@@ -19,7 +19,7 @@ export const GET = authMiddleware(
   },
 );
 
-export const PATH = authMiddleware(
+export const PATCH = authMiddleware(
   async (request: Request, { params }: { params: Params }) => {
     const requestBody = await readRequestBodyWithSchema(
       request,
