@@ -9,9 +9,11 @@ import {
   UpdateResourceResponse,
 } from "@/lib/vercel/schemas";
 
+// TODO: declare interface for ease of implementation?
+
 export async function installIntegration(
   installationId: string,
-  request: InstallIntegrationRequest,
+  request: InstallIntegrationRequest
 ): Promise<void> {
   throw new Error("Not implemented");
 }
@@ -22,7 +24,7 @@ export async function uninstallIntegration(installationId: string) {
 
 export async function provisionResource(
   installationId: string,
-  request: ProvisionResourceRequest,
+  request: ProvisionResourceRequest
 ): Promise<ProvisionResourceResponse> {
   throw new Error("Not implemented");
 }
@@ -30,33 +32,33 @@ export async function provisionResource(
 export async function updateResource(
   installationId: string,
   resourceId: string,
-  request: UpdateResourceRequest,
+  request: UpdateResourceRequest
 ): Promise<UpdateResourceResponse> {
   throw new Error("Not implemented");
 }
 
 export async function deleteResource(
   installationId: string,
-  resourceId: string,
+  resourceId: string
 ): Promise<void> {
   throw new Error("Not implemented");
 }
 
 export async function listResources(
-  installationId: string,
+  installationId: string
 ): Promise<ListResourcesResponse> {
   throw new Error("Not implemented");
 }
 
 export async function getResource(
   installationId: string,
-  resourceId: string,
+  resourceId: string
 ): Promise<GetResourceResponse> {
   throw new Error("Not implemented");
 }
 
 export async function getBillingPlans(
-  productId: string,
+  productId: string
 ): Promise<GetBillingPlansResponse> {
   throw new Error("Not implemented");
 }

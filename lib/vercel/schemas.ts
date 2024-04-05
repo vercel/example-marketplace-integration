@@ -98,6 +98,7 @@ export const billingPlanSchema = z.object({
     amount: z.string().min(1),
   }),
   maxProducts: z.number(),
+  // TODO: switch to `{ id: string; name: string; url: string }[]`
   requiredPolicies: z.array(z.string()),
 });
 
