@@ -15,6 +15,7 @@ export async function GET(request: NextRequest) {
     });
   }
 
+  // TODO(Marc): do we need to also switch to `marketplace.vercel.com`?
   const res = await fetch("https://vercel.com/api/v1/integrations/sso/token", {
     method: "POST",
     headers: {

@@ -19,7 +19,7 @@ export function authMiddleware(
   next: (
     req: NextRequestWithClaims,
     ...rest: any[]
-  ) => Promise<Response | NextResponse>,
+  ) => Promise<Response | NextResponse>
 ): (req: NextRequest, ...rest: any[]) => Promise<Response | NextResponse> {
   return async (
     req: NextRequest,
@@ -43,7 +43,7 @@ async function getPublicKey(keyId: string): Promise<string> {
   if (keysCache.has(keyId)) {
     return keysCache.get(keyId) as string;
   }
-  const res = await fetch(`https://vercel.com/.well-known/jwks`);
+  const res = await fetch(`https://marketplace.vercel.com/.well-known/jwks`);
   const jwks = await res.json();
   const key = jwks.keys.find((k: { kid: string }) => k.kid === keyId);
   if (!key) {
@@ -55,7 +55,7 @@ async function getPublicKey(keyId: string): Promise<string> {
 }
 
 async function verifyToken(
-  token: string,
+  token: string
 ): Promise<string | jsonwebtoken.JwtPayload | undefined> {
   return new Promise((resolve, reject) => {
     jsonwebtoken.verify(
@@ -77,7 +77,7 @@ async function verifyToken(
           return reject(err);
         }
         resolve(decoded);
-      },
+      }
     );
   });
 }
@@ -118,7 +118,7 @@ export async function authRequest(req: Request): Promise<OidcClaims> {
   if (claims.aud !== env.INTEGRATION_CLIENT_ID) {
     throw new Error("Invalid audience");
   }
-  if (claims.iss !== "https://vercel.com") {
+  if (claims.iss !== "https://marketplace.vercel.com") {
     throw new Error("Invalid issuer");
   }
   return claims;
