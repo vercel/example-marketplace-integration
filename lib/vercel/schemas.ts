@@ -8,9 +8,7 @@ export const installIntegrationRequestSchema = z.object({
   acceptedPolicies: z.record(z.string().datetime()),
   credentials: z.object({
     access_token: z.string().min(1),
-    refresh_token: z.string().min(1),
     token_type: z.string().min(1),
-    expires_in: z.number(),
   }),
 });
 
@@ -98,8 +96,13 @@ export const billingPlanSchema = z.object({
     amount: z.string().min(1),
   }),
   maxProducts: z.number(),
-  // TODO: switch to `{ id: string; name: string; url: string }[]`
-  requiredPolicies: z.array(z.string()),
+  requiredPolicies: z.array(
+    z.object({
+      id: z.string().min(1),
+      name: z.string().min(1),
+      url: z.string().min(1),
+    }),
+  ),
 });
 
 export type BillingPlan = z.infer<typeof billingPlanSchema>;
