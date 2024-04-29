@@ -1,10 +1,10 @@
 import { z, SafeParseReturnType, ZodSchema } from "zod";
 
 export async function readRequestBodyWithSchema<
-  TRequestBodySchema extends ZodSchema,
+  TRequestBodySchema extends ZodSchema
 >(
   request: Request,
-  requestBodySchema: TRequestBodySchema,
+  requestBodySchema: TRequestBodySchema
 ): Promise<
   SafeParseReturnType<z.infer<TRequestBodySchema>, z.infer<TRequestBodySchema>>
 > {
