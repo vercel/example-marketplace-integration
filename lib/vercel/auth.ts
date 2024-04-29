@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import jsonwebtoken from "jsonwebtoken";
-import jwkToPem from "jwk-to-pem";
+import { createRemoteJWKSet, jwtVerify } from "jose";
 import { env } from "../env";
+import { JWTExpired, JWTInvalid } from "jose/errors";
 
 export interface OidcClaims {
   sub: string;
@@ -9,117 +9,75 @@ export interface OidcClaims {
   iss: string;
   exp: number;
   iat: number;
+  installation_id: string;
+  user_id: string;
+  user_role: string;
+  account_id: string;
 }
 
-export interface NextRequestWithClaims extends NextRequest {
-  claims: OidcClaims;
-}
-
-export function authMiddleware(
-  next: (
-    req: NextRequestWithClaims,
-    ...rest: any[]
-  ) => Promise<Response | NextResponse>
-): (req: NextRequest, ...rest: any[]) => Promise<Response | NextResponse> {
-  return async (
+export function withAuth(
+  callback: (
+    claims: OidcClaims,
     req: NextRequest,
     ...rest: any[]
-  ): Promise<Response | NextResponse> => {
+  ) => Promise<Response>
+): (req: NextRequest, ...rest: any[]) => Promise<Response> {
+  return async (req: NextRequest, ...rest: any[]): Promise<Response> => {
     try {
-      const reqWithClaims = new NextRequest(req) as NextRequestWithClaims;
-      reqWithClaims.claims = await authRequest(req);
-      return next(reqWithClaims, ...rest);
+      const token = getAuthorizationToken(req);
+      const claims = await verifyToken(token);
+
+      return callback(claims, req, ...rest);
     } catch (err) {
-      if (err instanceof Error) {
-        return new NextResponse(err.message, { status: 401 });
+      if (err instanceof AuthError) {
+        return new NextResponse(err.message, { status: 403 });
       }
-      return new NextResponse("Unauthorized", { status: 401 });
+
+      throw err;
     }
   };
 }
 
-const keysCache = new Map<string, string>();
-async function getPublicKey(keyId: string): Promise<string> {
-  if (keysCache.has(keyId)) {
-    return keysCache.get(keyId) as string;
-  }
-  const res = await fetch(`https://marketplace.vercel.com/.well-known/jwks`);
-  const jwks = await res.json();
-  const key = jwks.keys.find((k: { kid: string }) => k.kid === keyId);
-  if (!key) {
-    throw new Error("Key not found");
-  }
-  const pem = jwkToPem(key);
-  keysCache.set(keyId, pem);
-  return pem;
-}
-
-async function verifyToken(
-  token: string
-): Promise<string | jsonwebtoken.JwtPayload | undefined> {
-  return new Promise((resolve, reject) => {
-    jsonwebtoken.verify(
+export async function verifyToken(token: string): Promise<OidcClaims> {
+  try {
+    const { payload: claims } = await jwtVerify<OidcClaims>(
       token,
-      (header, callback) => {
-        if (!header.kid) {
-          return callback(new Error("Invalid token"));
-        }
-        getPublicKey(header.kid)
-          .then((publicKey) => {
-            callback(null, publicKey);
-          })
-          .catch((err) => {
-            callback(err);
-          });
-      },
-      (err, decoded) => {
-        if (err) {
-          return reject(err);
-        }
-        resolve(decoded);
-      }
+      await createRemoteJWKSet(
+        new URL(`https://marketplace.vercel.com/.well-known/jwks`)
+      )
     );
-  });
-}
 
-function isOidcToken(decoded: unknown): decoded is OidcClaims {
-  return (
-    typeof decoded === "object" &&
-    decoded !== null &&
-    "sub" in decoded &&
-    "aud" in decoded &&
-    "iss" in decoded
-  );
-}
+    if (claims.aud !== env.INTEGRATION_CLIENT_ID) {
+      throw new AuthError("Invalid audience");
+    }
 
-export async function decodeAuthToken(authToken: string): Promise<OidcClaims> {
-  const decoded = await verifyToken(authToken);
-  if (isOidcToken(decoded)) {
-    return decoded;
+    if (claims.iss !== "https://marketplace.vercel.com") {
+      throw new AuthError("Invalid issuer");
+    }
+
+    return claims;
+  } catch (err) {
+    if (err instanceof JWTExpired) {
+      throw new AuthError("Auth expired");
+    }
+
+    if (err instanceof JWTInvalid) {
+      throw new AuthError("Auth invalid");
+    }
+
+    throw err;
   }
-  throw new Error("Invalid token");
 }
 
-function extractAuthRequest(req: Request): string {
+function getAuthorizationToken(req: Request): string {
   const authHeader = req.headers.get("Authorization");
-  const match = authHeader?.match(/^(?<authType>.*) (?<authToken>.*)$/i);
-  if (
-    match?.groups?.authType?.toLowerCase() === "bearer" &&
-    typeof match?.groups?.authToken === "string"
-  ) {
-    return match.groups.authToken;
+  const match = authHeader?.match(/^bearer (.+)$/i);
+
+  if (!match) {
+    throw new AuthError("Invalid Authorization header");
   }
-  throw new Error("Invalid Authorization header");
+
+  return match[1];
 }
 
-export async function authRequest(req: Request): Promise<OidcClaims> {
-  const token = extractAuthRequest(req);
-  const claims = await decodeAuthToken(token);
-  if (claims.aud !== env.INTEGRATION_CLIENT_ID) {
-    throw new Error("Invalid audience");
-  }
-  if (claims.iss !== "https://marketplace.vercel.com") {
-    throw new Error("Invalid issuer");
-  }
-  return claims;
-}
+class AuthError extends Error {}

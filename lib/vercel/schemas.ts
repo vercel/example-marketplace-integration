@@ -3,14 +3,11 @@ import { z } from "zod";
 // Account and Installation
 
 export const installIntegrationRequestSchema = z.object({
-  accountId: z.string().min(1),
   scopes: z.array(z.string()),
   acceptedPolicies: z.record(z.string().datetime()),
   credentials: z.object({
     access_token: z.string().min(1),
-    refresh_token: z.string().min(1),
     token_type: z.string().min(1),
-    expires_in: z.number(),
   }),
 });
 
