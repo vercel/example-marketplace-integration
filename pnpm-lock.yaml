@@ -31,12 +31,6 @@ dependencies:
     version: 3.22.4
 
 devDependencies:
-  '@types/jsonwebtoken':
-    specifier: ^9.0.6
-    version: 9.0.6
-  '@types/jwk-to-pem':
-    specifier: ^2.0.3
-    version: 2.0.3
   '@types/lodash':
     specifier: ^4.17.0
     version: 4.17.0
@@ -317,16 +311,6 @@ packages:
 
   /@types/json5@0.0.29:
     resolution: {integrity: sha512-dRLjCWHYg4oaA77cxO64oO+7JwCwnIzkZPdrrC71jQmQtlhM556pwKo5bUzqvZndkVbeFLIIi+9TC40JNF5hNQ==}
-    dev: true
-
-  /@types/jsonwebtoken@9.0.6:
-    resolution: {integrity: sha512-/5hndP5dCjloafCXns6SZyESp3Ldq7YjH3zwzwczYnjxIT0Fqzk5ROSYVGfFyczIue7IUEj8hkvLbPoLQ18vQw==}
-    dependencies:
-      '@types/node': 20.12.4
-    dev: true
-
-  /@types/jwk-to-pem@2.0.3:
-    resolution: {integrity: sha512-I/WFyFgk5GrNbkpmt14auGO3yFK1Wt4jXzkLuI+fDBNtO5ZI2rbymyGd6bKzfSBEuyRdM64ZUwxU1+eDcPSOEQ==}
     dev: true
 
   /@types/lodash@4.17.0:
