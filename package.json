@@ -19,8 +19,6 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
-    "@types/jsonwebtoken": "^9.0.6",
-    "@types/jwk-to-pem": "^2.0.3",
     "@types/lodash": "^4.17.0",
     "@types/node": "^20",
     "@types/react": "^18",
