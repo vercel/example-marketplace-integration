@@ -1,5 +1,3 @@
-import { kv } from "@vercel/kv";
-import { InstallIntegrationRequest } from "./schemas";
 import { getInstallation, getResource } from "../partner";
 import { env } from "../env";
 import { z } from "zod";
