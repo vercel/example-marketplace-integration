@@ -14,6 +14,7 @@
                 "properties": {
                   "ui:control": {
                     "const": "input",
+                    "description": "Renders a simple text input",
                     "type": "string"
                   },
                   "ui:hidden": {
@@ -22,15 +23,19 @@
                         "type": "boolean"
                       },
                       {
+                        "description": "Describes the form view on the Vercel Dashboard. 'create' is the Create Resource form, 'update' is the Update Resource form.",
                         "enum": ["update", "create"],
                         "type": "string"
                       }
-                    ]
+                    ],
+                    "description": "Configure if this property is hidden or not on the form view"
                   },
                   "ui:label": {
+                    "description": "The label rendered on the form for this property",
                     "type": "string"
                   },
                   "ui:placeholder": {
+                    "description": "Renders the string as a placeholder for the text input",
                     "type": "string"
                   },
                   "ui:read-only": {
@@ -39,10 +44,12 @@
                         "type": "boolean"
                       },
                       {
+                        "description": "Describes the form view on the Vercel Dashboard. 'create' is the Create Resource form, 'update' is the Update Resource form.",
                         "enum": ["update", "create"],
                         "type": "string"
                       }
-                    ]
+                    ],
+                    "description": "Configure if this property is read-only or not on the form view"
                   }
                 },
                 "required": ["ui:control"],
@@ -126,6 +133,7 @@
               },
               "ui:control": {
                 "const": "toggle",
+                "description": "Renders a toggle switch input",
                 "type": "string"
               },
               "ui:hidden": {
@@ -134,12 +142,15 @@
                     "type": "boolean"
                   },
                   {
+                    "description": "Describes the form view on the Vercel Dashboard. 'create' is the Create Resource form, 'update' is the Update Resource form.",
                     "enum": ["update", "create"],
                     "type": "string"
                   }
-                ]
+                ],
+                "description": "Configure if this property is hidden or not on the form view"
               },
               "ui:label": {
+                "description": "The label rendered on the form for this property",
                 "type": "string"
               },
               "ui:read-only": {
@@ -148,10 +159,12 @@
                     "type": "boolean"
                   },
                   {
+                    "description": "Describes the form view on the Vercel Dashboard. 'create' is the Create Resource form, 'update' is the Update Resource form.",
                     "enum": ["update", "create"],
                     "type": "string"
                   }
-                ]
+                ],
+                "description": "Configure if this property is read-only or not on the form view"
               }
             },
             "required": ["type", "ui:control"],
@@ -201,6 +214,7 @@
               },
               "ui:control": {
                 "const": "slider",
+                "description": "Renders a slider input",
                 "type": "string"
               },
               "ui:hidden": {
@@ -209,12 +223,15 @@
                     "type": "boolean"
                   },
                   {
+                    "description": "Describes the form view on the Vercel Dashboard. 'create' is the Create Resource form, 'update' is the Update Resource form.",
                     "enum": ["update", "create"],
                     "type": "string"
                   }
-                ]
+                ],
+                "description": "Configure if this property is hidden or not on the form view"
               },
               "ui:label": {
+                "description": "The label rendered on the form for this property",
                 "type": "string"
               },
               "ui:read-only": {
@@ -223,10 +240,12 @@
                     "type": "boolean"
                   },
                   {
+                    "description": "Describes the form view on the Vercel Dashboard. 'create' is the Create Resource form, 'update' is the Update Resource form.",
                     "enum": ["update", "create"],
                     "type": "string"
                   }
-                ]
+                ],
+                "description": "Configure if this property is read-only or not on the form view"
               }
             },
             "required": ["ui:control", "type", "items"],
@@ -258,6 +277,7 @@
               },
               "ui:control": {
                 "const": "select",
+                "description": "Renders a select dropdown",
                 "type": "string"
               },
               "ui:hidden": {
@@ -266,22 +286,28 @@
                     "type": "boolean"
                   },
                   {
+                    "description": "Describes the form view on the Vercel Dashboard. 'create' is the Create Resource form, 'update' is the Update Resource form.",
                     "enum": ["update", "create"],
                     "type": "string"
                   }
-                ]
+                ],
+                "description": "Configure if this property is hidden or not on the form view"
               },
               "ui:label": {
+                "description": "The label rendered on the form for this property",
                 "type": "string"
               },
               "ui:options": {
+                "description": "The list of options to provide to the select dropdown",
                 "items": {
                   "additionalProperties": false,
                   "properties": {
                     "label": {
+                      "description": "The rendered label of the dropdown option",
                       "type": "string"
                     },
                     "value": {
+                      "description": "The value of the dropdown option",
                       "type": "string"
                     }
                   },
@@ -292,6 +318,7 @@
                 "type": "array"
               },
               "ui:placeholder": {
+                "description": "The placeholder string to render on the dropdown input",
                 "type": "string"
               },
               "ui:read-only": {
@@ -300,10 +327,12 @@
                     "type": "boolean"
                   },
                   {
+                    "description": "Describes the form view on the Vercel Dashboard. 'create' is the Create Resource form, 'update' is the Update Resource form.",
                     "enum": ["update", "create"],
                     "type": "string"
                   }
-                ]
+                ],
+                "description": "Configure if this property is read-only or not on the form view"
               }
             },
             "required": ["type", "ui:control", "ui:options"],
@@ -358,6 +387,7 @@
               },
               "ui:control": {
                 "const": "multi-select",
+                "description": "Renders a multi-select dropdown",
                 "type": "string"
               },
               "ui:hidden": {
@@ -366,12 +396,15 @@
                     "type": "boolean"
                   },
                   {
+                    "description": "Describes the form view on the Vercel Dashboard. 'create' is the Create Resource form, 'update' is the Update Resource form.",
                     "enum": ["update", "create"],
                     "type": "string"
                   }
-                ]
+                ],
+                "description": "Configure if this property is hidden or not on the form view"
               },
               "ui:label": {
+                "description": "The label rendered on the form for this property",
                 "type": "string"
               },
               "ui:options": {
@@ -399,10 +432,12 @@
                     "type": "boolean"
                   },
                   {
+                    "description": "Describes the form view on the Vercel Dashboard. 'create' is the Create Resource form, 'update' is the Update Resource form.",
                     "enum": ["update", "create"],
                     "type": "string"
                   }
-                ]
+                ],
+                "description": "Configure if this property is read-only or not on the form view"
               }
             },
             "required": ["ui:control", "ui:options", "type", "items"],
@@ -412,12 +447,14 @@
             "additionalProperties": false,
             "properties": {
               "default": {
+                "description": "The default selected region",
                 "type": "string"
               },
               "description": {
                 "type": "string"
               },
               "enum": {
+                "description": "The list of possible Vercel Regions the user can select. Omit to allow them to select any region.",
                 "items": {
                   "type": "string"
                 },
@@ -440,6 +477,7 @@
               },
               "ui:control": {
                 "const": "vercel-region",
+                "description": "Renders a Vercel Region select",
                 "type": "string"
               },
               "ui:hidden": {
@@ -448,12 +486,15 @@
                     "type": "boolean"
                   },
                   {
+                    "description": "Describes the form view on the Vercel Dashboard. 'create' is the Create Resource form, 'update' is the Update Resource form.",
                     "enum": ["update", "create"],
                     "type": "string"
                   }
-                ]
+                ],
+                "description": "Configure if this property is hidden or not on the form view"
               },
               "ui:label": {
+                "description": "The label rendered on the form for this property",
                 "type": "string"
               },
               "ui:placeholder": {
@@ -465,10 +506,12 @@
                     "type": "boolean"
                   },
                   {
+                    "description": "Describes the form view on the Vercel Dashboard. 'create' is the Create Resource form, 'update' is the Update Resource form.",
                     "enum": ["update", "create"],
                     "type": "string"
                   }
-                ]
+                ],
+                "description": "Configure if this property is read-only or not on the form view"
               }
             },
             "required": ["type", "ui:control"],
@@ -492,13 +535,11 @@
               "items": {
                 "additionalProperties": false,
                 "properties": {
-                  "default": {
-                    "type": "string"
-                  },
                   "description": {
                     "type": "string"
                   },
                   "enum": {
+                    "description": "The list of possible Vercel Regions the user can select. Omit to allow them to select any region.",
                     "items": {
                       "type": "string"
                     },
@@ -529,6 +570,7 @@
               },
               "ui:control": {
                 "const": "multi-vercel-region",
+                "description": "Renders a Vercel Region multi-select",
                 "type": "string"
               },
               "ui:hidden": {
@@ -537,12 +579,15 @@
                     "type": "boolean"
                   },
                   {
+                    "description": "Describes the form view on the Vercel Dashboard. 'create' is the Create Resource form, 'update' is the Update Resource form.",
                     "enum": ["update", "create"],
                     "type": "string"
                   }
-                ]
+                ],
+                "description": "Configure if this property is hidden or not on the form view"
               },
               "ui:label": {
+                "description": "The label rendered on the form for this property",
                 "type": "string"
               },
               "ui:placeholder": {
@@ -554,10 +599,12 @@
                     "type": "boolean"
                   },
                   {
+                    "description": "Describes the form view on the Vercel Dashboard. 'create' is the Create Resource form, 'update' is the Update Resource form.",
                     "enum": ["update", "create"],
                     "type": "string"
                   }
-                ]
+                ],
+                "description": "Configure if this property is read-only or not on the form view"
               }
             },
             "required": ["ui:control", "type", "items"],
@@ -568,6 +615,7 @@
       "type": "object"
     },
     "required": {
+      "description": "The list of required attributes. These will be required fields on the Vercel Dashboard",
       "items": {
         "type": "string"
       },
