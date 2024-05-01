@@ -1,20 +1,36 @@
 {
-  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
   "properties": {
-    "type": {
-      "type": "string",
-      "const": "object"
+    "$schema": {
+      "type": "string"
     },
     "properties": {
-      "type": "object",
       "additionalProperties": {
         "anyOf": [
           {
             "allOf": [
               {
-                "type": "object",
                 "properties": {
+                  "ui:control": {
+                    "const": "input",
+                    "type": "string"
+                  },
+                  "ui:hidden": {
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "enum": ["update", "create"],
+                        "type": "string"
+                      }
+                    ]
+                  },
                   "ui:label": {
+                    "type": "string"
+                  },
+                  "ui:placeholder": {
                     "type": "string"
                   },
                   "ui:read-only": {
@@ -23,45 +39,27 @@
                         "type": "boolean"
                       },
                       {
-                        "type": "string",
-                        "enum": ["update", "create"]
+                        "enum": ["update", "create"],
+                        "type": "string"
                       }
                     ]
-                  },
-                  "ui:hidden": {
-                    "anyOf": [
-                      {
-                        "type": "boolean"
-                      },
-                      {
-                        "type": "string",
-                        "enum": ["update", "create"]
-                      }
-                    ]
-                  },
-                  "ui:control": {
-                    "type": "string",
-                    "const": "input"
-                  },
-                  "ui:placeholder": {
-                    "type": "string"
                   }
                 },
-                "required": ["ui:control"]
+                "required": ["ui:control"],
+                "type": "object"
               },
               {
                 "anyOf": [
                   {
-                    "type": "object",
+                    "additionalProperties": false,
                     "properties": {
+                      "default": {
+                        "type": "number"
+                      },
                       "description": {
                         "type": "string"
                       },
-                      "type": {
-                        "type": "string",
-                        "const": "number"
-                      },
-                      "minimum": {
+                      "exclusiveMaximum": {
                         "type": "number"
                       },
                       "exclusiveMinimum": {
@@ -70,60 +68,76 @@
                       "maximum": {
                         "type": "number"
                       },
-                      "exclusiveMaximum": {
+                      "minimum": {
                         "type": "number"
                       },
-                      "default": {
-                        "type": "number"
+                      "type": {
+                        "const": "number",
+                        "type": "string"
                       }
                     },
                     "required": ["type"],
-                    "additionalProperties": false
+                    "type": "object"
                   },
                   {
-                    "type": "object",
+                    "additionalProperties": false,
                     "properties": {
+                      "default": {
+                        "type": "string"
+                      },
                       "description": {
                         "type": "string"
                       },
-                      "type": {
-                        "type": "string",
-                        "const": "string"
+                      "maxLength": {
+                        "exclusiveMinimum": 0,
+                        "type": "number"
                       },
                       "minLength": {
-                        "type": "number",
-                        "exclusiveMinimum": 0
-                      },
-                      "maxLength": {
-                        "type": "number",
-                        "exclusiveMinimum": 0
+                        "exclusiveMinimum": 0,
+                        "type": "number"
                       },
                       "pattern": {
                         "type": "string"
                       },
-                      "default": {
+                      "type": {
+                        "const": "string",
                         "type": "string"
                       }
                     },
                     "required": ["type"],
-                    "additionalProperties": false
+                    "type": "object"
                   }
                 ]
               }
             ]
           },
           {
-            "type": "object",
+            "additionalProperties": false,
             "properties": {
+              "default": {
+                "type": "boolean"
+              },
               "description": {
                 "type": "string"
               },
               "type": {
-                "type": "string",
-                "const": "boolean"
+                "const": "boolean",
+                "type": "string"
               },
-              "default": {
-                "type": "boolean"
+              "ui:control": {
+                "const": "toggle",
+                "type": "string"
+              },
+              "ui:hidden": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "enum": ["update", "create"],
+                    "type": "string"
+                  }
+                ]
               },
               "ui:label": {
                 "type": "string"
@@ -134,77 +148,34 @@
                     "type": "boolean"
                   },
                   {
-                    "type": "string",
-                    "enum": ["update", "create"]
+                    "enum": ["update", "create"],
+                    "type": "string"
                   }
                 ]
-              },
-              "ui:hidden": {
-                "anyOf": [
-                  {
-                    "type": "boolean"
-                  },
-                  {
-                    "type": "string",
-                    "enum": ["update", "create"]
-                  }
-                ]
-              },
-              "ui:control": {
-                "type": "string",
-                "const": "toggle"
               }
             },
             "required": ["type", "ui:control"],
-            "additionalProperties": false
+            "type": "object"
           },
           {
-            "type": "object",
+            "additionalProperties": false,
             "properties": {
-              "ui:label": {
-                "type": "string"
-              },
-              "ui:read-only": {
-                "anyOf": [
-                  {
-                    "type": "boolean"
-                  },
-                  {
-                    "type": "string",
-                    "enum": ["update", "create"]
-                  }
-                ]
-              },
-              "ui:hidden": {
-                "anyOf": [
-                  {
-                    "type": "boolean"
-                  },
-                  {
-                    "type": "string",
-                    "enum": ["update", "create"]
-                  }
-                ]
-              },
-              "ui:control": {
-                "type": "string",
-                "const": "slider"
-              },
-              "type": {
-                "type": "string",
-                "const": "array"
+              "default": {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
               },
               "items": {
-                "type": "object",
+                "additionalProperties": false,
                 "properties": {
+                  "default": {
+                    "type": "number"
+                  },
                   "description": {
                     "type": "string"
                   },
-                  "type": {
-                    "type": "string",
-                    "const": "number"
-                  },
-                  "minimum": {
+                  "exclusiveMaximum": {
                     "type": "number"
                   },
                   "exclusiveMinimum": {
@@ -213,49 +184,35 @@
                   "maximum": {
                     "type": "number"
                   },
-                  "exclusiveMaximum": {
+                  "minimum": {
                     "type": "number"
                   },
-                  "default": {
-                    "type": "number"
+                  "type": {
+                    "const": "number",
+                    "type": "string"
                   }
                 },
                 "required": ["type"],
-                "additionalProperties": false
-              },
-              "default": {
-                "type": "array",
-                "items": {
-                  "type": "number"
-                }
-              }
-            },
-            "required": ["ui:control", "type", "items"],
-            "additionalProperties": false
-          },
-          {
-            "type": "object",
-            "properties": {
-              "description": {
-                "type": "string"
+                "type": "object"
               },
               "type": {
-                "type": "string",
-                "const": "string"
-              },
-              "minLength": {
-                "type": "number",
-                "exclusiveMinimum": 0
-              },
-              "maxLength": {
-                "type": "number",
-                "exclusiveMinimum": 0
-              },
-              "pattern": {
+                "const": "array",
                 "type": "string"
               },
-              "default": {
+              "ui:control": {
+                "const": "slider",
                 "type": "string"
+              },
+              "ui:hidden": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "enum": ["update", "create"],
+                    "type": "string"
+                  }
+                ]
               },
               "ui:label": {
                 "type": "string"
@@ -266,10 +223,42 @@
                     "type": "boolean"
                   },
                   {
-                    "type": "string",
-                    "enum": ["update", "create"]
+                    "enum": ["update", "create"],
+                    "type": "string"
                   }
                 ]
+              }
+            },
+            "required": ["ui:control", "type", "items"],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "default": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "maxLength": {
+                "exclusiveMinimum": 0,
+                "type": "number"
+              },
+              "minLength": {
+                "exclusiveMinimum": 0,
+                "type": "number"
+              },
+              "pattern": {
+                "type": "string"
+              },
+              "type": {
+                "const": "string",
+                "type": "string"
+              },
+              "ui:control": {
+                "const": "select",
+                "type": "string"
               },
               "ui:hidden": {
                 "anyOf": [
@@ -277,19 +266,17 @@
                     "type": "boolean"
                   },
                   {
-                    "type": "string",
-                    "enum": ["update", "create"]
+                    "enum": ["update", "create"],
+                    "type": "string"
                   }
                 ]
               },
-              "ui:control": {
-                "type": "string",
-                "const": "select"
+              "ui:label": {
+                "type": "string"
               },
               "ui:options": {
-                "type": "array",
                 "items": {
-                  "type": "object",
+                  "additionalProperties": false,
                   "properties": {
                     "label": {
                       "type": "string"
@@ -299,33 +286,79 @@
                     }
                   },
                   "required": ["label", "value"],
-                  "additionalProperties": false
+                  "type": "object"
                 },
-                "minItems": 1
+                "minItems": 1,
+                "type": "array"
               },
               "ui:placeholder": {
                 "type": "string"
+              },
+              "ui:read-only": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "enum": ["update", "create"],
+                    "type": "string"
+                  }
+                ]
               }
             },
             "required": ["type", "ui:control", "ui:options"],
-            "additionalProperties": false
+            "type": "object"
           },
           {
-            "type": "object",
+            "additionalProperties": false,
             "properties": {
-              "ui:label": {
+              "default": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "example": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "default": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "maxLength": {
+                    "exclusiveMinimum": 0,
+                    "type": "number"
+                  },
+                  "minLength": {
+                    "exclusiveMinimum": 0,
+                    "type": "number"
+                  },
+                  "pattern": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "const": "string",
+                    "type": "string"
+                  }
+                },
+                "required": ["type"],
+                "type": "object"
+              },
+              "type": {
+                "const": "array",
                 "type": "string"
               },
-              "ui:read-only": {
-                "anyOf": [
-                  {
-                    "type": "boolean"
-                  },
-                  {
-                    "type": "string",
-                    "enum": ["update", "create"]
-                  }
-                ]
+              "ui:control": {
+                "const": "multi-select",
+                "type": "string"
               },
               "ui:hidden": {
                 "anyOf": [
@@ -333,19 +366,17 @@
                     "type": "boolean"
                   },
                   {
-                    "type": "string",
-                    "enum": ["update", "create"]
+                    "enum": ["update", "create"],
+                    "type": "string"
                   }
                 ]
               },
-              "ui:control": {
-                "type": "string",
-                "const": "multi-select"
+              "ui:label": {
+                "type": "string"
               },
               "ui:options": {
-                "type": "array",
                 "items": {
-                  "type": "object",
+                  "additionalProperties": false,
                   "properties": {
                     "label": {
                       "type": "string"
@@ -355,91 +386,77 @@
                     }
                   },
                   "required": ["label", "value"],
-                  "additionalProperties": false
-                }
+                  "type": "object"
+                },
+                "type": "array"
               },
               "ui:placeholder": {
                 "type": "string"
               },
-              "type": {
-                "type": "string",
-                "const": "array"
-              },
-              "items": {
-                "type": "object",
-                "properties": {
-                  "description": {
-                    "type": "string"
+              "ui:read-only": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
                   },
-                  "type": {
-                    "type": "string",
-                    "const": "string"
-                  },
-                  "minLength": {
-                    "type": "number",
-                    "exclusiveMinimum": 0
-                  },
-                  "maxLength": {
-                    "type": "number",
-                    "exclusiveMinimum": 0
-                  },
-                  "pattern": {
-                    "type": "string"
-                  },
-                  "default": {
+                  {
+                    "enum": ["update", "create"],
                     "type": "string"
                   }
-                },
-                "required": ["type"],
-                "additionalProperties": false
-              },
-              "default": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              "example": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
+                ]
               }
             },
             "required": ["ui:control", "ui:options", "type", "items"],
-            "additionalProperties": false
+            "type": "object"
           },
           {
-            "type": "object",
+            "additionalProperties": false,
             "properties": {
+              "default": {
+                "type": "string"
+              },
               "description": {
                 "type": "string"
               },
-              "type": {
-                "type": "string",
-                "const": "string"
-              },
-              "minLength": {
-                "type": "number",
-                "exclusiveMinimum": 0
+              "enum": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               "maxLength": {
-                "type": "number",
-                "exclusiveMinimum": 0
+                "exclusiveMinimum": 0,
+                "type": "number"
+              },
+              "minLength": {
+                "exclusiveMinimum": 0,
+                "type": "number"
               },
               "pattern": {
                 "type": "string"
               },
-              "default": {
+              "type": {
+                "const": "string",
                 "type": "string"
               },
-              "enum": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
+              "ui:control": {
+                "const": "vercel-region",
+                "type": "string"
+              },
+              "ui:hidden": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "enum": ["update", "create"],
+                    "type": "string"
+                  }
+                ]
               },
               "ui:label": {
+                "type": "string"
+              },
+              "ui:placeholder": {
                 "type": "string"
               },
               "ui:read-only": {
@@ -448,133 +465,119 @@
                     "type": "boolean"
                   },
                   {
-                    "type": "string",
-                    "enum": ["update", "create"]
+                    "enum": ["update", "create"],
+                    "type": "string"
                   }
                 ]
-              },
-              "ui:hidden": {
-                "anyOf": [
-                  {
-                    "type": "boolean"
-                  },
-                  {
-                    "type": "string",
-                    "enum": ["update", "create"]
-                  }
-                ]
-              },
-              "ui:control": {
-                "type": "string",
-                "const": "vercel-region"
-              },
-              "ui:placeholder": {
-                "type": "string"
               }
             },
             "required": ["type", "ui:control"],
-            "additionalProperties": false
+            "type": "object"
           },
           {
-            "type": "object",
+            "additionalProperties": false,
             "properties": {
-              "ui:label": {
-                "type": "string"
+              "default": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
-              "ui:read-only": {
-                "anyOf": [
-                  {
-                    "type": "boolean"
-                  },
-                  {
-                    "type": "string",
-                    "enum": ["update", "create"]
-                  }
-                ]
-              },
-              "ui:hidden": {
-                "anyOf": [
-                  {
-                    "type": "boolean"
-                  },
-                  {
-                    "type": "string",
-                    "enum": ["update", "create"]
-                  }
-                ]
-              },
-              "ui:control": {
-                "type": "string",
-                "const": "multi-vercel-region"
-              },
-              "ui:placeholder": {
-                "type": "string"
-              },
-              "type": {
-                "type": "string",
-                "const": "array"
+              "example": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               },
               "items": {
-                "type": "object",
+                "additionalProperties": false,
                 "properties": {
+                  "default": {
+                    "type": "string"
+                  },
                   "description": {
                     "type": "string"
                   },
-                  "type": {
-                    "type": "string",
-                    "const": "string"
-                  },
-                  "minLength": {
-                    "type": "number",
-                    "exclusiveMinimum": 0
+                  "enum": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
                   },
                   "maxLength": {
-                    "type": "number",
-                    "exclusiveMinimum": 0
+                    "exclusiveMinimum": 0,
+                    "type": "number"
+                  },
+                  "minLength": {
+                    "exclusiveMinimum": 0,
+                    "type": "number"
                   },
                   "pattern": {
                     "type": "string"
                   },
-                  "default": {
+                  "type": {
+                    "const": "string",
                     "type": "string"
-                  },
-                  "enum": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
                   }
                 },
                 "required": ["type"],
-                "additionalProperties": false
+                "type": "object"
               },
-              "default": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
+              "type": {
+                "const": "array",
+                "type": "string"
               },
-              "example": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
+              "ui:control": {
+                "const": "multi-vercel-region",
+                "type": "string"
+              },
+              "ui:hidden": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "enum": ["update", "create"],
+                    "type": "string"
+                  }
+                ]
+              },
+              "ui:label": {
+                "type": "string"
+              },
+              "ui:placeholder": {
+                "type": "string"
+              },
+              "ui:read-only": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "enum": ["update", "create"],
+                    "type": "string"
+                  }
+                ]
               }
             },
             "required": ["ui:control", "type", "items"],
-            "additionalProperties": false
+            "type": "object"
           }
         ]
-      }
+      },
+      "type": "object"
     },
     "required": {
-      "type": "array",
       "items": {
         "type": "string"
-      }
+      },
+      "type": "array"
+    },
+    "type": {
+      "const": "object",
+      "type": "string"
     }
   },
   "required": ["type", "properties"],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  "type": "object"
 }
