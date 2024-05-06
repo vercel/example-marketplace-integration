@@ -78,7 +78,10 @@ export async function deleteResource(
   installationId: string,
   resourceId: string
 ): Promise<void> {
-  await kv.del(`${installationId}:resource:${resourceId}`);
+  const pipeline = kv.pipeline();
+  pipeline.del(`${installationId}:resource:${resourceId}`);
+  pipeline.lrem(`${installationId}:resources`, 0, resourceId);
+  await pipeline.exec();
 }
 
 export async function listResources(
@@ -86,14 +89,16 @@ export async function listResources(
 ): Promise<ListResourcesResponse> {
   const resourceIds = await kv.lrange(`${installationId}:resources`, 0, -1);
 
+  const pipeline = kv.pipeline();
+
+  for (const resourceId of resourceIds) {
+    pipeline.get(`${installationId}:resource:${resourceId}`);
+  }
+
+  const resources = await pipeline.exec<Resource[]>();
+
   return {
-    resources: compact(
-      await Promise.all(
-        resourceIds.map((resourceId) =>
-          kv.get<Resource>(`${installationId}:resource:${resourceId}`)
-        )
-      )
-    ),
+    resources: compact(resources),
   };
 }
 
