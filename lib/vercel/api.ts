@@ -1,6 +1,7 @@
 import { getInstallation, getResource } from "../partner";
 import { env } from "../env";
 import { z } from "zod";
+import { BillingData } from "./billing-data";
 
 export async function dispatchEvent(
   installationId: string,
@@ -58,6 +59,20 @@ export async function exchangeCodeForToken(
   );
 
   return id_token;
+}
+
+export async function sendBillingData(
+  installationId: string,
+  data: BillingData
+): Promise<void> {
+  await fetchVercelApi(
+    `/v1/integrations/marketplace/installations/${installationId}/billing`,
+    {
+      installationId,
+      method: "POST",
+      data,
+    }
+  );
 }
 
 async function fetchVercelApi(

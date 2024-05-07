@@ -17,11 +17,23 @@ export async function installIntegration(
   installationId: string,
   request: InstallIntegrationRequest
 ): Promise<void> {
-  await kv.set(installationId, request);
+  const pipeline = kv.pipeline();
+  await pipeline.set(installationId, request);
+  await pipeline.lrem("installations", 0, installationId);
+  await pipeline.lpush("installations", installationId);
+  await pipeline.exec();
 }
 
 export async function uninstallIntegration(installationId: string) {
-  await kv.del(installationId);
+  const pipeline = kv.pipeline();
+  await pipeline.del(installationId);
+  await pipeline.lrem("installations", 0, installationId);
+  await pipeline.exec();
+}
+
+export async function listInstallations(): Promise<string[]> {
+  const installationIds = await kv.lrange("installations", 0, -1);
+  return installationIds;
 }
 
 export async function provisionResource(
@@ -88,6 +100,9 @@ export async function listResources(
   installationId: string
 ): Promise<ListResourcesResponse> {
   const resourceIds = await kv.lrange(`${installationId}:resources`, 0, -1);
+  if (resourceIds.length === 0) {
+    return { resources: [] };
+  }
 
   const pipeline = kv.pipeline();
 
