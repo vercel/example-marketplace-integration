@@ -54,11 +54,11 @@ async function mockBillingData(installationId: string): Promise<BillingData> {
 
   const pricingModel: Record<string, { units: string; price: number }> = {
     Storage: {
-      price: 0.01,
+      price: 0.1,
       units: "GB",
     },
     Queries: {
-      price: 0.001,
+      price: 0.01,
       units: "1k",
     },
   } as const;
