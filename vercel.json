@@ -1,7 +1,7 @@
 {
   "crons": [
     {
-      "path": "/backend/send-billing-data-cron",
+      "path": "/cron/send-billing-data-cron",
       "schedule": "5 * * * *"
     }
   ]

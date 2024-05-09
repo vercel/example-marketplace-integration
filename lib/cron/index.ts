@@ -1,4 +1,4 @@
-export function backendApi(
+export function cronJob(
   fn: (req: Request) => Response | Promise<Response>
 ): (req: Request) => Promise<Response> {
   return async (req) => {

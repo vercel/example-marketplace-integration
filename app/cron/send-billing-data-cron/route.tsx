@@ -1,4 +1,4 @@
-import { backendApi } from "@/lib/backend";
+import { cronJob } from "@/lib/cron";
 import { listInstallations, listResources } from "@/lib/partner";
 import { sendBillingData } from "@/lib/vercel/api";
 import type {
@@ -9,11 +9,12 @@ import type {
 
 export const dynamic = "force-dynamic";
 
-export const GET = backendApi(async (request: Request) => {
+export const GET = cronJob(async (request: Request) => {
   const dryRun = new URL(request.url).searchParams.get("dryrun") === "1";
   const installationIds = await listInstallations();
   const promises = installationIds.map(async (installationId) => {
     const data = await mockBillingData(installationId);
+    console.log("Sending billing data: ", installationId, data);
     let error: string | undefined;
     if (!dryRun) {
       try {
