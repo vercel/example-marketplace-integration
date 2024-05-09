@@ -96,5 +96,9 @@ async function fetchVercelApi(
     );
   }
 
+  if (res.status === 201) {
+    return;
+  }
+
   return await res.json();
 }
