@@ -75,7 +75,7 @@ async function mockBillingData(installationId: string): Promise<BillingData> {
       }
       return {
         resourceId: resource.id,
-        billingPlanId: resource.billingPlan,
+        billingPlan: resource.billingPlan,
         name: `${resource.name}: ${u.name}`,
         price: pricing.price.toFixed(2),
         units: u.units,

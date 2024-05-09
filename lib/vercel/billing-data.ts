@@ -16,7 +16,7 @@ export interface BillingData {
 
 export interface BillingItem {
   resourceId?: string;
-  billingPlanId: string;
+  billingPlan: string;
   // Start and end are only needed if different from the period's start/end.
   // E.g. in case of a plan change.
   start?: ISODateTime;
