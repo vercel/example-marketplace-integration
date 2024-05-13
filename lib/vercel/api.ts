@@ -111,5 +111,10 @@ async function fetchVercelApi(
     );
   }
 
+  // No response body.
+  if (res.status === 201) {
+    return null;
+  }
+
   return await res.json();
 }
