@@ -44,7 +44,10 @@ export default async function Home({
         <h1>Actions</h1>
         <div>
           <form action={rotateCredentialsAction}>
-            <button>Rotate Credentials</button>
+            <input type="hidden" name="resourceId" value={resource.id} />
+            <button className="rounded bg-blue-500 text-white px-2 py-1">
+              Rotate Credentials
+            </button>
           </form>
         </div>
       </div>
