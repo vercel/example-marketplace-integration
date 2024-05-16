@@ -17,7 +17,13 @@ export async function GET(request: NextRequest) {
 
   createSession(token);
 
-  redirect("/dashboard");
+  const resourceId = request.nextUrl.searchParams.get("resource_id");
+
+  if (resourceId) {
+    redirect(`/dashboard/resources/${resourceId}`);
+  } else {
+    redirect("/dashboard");
+  }
 }
 
 function getHost(request: NextRequest): string {

@@ -97,9 +97,13 @@ export async function deleteResource(
 }
 
 export async function listResources(
-  installationId: string
+  installationId: string,
+  targetResourceIds?: string[]
 ): Promise<ListResourcesResponse> {
-  const resourceIds = await kv.lrange(`${installationId}:resources`, 0, -1);
+  const resourceIds = targetResourceIds?.length
+    ? targetResourceIds
+    : await kv.lrange(`${installationId}:resources`, 0, -1);
+
   if (resourceIds.length === 0) {
     return { resources: [] };
   }
