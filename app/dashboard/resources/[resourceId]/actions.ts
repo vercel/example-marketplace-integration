@@ -3,6 +3,7 @@
 import { getResource, updateResource } from "@/lib/partner";
 import { dispatchEvent, updateSecrets } from "@/lib/vercel/api";
 import { getSession } from "../../auth";
+import { revalidatePath } from "next/cache";
 
 export async function updateResourceAction(formData: FormData): Promise<void> {
   const session = await getSession();
@@ -24,6 +25,9 @@ export async function updateResourceAction(formData: FormData): Promise<void> {
     productId: resource.productId,
     resourceId: resource.id,
   });
+
+  revalidatePath("/dashboard");
+  revalidatePath(`/dashboard/resources/${resource.id}`);
 }
 
 export async function rotateCredentialsAction(
