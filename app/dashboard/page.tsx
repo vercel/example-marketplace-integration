@@ -1,15 +1,20 @@
 import { getInstallation, listResources } from "@/lib/partner";
 import Link from "next/link";
 import { getSession } from "./auth";
+import { getAccountInfo } from "@/lib/vercel/api";
 
 export default async function Home() {
   const session = await getSession();
-  const { resources } = await listResources(session.installation_id);
-  const installation = await getInstallation(session.installation_id);
+
+  const [{ resources }, installation, account] = await Promise.all([
+    listResources(session.installation_id),
+    getInstallation(session.installation_id),
+    getAccountInfo(session.installation_id),
+  ]);
 
   return (
     <main className="space-y-8">
-      <h1 className="text-xl font-bold">My Dashboard</h1>
+      <h1 className="text-xl font-bold">{`${account.name}'s`} Dashboard</h1>
       <div className="space-y-4">
         <h2 className="text-md">Resources</h2>
         <ul className="list-disc ml-6 space-y-2">

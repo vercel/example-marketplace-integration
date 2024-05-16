@@ -13,7 +13,7 @@ type IntegrationEvent = ResourceUpdatedEvent;
 
 export async function dispatchEvent(
   installationId: string,
-  event: IntegrationEvent
+  event: IntegrationEvent,
 ): Promise<void> {
   await fetchVercelApi(
     `/v1/integrations/marketplace/installations/${installationId}/events`,
@@ -21,14 +21,31 @@ export async function dispatchEvent(
       installationId,
       method: "POST",
       data: { event },
-    }
+    },
   );
+}
+
+type AccountInfo = {
+  name: string;
+  contact: {
+    email: string;
+    name: string;
+  };
+};
+
+export async function getAccountInfo(
+  installationId: string,
+): Promise<AccountInfo> {
+  return (await fetchVercelApi(
+    `/v1/integrations/marketplace/installations/${installationId}/account`,
+    { installationId },
+  )) as AccountInfo;
 }
 
 export async function updateSecrets(
   installationId: string,
   resourceId: string,
-  secrets: { name: string; value: string }[]
+  secrets: { name: string; value: string }[],
 ): Promise<void> {
   const resource = await getResource(installationId, resourceId);
 
@@ -42,7 +59,7 @@ export async function updateSecrets(
       installationId,
       method: "PUT",
       data: { secrets },
-    }
+    },
   );
 }
 
@@ -52,7 +69,7 @@ const IntegrationsSsoTokenResponse = z.object({
 
 export async function exchangeCodeForToken(
   code: string,
-  redirectUrl: string
+  redirectUrl: string,
 ): Promise<string> {
   const { id_token } = IntegrationsSsoTokenResponse.parse(
     await fetchVercelApi("/v1/integrations/sso/token", {
@@ -63,7 +80,7 @@ export async function exchangeCodeForToken(
         client_secret: env.INTEGRATION_CLIENT_SECRET,
         redirect_uri: redirectUrl,
       },
-    })
+    }),
   );
 
   return id_token;
@@ -71,7 +88,7 @@ export async function exchangeCodeForToken(
 
 export async function sendBillingData(
   installationId: string,
-  data: BillingData
+  data: BillingData,
 ): Promise<void> {
   await fetchVercelApi(
     `/v1/integrations/marketplace/installations/${installationId}/billing`,
@@ -79,13 +96,13 @@ export async function sendBillingData(
       installationId,
       method: "POST",
       data,
-    }
+    },
   );
 }
 
 async function fetchVercelApi(
   path: string,
-  init?: RequestInit & { installationId?: string; data?: unknown }
+  init?: RequestInit & { installationId?: string; data?: unknown },
 ): Promise<unknown> {
   const options = init || {};
 
@@ -122,7 +139,7 @@ async function fetchVercelApi(
     throw new Error(
       `Request to Vercel API failed: ${res.status} ${
         res.statusText
-      } ${await res.text()}`
+      } ${await res.text()}`,
     );
   }
 
