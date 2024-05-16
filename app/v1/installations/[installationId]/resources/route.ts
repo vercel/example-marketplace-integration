@@ -3,14 +3,13 @@ import { readRequestBodyWithSchema } from "@/lib/utils";
 import { withAuth } from "@/lib/vercel/auth";
 import { provisionResourceRequestSchema } from "@/lib/vercel/schemas";
 
-interface Params {
-  installationId: string;
-}
+export const dynamic = "force-dynamic";
 
-export const GET = withAuth(async (claims) => {
-  const response = await listResources(claims.installation_id);
+export const GET = withAuth(async (claims, request) => {
+  const ids = request.nextUrl.searchParams.getAll("ids");
+  const resources = await listResources(claims.installation_id, ids);
 
-  return Response.json(response);
+  return Response.json(resources);
 });
 
 export const POST = withAuth(async (claims, request) => {

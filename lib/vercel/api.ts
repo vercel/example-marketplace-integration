@@ -101,7 +101,14 @@ async function fetchVercelApi(
     };
   }
 
-  const res = await fetch(`https://vercel.com/api${path}`, options);
+  const url = `https://vercel.com/api${path}`;
+
+  console.log(`>> ${options.method || "GET"} ${url}`);
+  const res = await fetch(url, options);
+
+  console.log(
+    `<< ${options.method || "GET"} ${url} ${res.status} ${res.statusText}`
+  );
 
   if (!res.ok) {
     throw new Error(
@@ -111,10 +118,7 @@ async function fetchVercelApi(
     );
   }
 
-  // No response body.
-  if (res.status === 201) {
-    return null;
+  if (res.headers.get("content-type")?.includes("application/json")) {
+    return await res.json();
   }
-
-  return await res.json();
 }
