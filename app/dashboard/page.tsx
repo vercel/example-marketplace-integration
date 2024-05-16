@@ -14,7 +14,7 @@ export default async function Home() {
 
   return (
     <main className="space-y-8">
-      <h1 className="text-xl font-bold">{account.name}'s Dashboard</h1>
+      <h1 className="text-xl font-bold">{`${account.name}'s`} Dashboard</h1>
       <div className="space-y-4">
         <h2 className="text-md">Resources</h2>
         <ul className="list-disc ml-6 space-y-2">
