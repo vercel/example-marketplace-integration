@@ -3,9 +3,17 @@ import { env } from "../env";
 import { z } from "zod";
 import { BillingData } from "./billing-data";
 
+interface ResourceUpdatedEvent {
+  type: "resource.updated";
+  productId: string;
+  resourceId: string;
+}
+
+type IntegrationEvent = ResourceUpdatedEvent;
+
 export async function dispatchEvent(
   installationId: string,
-  event: any,
+  event: IntegrationEvent,
 ): Promise<void> {
   await fetchVercelApi(
     `/v1/integrations/marketplace/installations/${installationId}/events`,
