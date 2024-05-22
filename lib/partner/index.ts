@@ -73,7 +73,7 @@ export async function provisionResource(
 
   await kv.set(
     `${installationId}:resource:${resource.id}`,
-    formatResourceToStorage(resource)
+    serializeResource(resource)
   );
   await kv.lpush(`${installationId}:resources`, resource.id);
 
@@ -108,7 +108,7 @@ export async function updateResource(
 
   await kv.set(
     `${installationId}:resource:${resourceId}`,
-    formatResourceToStorage(nextResource)
+    serializeResource(nextResource)
   );
 
   return nextResource;
@@ -142,10 +142,10 @@ export async function listResources(
     pipeline.get(`${installationId}:resource:${resourceId}`);
   }
 
-  const resources = await pipeline.exec<StoredResource[]>();
+  const resources = await pipeline.exec<SerializedResource[]>();
 
   return {
-    resources: compact(resources).map(restoreResourceFromStorage),
+    resources: compact(resources).map(deserializeResource),
   };
 }
 
@@ -153,33 +153,33 @@ export async function getResource(
   installationId: string,
   resourceId: string
 ): Promise<GetResourceResponse | null> {
-  const resource = await kv.get<StoredResource>(
+  const resource = await kv.get<SerializedResource>(
     `${installationId}:resource:${resourceId}`
   );
 
   if (resource) {
-    return restoreResourceFromStorage(resource);
+    return deserializeResource(resource);
   }
 
   return null;
 }
 
-type StoredResource = Omit<Resource, "billingPlan"> & {
+type SerializedResource = Omit<Resource, "billingPlan"> & {
   billingPlan: string;
 };
 
-function formatResourceToStorage(resource: Resource): StoredResource {
+function serializeResource(resource: Resource): SerializedResource {
   return { ...resource, billingPlan: resource.billingPlan.id };
 }
 
-function restoreResourceFromStorage(storedResource: StoredResource): Resource {
-  const billingPlan = billingPlanMap.get(storedResource.billingPlan) ?? {
-    id: storedResource.billingPlan,
+function deserializeResource(serializedResource: SerializedResource): Resource {
+  const billingPlan = billingPlanMap.get(serializedResource.billingPlan) ?? {
+    id: serializedResource.billingPlan,
     type: "invoice",
     name: "Unknown",
     description: "Unknown",
   };
-  return { ...storedResource, billingPlan };
+  return { ...serializedResource, billingPlan };
 }
 
 export async function getBillingPlans(
