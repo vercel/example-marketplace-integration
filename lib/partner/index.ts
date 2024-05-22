@@ -1,5 +1,6 @@
 import { nanoid } from "nanoid";
 import {
+  BillingPlan,
   GetBillingPlansResponse,
   GetResourceResponse,
   InstallIntegrationRequest,
@@ -12,6 +13,23 @@ import {
 } from "@/lib/vercel/schemas";
 import { kv } from "@vercel/kv";
 import { compact } from "lodash";
+
+const billingPlans: BillingPlan[] = [
+  {
+    id: "default",
+    type: "invoice",
+    name: "Default",
+    description: "Pay as you go",
+  },
+  {
+    id: "pro200",
+    type: "invoice",
+    name: "Pro 200",
+    description: "Up to 200G, as low as $20",
+  },
+];
+
+const billingPlanMap = new Map(billingPlans.map((plan) => [plan.id, plan]));
 
 export async function installIntegration(
   installationId: string,
@@ -40,16 +58,23 @@ export async function provisionResource(
   installationId: string,
   request: ProvisionResourceRequest
 ): Promise<ProvisionResourceResponse> {
+  const billingPlan = billingPlanMap.get(request.billingPlanId);
+  if (!billingPlan) {
+    throw new Error(`Unknown billing plan ${request.billingPlanId}`);
+  }
   const resource = {
     id: nanoid(),
     status: "ready",
     name: request.name,
-    billingPlan: request.billingPlan,
+    billingPlan,
     metadata: request.metadata,
     productId: request.productId,
   } satisfies Resource;
 
-  await kv.set(`${installationId}:resource:${resource.id}`, resource);
+  await kv.set(
+    `${installationId}:resource:${resource.id}`,
+    serializeResource(resource)
+  );
   await kv.lpush(`${installationId}:resources`, resource.id);
 
   return {
@@ -81,7 +106,10 @@ export async function updateResource(
     status: "ready" as const,
   };
 
-  await kv.set(`${installationId}:resource:${resourceId}`, nextResource);
+  await kv.set(
+    `${installationId}:resource:${resourceId}`,
+    serializeResource(nextResource)
+  );
 
   return nextResource;
 }
@@ -114,10 +142,10 @@ export async function listResources(
     pipeline.get(`${installationId}:resource:${resourceId}`);
   }
 
-  const resources = await pipeline.exec<Resource[]>();
+  const resources = await pipeline.exec<SerializedResource[]>();
 
   return {
-    resources: compact(resources),
+    resources: compact(resources).map(deserializeResource),
   };
 }
 
@@ -125,15 +153,33 @@ export async function getResource(
   installationId: string,
   resourceId: string
 ): Promise<GetResourceResponse | null> {
-  const resource = await kv.get<ProvisionResourceResponse>(
+  const resource = await kv.get<SerializedResource>(
     `${installationId}:resource:${resourceId}`
   );
 
   if (resource) {
-    return resource;
+    return deserializeResource(resource);
   }
 
   return null;
+}
+
+type SerializedResource = Omit<Resource, "billingPlan"> & {
+  billingPlan: string;
+};
+
+function serializeResource(resource: Resource): SerializedResource {
+  return { ...resource, billingPlan: resource.billingPlan.id };
+}
+
+function deserializeResource(serializedResource: SerializedResource): Resource {
+  const billingPlan = billingPlanMap.get(serializedResource.billingPlan) ?? {
+    id: serializedResource.billingPlan,
+    type: "invoice",
+    name: "Unknown",
+    description: "Unknown",
+  };
+  return { ...serializedResource, billingPlan };
 }
 
 export async function getBillingPlans(
