@@ -5,7 +5,8 @@ import type {
   BillingData,
   BillingItem,
   ResourceUsage,
-} from "@/lib/vercel/billing-data";
+  BillingPlan,
+} from "@/lib/vercel/schemas";
 
 export const dynamic = "force-dynamic";
 
@@ -75,13 +76,13 @@ async function mockBillingData(installationId: string): Promise<BillingData> {
       }
       return {
         resourceId: resource.id,
-        billingPlan: resource.billingPlan,
+        billingPlanId: resource.billingPlan.id,
         name: `${resource.name}: ${u.name}`,
         price: pricing.price.toFixed(2),
         units: u.units,
         quantity: u.periodValue,
         total: (pricing.price * u.periodValue).toFixed(2),
-      };
+      } satisfies BillingItem;
     })
     .filter(isNotNull);
 
@@ -104,7 +105,7 @@ function isNotNull<T>(value: T | undefined | null): value is T {
 function mockUsageData(
   resource: {
     id: string;
-    billingPlan: string;
+    billingPlan: BillingPlan;
   },
   timestamp: Date,
   periodStart: Date,
