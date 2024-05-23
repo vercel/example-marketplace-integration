@@ -77,6 +77,13 @@ export type GetBillingPlansResponse = z.infer<
 
 const metadataSchema = z.record(z.unknown());
 
+const notificationSchema = z.object({
+  level: z.enum(["info", "warn", "error"]),
+  title: z.string().max(100),
+  message: z.string().optional(),
+  href: z.string().url().optional(),
+});
+
 export const resourceSchema = z.object({
   id: z.string().min(1),
   productId: z.string().min(1),
@@ -85,6 +92,7 @@ export const resourceSchema = z.object({
   metadata: metadataSchema,
   customerEmail: z.string().email().optional(),
   status: resourceStateSchema,
+  notification: notificationSchema.optional(),
 });
 
 export type Resource = z.infer<typeof resourceSchema>;
