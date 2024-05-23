@@ -24,11 +24,11 @@ const notificationsMock: Resource["notification"][] = [
 export const GET = withAuth(async (claims, request) => {
   const ids = request.nextUrl.searchParams.getAll("ids");
   const resources = await listResources(claims.installation_id, ids);
-  if (resources[0]) {
-    resources[0].notification = notificationsMock[0];
+  if (resources.resources[0]) {
+    resources.resources[0].notification = notificationsMock[0];
   }
-  if (resources[1]) {
-    resources[1].notification = notificationsMock[1];
+  if (resources.resources[1]) {
+    resources.resources[1].notification = notificationsMock[1];
   }
   return Response.json(resources);
 });
