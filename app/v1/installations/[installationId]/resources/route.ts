@@ -1,14 +1,35 @@
 import { listResources, provisionResource } from "@/lib/partner";
 import { readRequestBodyWithSchema } from "@/lib/utils";
 import { withAuth } from "@/lib/vercel/auth";
-import { provisionResourceRequestSchema } from "@/lib/vercel/schemas";
+import { Resource, provisionResourceRequestSchema } from "@/lib/vercel/schemas";
 
 export const dynamic = "force-dynamic";
+
+const notificationsMock: Resource["notification"][] = [
+  {
+    title: "Account is suspended",
+    message:
+      "Your account has been suspended due to a billing issue. Please update your payment information to resume service.",
+    href: "https://vercel.com/account/billing",
+    level: "error",
+  },
+  {
+    title: "Initializing",
+    message:
+      "Your resource is currently initializing. This may take a few minutes.",
+    level: "warn",
+  },
+];
 
 export const GET = withAuth(async (claims, request) => {
   const ids = request.nextUrl.searchParams.getAll("ids");
   const resources = await listResources(claims.installation_id, ids);
-
+  if (resources[0]) {
+    resources[0].notification = notificationsMock[0];
+  }
+  if (resources[1]) {
+    resources[1].notification = notificationsMock[1];
+  }
   return Response.json(resources);
 });
 
