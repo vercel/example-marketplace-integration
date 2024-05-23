@@ -8,6 +8,21 @@ interface Params {
   resourceId: string;
 }
 
+const notificationsMock: Resource["notification"][] = [
+  {
+    title: "Account is suspended",
+    message:
+      "Your account has been suspended due to a billing issue. Please update your payment information to resume service.",
+    href: "https://vercel.com/account/billing",
+    level: "error",
+  },
+  {
+    title: "Initializing",
+    message:
+      "Your resource is currently initializing. This may take a few minutes.",
+    level: "warn",
+  },
+];
 export const GET = withAuth(
   async (claims, _request, { params }: { params: Params }) => {
     const resource = await getResource(
