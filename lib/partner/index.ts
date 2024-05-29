@@ -17,15 +17,35 @@ import { compact } from "lodash";
 const billingPlans: BillingPlan[] = [
   {
     id: "default",
+    name: "Hobby",
+    description: "Use all you want up to 20G",
     type: "invoice",
-    name: "Default",
-    description: "Pay as you go",
+    quote: [
+      { amount: "20.00", line: "20G and 200K queries" },
+      { amount: "1.00", line: "per extra 10G storage" },
+      { amount: "2.00", line: "per extra 100K queries" },
+    ],
+    maxResources: 3,
+    requiredPolicies: [
+      { id: "1", name: "Terms of Service", url: "https://partner/toc" },
+    ],
+    effectiveDate: "2021-01-01T00:00:00Z",
   },
   {
     id: "pro200",
+    name: "Pro",
     type: "invoice",
-    name: "Pro 200",
-    description: "Up to 200G, as low as $20",
+    description: "10$ every Gb",
+    quote: [
+      { amount: "200.00", line: "20G and 200K queries" },
+      { amount: "10.00", line: "per extra 10G storage" },
+      { amount: "Unlimited", line: "Daily Command Limit" },
+    ],
+    maxResources: 3,
+    requiredPolicies: [
+      { id: "1", name: "Terms of Service", url: "https://partner/toc" },
+    ],
+    effectiveDate: "2021-01-01T00:00:00Z",
   },
 ];
 
