@@ -100,9 +100,14 @@ export async function updateResource(
     throw new Error(`Cannot find resource ${resourceId}`);
   }
 
+  const { billingPlanId, ...updatedFields } = request;
+
   const nextResource = {
     ...resource,
-    ...request,
+    ...updatedFields,
+    billingPlan: billingPlanId
+      ? billingPlanMap.get(billingPlanId) ?? resource.billingPlan
+      : resource.billingPlan,
     status: "ready" as const,
   };
 
