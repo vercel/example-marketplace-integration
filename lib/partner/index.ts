@@ -189,20 +189,10 @@ export async function getProductBillingPlans(
 }
 
 export async function getResourceBillingPlans(
-  installationId: string,
-  resourceId: string
+  _installationId: string,
+  _resourceId: string
 ): Promise<GetBillingPlansResponse> {
-  const resource = await getResource(installationId, resourceId);
-
-  if (!resource) {
-    throw new Error(`Resource '${resourceId}' not found`);
-  }
-
-  return {
-    plans: billingPlans.filter(
-      (plan) => plan.id !== resource.billingPlan.id
-    ),
-  }
+  return { plans: billingPlans };
 }
 
 export async function getInstallation(
