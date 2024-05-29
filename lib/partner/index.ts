@@ -182,10 +182,27 @@ function deserializeResource(serializedResource: SerializedResource): Resource {
   return { ...serializedResource, billingPlan };
 }
 
-export async function getBillingPlans(
-  productId: string
+export async function getProductBillingPlans(
+  _productId: string
 ): Promise<GetBillingPlansResponse> {
-  throw new Error("Not implemented");
+  return { plans: billingPlans };
+}
+
+export async function getResourceBillingPlans(
+  installationId: string,
+  resourceId: string
+): Promise<GetBillingPlansResponse> {
+  const resource = await getResource(installationId, resourceId);
+
+  if (!resource) {
+    throw new Error(`Resource '${resourceId}' not found`);
+  }
+
+  return {
+    plans: billingPlans.filter(
+      (plan) => plan.id !== resource.billingPlan.id
+    ),
+  }
 }
 
 export async function getInstallation(
