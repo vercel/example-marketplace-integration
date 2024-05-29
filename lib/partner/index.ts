@@ -10,6 +10,7 @@ import {
   Resource,
   UpdateResourceRequest,
   UpdateResourceResponse,
+  Notification,
 } from "@/lib/vercel/schemas";
 import { kv } from "@vercel/kv";
 import { compact } from "lodash";
@@ -137,6 +138,33 @@ export async function updateResource(
   );
 
   return nextResource;
+}
+
+export async function updateResourceNotification(
+  installationId: string,
+  resourceId: string,
+  notification?: Notification
+): Promise<void> {
+  const resource = await getResource(installationId, resourceId);
+
+  if (!resource) {
+    throw new Error(`Cannot find resource ${resourceId}`);
+  }
+
+  await kv.set(
+    `${installationId}:resource:${resourceId}`,
+    serializeResource({
+      ...resource,
+      notification,
+    })
+  );
+}
+
+export async function clearResourceNotification(
+  installationId: string,
+  resourceId: string
+): Promise<void> {
+  await updateResourceNotification(installationId, resourceId);
 }
 
 export async function deleteResource(
