@@ -187,10 +187,17 @@ function deserializeResource(serializedResource: SerializedResource): Resource {
   return { ...serializedResource, billingPlan };
 }
 
-export async function getBillingPlans(
-  productId: string
+export async function getProductBillingPlans(
+  _productId: string
 ): Promise<GetBillingPlansResponse> {
-  throw new Error("Not implemented");
+  return { plans: billingPlans };
+}
+
+export async function getResourceBillingPlans(
+  _installationId: string,
+  _resourceId: string
+): Promise<GetBillingPlansResponse> {
+  return { plans: billingPlans };
 }
 
 export async function getInstallation(
