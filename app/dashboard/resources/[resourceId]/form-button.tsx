@@ -7,5 +7,5 @@ export function FormButton(
 ) {
   const { pending } = useFormStatus();
 
-  return <button {...props} disabled={pending} />;
+  return <button {...props} disabled={pending || props.disabled} />;
 }

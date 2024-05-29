@@ -1,6 +1,12 @@
 "use server";
 
-import { getResource, updateResource } from "@/lib/partner";
+import {
+  clearResourceNotification,
+  getResource,
+  updateResource,
+  updateResourceNotification,
+} from "@/lib/partner";
+import { Notification } from "@/lib/vercel/schemas";
 import { dispatchEvent, updateSecrets } from "@/lib/vercel/api";
 import { getSession } from "../../auth";
 import { revalidatePath } from "next/cache";
@@ -49,4 +55,55 @@ export async function rotateCredentialsAction(
       value: `birds aren't real (${new Date().toISOString()})`,
     },
   ]);
+}
+
+export async function clearResourceNotificationAction(
+  formData: FormData
+): Promise<void> {
+  const session = await getSession();
+
+  await clearResourceNotification(
+    session.installation_id,
+    formData.get("resourceId") as string
+  );
+
+  revalidatePath("/dashboard");
+  revalidatePath(`/dashboard/resources/${formData.get("resourceId")}`);
+}
+
+export async function updateResourceNotificationAction(formData: FormData) {
+  const session = await getSession();
+
+  await updateResourceNotification(
+    session.installation_id,
+    formData.get("resourceId") as string,
+    {
+      level: formData.get("level") as Notification["level"],
+      title: formData.get("title") as string,
+      message: formData.get("message") as string,
+      href: formData.get("href") as string,
+    }
+  );
+
+  revalidatePath("/dashboard");
+  revalidatePath(`/dashboard/resources/${formData.get("resourceId")}`);
+}
+
+export async function setExampleNotificationAction(formData: FormData) {
+  const session = await getSession();
+
+  await updateResourceNotification(
+    session.installation_id,
+    formData.get("resourceId") as string,
+    {
+      level: "error",
+      title: "Resource failed to provision",
+      message:
+        "Your resource failed to provision because of complicated technical reasons. Please reach out to help@acmecorp.com",
+      href: "https://acmecorp.com/help",
+    }
+  );
+
+  revalidatePath("/dashboard");
+  revalidatePath(`/dashboard/resources/${formData.get("resourceId")}`);
 }

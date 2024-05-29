@@ -84,6 +84,8 @@ const notificationSchema = z.object({
   href: z.string().url().optional(),
 });
 
+export type Notification = z.infer<typeof notificationSchema>;
+
 export const resourceSchema = z.object({
   id: z.string().min(1),
   productId: z.string().min(1),
