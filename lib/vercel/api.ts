@@ -15,14 +15,11 @@ export async function dispatchEvent(
   installationId: string,
   event: IntegrationEvent
 ): Promise<void> {
-  await fetchVercelApi(
-    `/v1/integrations/marketplace/installations/${installationId}/events`,
-    {
-      installationId,
-      method: "POST",
-      data: { event },
-    }
-  );
+  await fetchVercelApi(`/v1/installations/${installationId}/events`, {
+    installationId,
+    method: "POST",
+    data: { event },
+  });
 }
 
 type AccountInfo = {
@@ -36,10 +33,9 @@ type AccountInfo = {
 export async function getAccountInfo(
   installationId: string
 ): Promise<AccountInfo> {
-  return (await fetchVercelApi(
-    `/v1/integrations/marketplace/installations/${installationId}/account`,
-    { installationId }
-  )) as AccountInfo;
+  return (await fetchVercelApi(`/v1/installations/${installationId}/account`, {
+    installationId,
+  })) as AccountInfo;
 }
 
 export async function updateSecrets(
@@ -54,7 +50,7 @@ export async function updateSecrets(
   }
 
   await fetchVercelApi(
-    `/v1/integrations/marketplace/installations/${installationId}/products/${resource.productId}/resources/${resource.id}/secrets`,
+    `/v1/installations/${installationId}/products/${resource.productId}/resources/${resource.id}/secrets`,
     {
       installationId,
       method: "PUT",
@@ -90,14 +86,11 @@ export async function sendBillingData(
   installationId: string,
   data: BillingData
 ): Promise<void> {
-  await fetchVercelApi(
-    `/v1/integrations/marketplace/installations/${installationId}/billing`,
-    {
-      installationId,
-      method: "POST",
-      data,
-    }
-  );
+  await fetchVercelApi(`/v1/installations/${installationId}/billing`, {
+    installationId,
+    method: "POST",
+    data,
+  });
 }
 
 async function fetchVercelApi(
