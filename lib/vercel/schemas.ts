@@ -39,7 +39,7 @@ export type InstallIntegrationRequest = z.infer<
 
 export const billingPlanSchema = z.object({
   id: z.string().min(1),
-  type: z.enum(["prepayment", "invoice"]),
+  type: z.enum(["prepayment", "subscription"]),
   name: z.string().min(1),
   description: z.string().min(1),
   quote: z

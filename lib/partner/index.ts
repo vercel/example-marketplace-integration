@@ -20,7 +20,7 @@ const billingPlans: BillingPlan[] = [
     id: "default",
     name: "Hobby",
     description: "Use all you want up to 20G",
-    type: "invoice",
+    type: "subscription",
     quote: [
       { amount: "20.00", line: "20G and 200K queries" },
       { amount: "1.00", line: "per extra 10G storage" },
@@ -35,7 +35,7 @@ const billingPlans: BillingPlan[] = [
   {
     id: "pro200",
     name: "Pro",
-    type: "invoice",
+    type: "subscription",
     description: "10$ every Gb",
     quote: [
       { amount: "200.00", line: "20G and 200K queries" },
@@ -228,7 +228,7 @@ function serializeResource(resource: Resource): SerializedResource {
 function deserializeResource(serializedResource: SerializedResource): Resource {
   const billingPlan = billingPlanMap.get(serializedResource.billingPlan) ?? {
     id: serializedResource.billingPlan,
-    type: "invoice",
+    type: "subscription",
     name: "Unknown",
     description: "Unknown",
   };
