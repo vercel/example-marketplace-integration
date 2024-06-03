@@ -192,3 +192,65 @@ export const billingDataSchema = z.object({
 });
 
 export type BillingData = z.infer<typeof billingDataSchema>;
+
+// Webhooks
+
+export const webhookEventSchema = z.object({
+  id: z.string().min(1),
+  type: z.string().min(1),
+  createdAt: z.number(),
+  payload: z.unknown(),
+}) as unknown as z.ZodType<WebhookEvent>;
+
+export interface WebhookEvent {
+  id: string;
+  type: string;
+  createdAt: number;
+  payload: unknown;
+}
+
+export const invoiceWebhookPayloadSchema = z.object({
+  installationId: z.string().min(1),
+  period: z.object({
+    start: datetimeSchema,
+    end: datetimeSchema,
+  }),
+  invoiceId: z.string().min(1),
+  invoiceDate: datetimeSchema,
+  invoiceTotal: currencySchema,
+});
+
+export type InvoiceWebhookPayload = z.infer<typeof invoiceWebhookPayloadSchema>;
+
+export interface InvoiceCreatedEvent extends WebhookEvent {
+  type: "marketplace.invoice.created";
+  payload: InvoiceWebhookPayload;
+}
+
+export function isInvoiceCreatedEvent(
+  event: WebhookEvent
+): event is InvoiceCreatedEvent {
+  return event.type === "marketplace.invoice.created";
+}
+
+export interface InvoicePaidEvent extends WebhookEvent {
+  type: "marketplace.invoice.paid";
+  payload: InvoiceWebhookPayload;
+}
+
+export function isInvoicePaidEvent(
+  event: WebhookEvent
+): event is InvoicePaidEvent {
+  return event.type === "marketplace.invoice.paid";
+}
+
+export interface InvoiceNotPaidEvent extends WebhookEvent {
+  type: "marketplace.invoice.notpaid";
+  payload: InvoiceWebhookPayload;
+}
+
+export function isInvoiceNotPaidEvent(
+  event: WebhookEvent
+): event is InvoiceNotPaidEvent {
+  return event.type === "marketplace.invoice.notpaid";
+}

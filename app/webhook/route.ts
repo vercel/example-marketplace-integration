@@ -1,15 +1,6 @@
 import crypto from "crypto";
 import { env } from "@/lib/env";
-import { z } from "zod";
-
-const webhookEventSchema = z.object({
-  id: z.string().min(1),
-  type: z.string().min(1),
-  createdAt: z.number(),
-  payload: z.unknown(),
-});
-
-type WebhookEvent = z.infer<typeof webhookEventSchema>;
+import { type WebhookEvent, webhookEventSchema } from "@/lib/vercel/schemas";
 
 export async function POST(req: Request): Promise<Response> {
   const rawBody = await req.text();
