@@ -1,7 +1,7 @@
 import { getInstallation, getResource } from "../partner";
 import { env } from "../env";
 import { z } from "zod";
-import { BillingData } from "./schemas";
+import { BillingData, Invoice } from "./schemas";
 
 interface ResourceUpdatedEvent {
   type: "resource.updated";
@@ -91,6 +91,18 @@ export async function sendBillingData(
     method: "POST",
     data,
   });
+}
+
+export async function getInvoice(
+  installationId: string,
+  invoiceId: string
+): Promise<Invoice> {
+  return (await fetchVercelApi(
+    `/v1/installations/${installationId}/billing/invoices/${invoiceId}`,
+    {
+      installationId,
+    }
+  )) as Invoice;
 }
 
 async function fetchVercelApi(

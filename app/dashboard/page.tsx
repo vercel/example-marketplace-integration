@@ -15,6 +15,11 @@ export default async function Home() {
   return (
     <main className="space-y-8">
       <h1 className="text-xl font-bold">{`${account.name}'s`} Dashboard</h1>
+      <div>
+        <Link href="/dashboard/invoices" className="text-blue-500 underline">
+          Invoices
+        </Link>
+      </div>
       <div className="grid grid-cols-2 gap-6">
         <div className="space-y-4">
           <h2 className="text-xl font-bold">Resources</h2>
