@@ -193,6 +193,24 @@ export const billingDataSchema = z.object({
 
 export type BillingData = z.infer<typeof billingDataSchema>;
 
+// Get Invoice.
+
+export const invoiceSchema = z.object({
+  id: z.string(),
+  externalId: z.string().optional(),
+  date: datetimeSchema,
+  period: z.object({
+    start: datetimeSchema,
+    end: datetimeSchema,
+  }),
+  memo: z.string().optional(),
+  total: currencySchema,
+  paid: z.boolean(),
+  paidDate: datetimeSchema.optional(),
+});
+
+export type Invoice = z.infer<typeof invoiceSchema>;
+
 // Webhooks
 
 export const webhookEventSchema = z.object({
