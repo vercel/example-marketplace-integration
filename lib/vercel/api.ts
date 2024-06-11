@@ -1,7 +1,8 @@
 import { getInstallation, getResource } from "../partner";
 import { env } from "../env";
 import { z } from "zod";
-import { BillingData, Invoice } from "./schemas";
+import { BillingData, CreateInvoiceRequest, Invoice } from "./schemas";
+import { mockBillingData } from "@/data/mock-billing-data";
 
 interface ResourceUpdatedEvent {
   type: "resource.updated";
@@ -103,6 +104,38 @@ export async function getInvoice(
       installationId,
     }
   )) as Invoice;
+}
+
+export async function submitInvoice(
+  installationId: string,
+  test: boolean
+): Promise<{ invoiceId: string }> {
+  const billingData = await mockBillingData(installationId);
+  const items = billingData.billing.filter((item) => Boolean(item.resourceId));
+  const invoiceRequest: CreateInvoiceRequest = {
+    test: test ? { result: "paid" } : undefined,
+    externalId: new Date().toISOString().replace(/[^0-9]/g, ""),
+    invoiceDate: new Date().toISOString(),
+    period: billingData.period,
+    items: items.map((item) => ({
+      resourceId: item.resourceId!,
+      billingPlanId: item.billingPlanId,
+      name: item.name,
+      price: item.price,
+      quantity: item.quantity,
+      units: item.units,
+      total: item.total,
+    })),
+  };
+  console.log("Submitting invoice:", invoiceRequest);
+  return (await fetchVercelApi(
+    `/v1/installations/${installationId}/billing/invoices`,
+    {
+      installationId,
+      method: "POST",
+      data: invoiceRequest,
+    }
+  )) as { invoiceId: string };
 }
 
 async function fetchVercelApi(

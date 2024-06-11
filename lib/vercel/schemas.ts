@@ -196,20 +196,70 @@ export type BillingData = z.infer<typeof billingDataSchema>;
 // Get Invoice.
 
 export const invoiceSchema = z.object({
-  id: z.string(),
+  test: z.boolean().optional(),
+  invoiceId: z.string(),
   externalId: z.string().optional(),
-  date: datetimeSchema,
+  invoiceDate: datetimeSchema,
   period: z.object({
     start: datetimeSchema,
     end: datetimeSchema,
   }),
   memo: z.string().optional(),
-  total: currencySchema,
-  paid: z.boolean(),
-  paidDate: datetimeSchema.optional(),
+  state: z.enum(["pending", "scheduled", "issued", "paid", "notpaid"]),
+  created: datetimeSchema,
+  updated: datetimeSchema,
 });
 
 export type Invoice = z.infer<typeof invoiceSchema>;
+
+export const invoiceItemSchema = z.object({
+  // Resource and billing plan IDs.
+  resourceId: z.string(),
+  billingPlanId: z.string(),
+
+  // Start and end are only needed if different from the period's start/end.
+  start: datetimeSchema.optional(),
+  end: datetimeSchema.optional(),
+
+  // Item details.
+  name: z.string(),
+  details: z.string().optional(),
+  price: currencySchema,
+  quantity: z.number(),
+  units: unitsSchema,
+  total: currencySchema,
+});
+
+export type InvoiceItem = z.infer<typeof invoiceItemSchema>;
+
+export const createInvoiceRequest = z.object({
+  // Test mode.
+  test: z
+    .object({
+      result: z.enum(["paid", "notpaid"]).optional(),
+    })
+    .optional(),
+
+  // Partner-defined invoice ID.
+  externalId: z.string().optional(),
+
+  // Invoice date. Must be within the period's start and end.
+  invoiceDate: datetimeSchema,
+
+  // Subscription period for this billing cycle.
+  period: z.object({
+    start: datetimeSchema,
+    end: datetimeSchema,
+  }),
+
+  // Additional memo for the invoice.
+  memo: z.string().optional(),
+
+  // Invoice items.
+  items: z.array(invoiceItemSchema),
+});
+
+export type CreateInvoiceRequest = z.infer<typeof createInvoiceRequest>;
 
 // Webhooks
 
