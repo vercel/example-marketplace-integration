@@ -9,7 +9,19 @@ export async function submitInvoiceAction(formData: FormData): Promise<void> {
 
   const test = formData.get("test") === "on";
 
-  const { invoiceId } = await submitInvoice(session.installation_id, test);
-
+  let invoiceId: string;
+  try {
+    const { invoiceId: resultInvoiceId } = await submitInvoice(
+      session.installation_id,
+      test
+    );
+    invoiceId = resultInvoiceId;
+  } catch (e) {
+    redirect(
+      `/dashboard/invoices?submitError=${encodeURIComponent(
+        e instanceof Error ? e.message : String(e)
+      )}`
+    );
+  }
   redirect(`/dashboard/invoices?id=${encodeURIComponent(invoiceId)}`);
 }
