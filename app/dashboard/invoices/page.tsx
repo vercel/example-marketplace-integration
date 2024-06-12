@@ -7,7 +7,7 @@ import { FormButton } from "../components/form-button";
 export default async function Page({
   searchParams,
 }: {
-  searchParams: { id?: string };
+  searchParams: { id?: string; submitError?: string };
 }) {
   const session = await getSession();
 
@@ -37,6 +37,16 @@ export default async function Page({
             </div>
           </div>
         </form>
+
+        {searchParams.submitError ? (
+          <div
+            className="bg-pink-100 border border-pink-400 text-pink-700 px-4 py-3 rounded relative mt-4"
+            role="alert"
+          >
+            <strong className="font-bold">Error! </strong>
+            <span className="block sm:inline">{searchParams.submitError}</span>
+          </div>
+        ) : null}
       </Section>
 
       <Section title="Invoices">
@@ -59,7 +69,7 @@ export default async function Page({
         ) : null}
         {invoiceError ? (
           <div
-            className="bg-pink-100 border border-pink-400 text-pink-700 px-4 py-3 rounded relative"
+            className="bg-pink-100 border border-pink-400 text-pink-700 px-4 py-3 rounded relative mt-4"
             role="alert"
           >
             <strong className="font-bold">Error! </strong>

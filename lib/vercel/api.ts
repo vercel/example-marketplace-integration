@@ -113,7 +113,7 @@ export async function submitInvoice(
   const billingData = await mockBillingData(installationId);
   const items = billingData.billing.filter((item) => Boolean(item.resourceId));
   const invoiceRequest: CreateInvoiceRequest = {
-    test: test ? { result: "paid" } : undefined,
+    test: test ? { result: "paid", validate: false } : undefined,
     externalId: new Date().toISOString().replace(/[^0-9]/g, ""),
     invoiceDate: new Date().toISOString(),
     period: billingData.period,

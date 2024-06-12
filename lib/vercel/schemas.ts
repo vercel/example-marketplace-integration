@@ -236,6 +236,7 @@ export const createInvoiceRequest = z.object({
   // Test mode.
   test: z
     .object({
+      validate: z.boolean().optional(),
       result: z.enum(["paid", "notpaid"]).optional(),
     })
     .optional(),
