@@ -108,10 +108,26 @@ export async function getInvoice(
 
 export async function submitInvoice(
   installationId: string,
-  test: boolean
+  opts?: { test?: boolean; maxAmount?: number }
 ): Promise<{ invoiceId: string }> {
+  const test = opts?.test ?? false;
+  const maxAmount = opts?.maxAmount ?? undefined;
+
   const billingData = await mockBillingData(installationId);
-  const items = billingData.billing.filter((item) => Boolean(item.resourceId));
+
+  let items = billingData.billing.filter((item) => Boolean(item.resourceId));
+  if (maxAmount !== undefined) {
+    const total = items.reduce((acc, item) => acc + parseFloat(item.total), 0);
+    if (total > maxAmount) {
+      const ratio = maxAmount / total;
+      items = items.map((item) => ({
+        ...item,
+        quantity: item.quantity * ratio,
+        total: (parseFloat(item.total) * ratio).toFixed(2),
+      }));
+    }
+  }
+
   const invoiceRequest: CreateInvoiceRequest = {
     test: test ? { result: "paid", validate: false } : undefined,
     externalId: new Date().toISOString().replace(/[^0-9]/g, ""),
