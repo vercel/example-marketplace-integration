@@ -30,6 +30,15 @@ export default async function Page({
               <label>Test</label>
               <input type="checkbox" name="test" defaultChecked={true} />
             </div>
+            <div className="flex gap-2">
+              <label>Max amount</label>
+              <input
+                type="number"
+                name="maxAmount"
+                defaultValue="5"
+                className="border"
+              />
+            </div>
             <div className="flex justify-end">
               <FormButton className="rounded bg-blue-500 text-white px-2 py-1 disabled:opacity-50">
                 Submit Invoice
