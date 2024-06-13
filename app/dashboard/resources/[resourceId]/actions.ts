@@ -6,7 +6,7 @@ import {
   updateResource,
   updateResourceNotification,
 } from "@/lib/partner";
-import { Notification } from "@/lib/vercel/schemas";
+import { Notification, Resource } from "@/lib/vercel/schemas";
 import { dispatchEvent, updateSecrets } from "@/lib/vercel/api";
 import { getSession } from "../../auth";
 import { revalidatePath } from "next/cache";
@@ -24,6 +24,7 @@ export async function updateResourceAction(formData: FormData): Promise<void> {
 
   await updateResource(session.installation_id, resource.id, {
     name: formData.get("name") as string,
+    status: formData.get("status") as Resource["status"],
   });
 
   await dispatchEvent(session.installation_id, {

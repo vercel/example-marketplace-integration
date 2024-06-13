@@ -52,6 +52,18 @@ export default async function ResourcePage({
                 defaultValue={resource.name}
               />
             </div>
+            <div className="flex flex-row gap-1">
+              <label>Status: </label>
+
+              <select name="status" defaultValue={resource.status}>
+                <option selected value="ready">
+                  Ready
+                </option>
+                <option value="error">Error</option>
+                <option value="suspended">Suspended</option>
+                <option value="pending">Pending</option>
+              </select>
+            </div>
             <div className="flex justify-end">
               <FormButton className="rounded bg-blue-500 text-white px-2 py-1 disabled:opacity-50">
                 Save
