@@ -19,6 +19,11 @@ const links = [
     segment: "invoices",
     label: "Invoices",
   },
+  {
+    href: "/dashboard/webhook-events",
+    segment: "webhook-events",
+    label: "Webhook Events",
+  },
 ] as const;
 
 export function Nav() {

@@ -11,6 +11,7 @@ import {
   UpdateResourceRequest,
   UpdateResourceResponse,
   Notification,
+  WebhookEvent,
 } from "@/lib/vercel/schemas";
 import { kv } from "@vercel/kv";
 import { compact } from "lodash";
@@ -128,7 +129,7 @@ export async function updateResource(
     ...updatedFields,
     billingPlan: billingPlanId
       ? billingPlanMap.get(billingPlanId) ?? resource.billingPlan
-      : resource.billingPlan, 
+      : resource.billingPlan,
   };
 
   await kv.set(
@@ -257,4 +258,15 @@ export async function getInstallation(
   }
 
   return installation;
+}
+
+export async function storeWebhookEvent(event: WebhookEvent): Promise<void> {
+  const pipeline = kv.pipeline();
+  await pipeline.lpush("webhook_events", event);
+  await pipeline.ltrim("webhook_events", 0, 100);
+  await pipeline.exec();
+}
+
+export async function getWebhookEvents(limit = 100): Promise<WebhookEvent[]> {
+  return kv.lrange<WebhookEvent>("webhook_events", 0, limit);
 }
