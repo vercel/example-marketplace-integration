@@ -117,6 +117,7 @@ function mockUsageData(
       units: "GB",
       dayValue: storageTotal,
       periodValue: storageTotal,
+      planValue: 500,
     },
     {
       resourceId: resource.id,
@@ -125,6 +126,7 @@ function mockUsageData(
       units: "1k",
       dayValue: queriesToday,
       periodValue: queriesTotal,
+      planValue: 2000000,
     },
   ];
 }
