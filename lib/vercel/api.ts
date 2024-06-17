@@ -1,7 +1,12 @@
 import { getInstallation, getResource } from "../partner";
 import { env } from "../env";
 import { z } from "zod";
-import { BillingData, CreateInvoiceRequest, Invoice } from "./schemas";
+import {
+  BillingData,
+  CreateInvoiceRequest,
+  Invoice,
+  RefundInvoiceRequest,
+} from "./schemas";
 import { mockBillingData } from "@/data/mock-billing-data";
 
 interface ResourceUpdatedEvent {
@@ -150,6 +155,26 @@ export async function submitInvoice(
       installationId,
       method: "POST",
       data: invoiceRequest,
+    }
+  )) as { invoiceId: string };
+}
+
+export async function refundInvoice(
+  installationId: string,
+  invoiceId: string,
+  total: string,
+  reason: string
+): Promise<{ invoiceId: string }> {
+  return (await fetchVercelApi(
+    `/v1/installations/${installationId}/billing/invoices/${invoiceId}`,
+    {
+      installationId,
+      method: "POST",
+      data: {
+        action: "refund",
+        total,
+        reason,
+      } satisfies RefundInvoiceRequest,
     }
   )) as { invoiceId: string };
 }

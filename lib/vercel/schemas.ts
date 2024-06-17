@@ -10,7 +10,7 @@ export const resourceStateSchema = z.enum([
   "suspended",
   "resumed",
   "uninstalled",
-  "error"
+  "error",
 ]);
 
 export const currencySchema = z.string().min(1);
@@ -206,7 +206,18 @@ export const invoiceSchema = z.object({
     end: datetimeSchema,
   }),
   memo: z.string().optional(),
-  state: z.enum(["pending", "scheduled", "issued", "paid", "notpaid"]),
+  state: z.enum([
+    "pending",
+    "scheduled",
+    "issued",
+    "paid",
+    "notpaid",
+    "refund_requested",
+    "refunded",
+  ]),
+  total: currencySchema,
+  refundTotal: currencySchema.optional(),
+  refundReason: z.string().optional(),
   created: datetimeSchema,
   updated: datetimeSchema,
 });
@@ -262,6 +273,14 @@ export const createInvoiceRequest = z.object({
 });
 
 export type CreateInvoiceRequest = z.infer<typeof createInvoiceRequest>;
+
+export const refundInvoiceRequest = z.object({
+  action: z.enum(["refund"]),
+  total: currencySchema,
+  reason: z.string(),
+});
+
+export type RefundInvoiceRequest = z.infer<typeof refundInvoiceRequest>;
 
 // Webhooks
 

@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { getSession } from "../auth";
-import { submitInvoice } from "@/lib/vercel/api";
+import { refundInvoice, submitInvoice } from "@/lib/vercel/api";
 
 export async function submitInvoiceAction(formData: FormData): Promise<void> {
   const session = await getSession();
@@ -26,5 +26,21 @@ export async function submitInvoiceAction(formData: FormData): Promise<void> {
       )}`
     );
   }
+  redirect(`/dashboard/invoices?id=${encodeURIComponent(invoiceId)}`);
+}
+
+export async function refundInvoiceAction(formData: FormData) {
+  const session = await getSession();
+
+  const invoiceId = formData.get("id") as string;
+  const refundAmount = formData.get("refundAmount") as string;
+  const refundReason = formData.get("refundReason") as string;
+
+  await refundInvoice(
+    session.installation_id,
+    invoiceId,
+    refundAmount,
+    refundReason
+  );
   redirect(`/dashboard/invoices?id=${encodeURIComponent(invoiceId)}`);
 }

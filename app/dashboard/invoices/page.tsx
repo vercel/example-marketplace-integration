@@ -1,7 +1,7 @@
 import { getSession } from "../auth";
 import { getAccountInfo, getInvoice } from "@/lib/vercel/api";
 import { Section } from "../components/section";
-import { submitInvoiceAction } from "./actions";
+import { refundInvoiceAction, submitInvoiceAction } from "./actions";
 import { FormButton } from "../components/form-button";
 
 export default async function Page({
@@ -33,7 +33,7 @@ export default async function Page({
             <div className="flex gap-2">
               <label>Max amount</label>
               <input
-                type="number"
+                type="text"
                 name="maxAmount"
                 defaultValue="5"
                 className="border"
@@ -58,7 +58,7 @@ export default async function Page({
         ) : null}
       </Section>
 
-      <Section title="Invoices">
+      <Section title="Get Invoice">
         <form>
           Look up by ID:{" "}
           <input
@@ -85,6 +85,31 @@ export default async function Page({
             <span className="block sm:inline">{invoiceError}</span>
           </div>
         ) : null}
+      </Section>
+
+      <Section title="Refund Invoice">
+        <form action={refundInvoiceAction}>
+          Refund up by ID:{" "}
+          <input
+            className="border"
+            type="text"
+            name="id"
+            defaultValue={searchParams.id ?? ""}
+          />
+          <div className="flex gap-2">
+            <label>Refund amount</label>
+            <input type="text" name="refundAmount" className="border" />
+          </div>
+          <div className="flex gap-2">
+            <label>Refund reason</label>
+            <input type="text" name="refundReason" className="border" />
+          </div>
+          <div className="flex justify-end">
+            <FormButton className="rounded bg-blue-500 text-white px-2 py-1 disabled:opacity-50">
+              Refund Invoice
+            </FormButton>
+          </div>
+        </form>
       </Section>
     </main>
   );
