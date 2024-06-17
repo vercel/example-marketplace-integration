@@ -268,5 +268,7 @@ export async function storeWebhookEvent(event: WebhookEvent): Promise<void> {
 }
 
 export async function getWebhookEvents(limit = 100): Promise<WebhookEvent[]> {
-  return kv.lrange<WebhookEvent>("webhook_events", 0, limit);
+  return (await kv.lrange<WebhookEvent>("webhook_events", 0, limit)).sort(
+    (a, b) => b.createdAt - a.createdAt
+  );
 }
