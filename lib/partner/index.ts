@@ -128,8 +128,7 @@ export async function updateResource(
     ...updatedFields,
     billingPlan: billingPlanId
       ? billingPlanMap.get(billingPlanId) ?? resource.billingPlan
-      : resource.billingPlan,
-    status: "ready" as const,
+      : resource.billingPlan, 
   };
 
   await kv.set(

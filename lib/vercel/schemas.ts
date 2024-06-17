@@ -10,6 +10,7 @@ export const resourceStateSchema = z.enum([
   "suspended",
   "resumed",
   "uninstalled",
+  "error"
 ]);
 
 export const currencySchema = z.string().min(1);
