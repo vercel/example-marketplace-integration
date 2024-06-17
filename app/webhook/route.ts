@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import { env } from "@/lib/env";
 import { type WebhookEvent, webhookEventSchema } from "@/lib/vercel/schemas";
+import { storeWebhookEvent } from "@/lib/partner";
 
 export async function POST(req: Request): Promise<Response> {
   const rawBody = await req.text();
@@ -24,6 +25,7 @@ export async function POST(req: Request): Promise<Response> {
   if (event) {
     const { id, type, createdAt, payload } = event;
     console.log("webhook event:", id, type, new Date(createdAt), payload);
+    storeWebhookEvent(event);
   }
   return new Response("", { status: 200 });
 }
