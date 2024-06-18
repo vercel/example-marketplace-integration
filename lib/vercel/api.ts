@@ -166,7 +166,7 @@ export async function refundInvoice(
   reason: string
 ): Promise<{ invoiceId: string }> {
   return (await fetchVercelApi(
-    `/v1/installations/${installationId}/billing/invoices/${invoiceId}`,
+    `/v1/installations/${installationId}/billing/invoices/${invoiceId}/actions`,
     {
       installationId,
       method: "POST",
