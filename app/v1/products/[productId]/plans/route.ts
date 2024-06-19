@@ -15,6 +15,7 @@ export const GET = withAuth(
   }
 );
 
+// Experimental and unstable API
 export const POST = withAuth(
   async (_claims, request, { params }: { params: Params }) => {
     const requestBody = await readRequestBodyWithSchema(
