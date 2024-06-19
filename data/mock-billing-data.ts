@@ -55,7 +55,7 @@ export async function mockBillingData(
       return {
         resourceId: resource.id,
         billingPlanId: resource.billingPlan.id,
-        name: `${resource.name}: ${u.name}`,
+        name: u.name,
         price: pricing.price.toFixed(2),
         units: u.units,
         quantity: u.periodValue,
