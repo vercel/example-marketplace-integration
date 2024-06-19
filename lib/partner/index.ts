@@ -236,7 +236,8 @@ function deserializeResource(serializedResource: SerializedResource): Resource {
 }
 
 export async function getProductBillingPlans(
-  _productId: string
+  _productId: string,
+  _metadata?:Record<string, unknown>
 ): Promise<GetBillingPlansResponse> {
   return { plans: billingPlans };
 }
