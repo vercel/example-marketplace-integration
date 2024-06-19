@@ -9,10 +9,12 @@ export interface OidcClaims {
   iss: string;
   exp: number;
   iat: number;
+  account_id: string;
   installation_id: string;
   user_id: string;
   user_role: string;
-  account_id: string;
+  user_name?: string;
+  user_avatar_url?: string;
 }
 
 export function withAuth(
