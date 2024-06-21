@@ -25,7 +25,7 @@ export async function POST(req: Request): Promise<Response> {
   if (event) {
     const { id, type, createdAt, payload } = event;
     console.log("webhook event:", id, type, new Date(createdAt), payload);
-    storeWebhookEvent(event);
+    await storeWebhookEvent(event);
   }
   return new Response("", { status: 200 });
 }
