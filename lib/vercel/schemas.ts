@@ -39,19 +39,47 @@ export type InstallIntegrationRequest = z.infer<
 // Billing
 
 export const billingPlanSchema = z.object({
+  // Partner-defined ID.
+  // Ex: "pro200"
   id: z.string().min(1),
+
   type: z.enum(["prepayment", "subscription"]),
+
+  // Ex: "Hobby"
   name: z.string().min(1),
+
+  // Ex: "Use all you want up to 20G"
   description: z.string().min(1),
-  quote: z
+
+  // Set this to `false` if this plan is completely free.
+  paymentMethodRequired: z.boolean().optional().default(true),
+
+  // Plan's cost, if available. Only relevant for fixed-cost plans.
+  // Ex: "$20.00/month"
+  cost: z.string().min(1).optional(),
+
+  // Plan's details.
+  // Ex: [
+  //   { label: "SOC2 Compliant" },
+  //   { label: "SLA", value: "99.999%" },
+  //   { label: "Maximum database size", value: "20G" },
+  //   { label: "Cost per extra 100K queries", value: "$0.10"},
+  // ]
+  details: z
     .array(
       z.object({
-        line: z.string().min(1),
-        amount: z.string().min(1),
+        label: z.string().min(1),
+        value: z.string().min(1).optional(),
       })
     )
     .optional(),
+
+  // Max number of that can be installed on this plan.
+  // Ex: `maxResources: 1` for "Hobby" plan.
   maxResources: z.number().optional(),
+
+  // Policies to be accepted by the customer.
+  // Ex: [{ id: 'toc', name: 'ACME Terms of Service', url: 'https://partner/toc' }]
   requiredPolicies: z
     .array(
       z.object({
@@ -61,6 +89,8 @@ export const billingPlanSchema = z.object({
       })
     )
     .optional(),
+
+  // Date/time when the plan becomes effective. Important for billing plan changes.
   effectiveDate: datetimeSchema.optional(),
 });
 

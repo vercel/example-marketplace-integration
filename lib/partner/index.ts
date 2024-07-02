@@ -22,10 +22,10 @@ const billingPlans: BillingPlan[] = [
     name: "Hobby",
     description: "Use all you want up to 20G",
     type: "subscription",
-    quote: [
-      { amount: "20.00", line: "20G and 200K queries" },
-      { amount: "1.00", line: "per extra 10G storage" },
-      { amount: "2.00", line: "per extra 100K queries" },
+    paymentMethodRequired: false,
+    details: [
+      { label: "Max storage size", value: "20G" },
+      { label: "Max queries per day", value: "100K" },
     ],
     maxResources: 3,
     requiredPolicies: [
@@ -38,12 +38,12 @@ const billingPlans: BillingPlan[] = [
     name: "Pro",
     type: "subscription",
     description: "10$ every Gb",
-    quote: [
-      { amount: "200.00", line: "20G and 200K queries" },
-      { amount: "10.00", line: "per extra 10G storage" },
-      { amount: "Unlimited", line: "Daily Command Limit" },
+    paymentMethodRequired: true,
+    details: [
+      { label: "20G storage and 200K queries", value: "$25.00" },
+      { label: "Extra storage", value: "$10.00 per 10G" },
+      { label: "Unlimited daily Command Limit" },
     ],
-    maxResources: 3,
     requiredPolicies: [
       { id: "1", name: "Terms of Service", url: "https://partner/toc" },
     ],
@@ -231,13 +231,14 @@ function deserializeResource(serializedResource: SerializedResource): Resource {
     type: "subscription",
     name: "Unknown",
     description: "Unknown",
+    paymentMethodRequired: false,
   };
   return { ...serializedResource, billingPlan };
 }
 
 export async function getProductBillingPlans(
   _productId: string,
-  _experimental_metadata?:Record<string, unknown>
+  _experimental_metadata?: Record<string, unknown>
 ): Promise<GetBillingPlansResponse> {
   return { plans: billingPlans };
 }
