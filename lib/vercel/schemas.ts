@@ -119,13 +119,27 @@ const notificationSchema = z.object({
 export type Notification = z.infer<typeof notificationSchema>;
 
 export const resourceSchema = z.object({
+  // Partner's resource ID.
   id: z.string().min(1),
+
+  // Partner's product ID/slug.
   productId: z.string().min(1),
+
+  // Billing plan details.
   billingPlan: billingPlanSchema,
+
+  // Resource's name. Normally set by the user.
   name: z.string().min(1),
+
+  // Resource's metadata. Normally set/selected by the user.
+  // Based on the registered metadata schema.
   metadata: metadataSchema,
-  customerEmail: z.string().email().optional(),
+
+  // Resource's status.
   status: resourceStateSchema,
+
+  // Resource's active notification,
+  // Ex: { level: 'warn', title: 'Database is nearing maximum planned size' }
   notification: notificationSchema.optional(),
 });
 
@@ -186,40 +200,83 @@ export type GetResourceResponse = z.infer<typeof getResourceResponseSchema>;
 // Billing data.
 
 export const billingItemSchema = z.object({
+  // Partner's billing plan ID.
   billingPlanId: z.string(),
+
+  // Partner's resource ID.
   resourceId: z.string().optional(),
+
+  // Start and end are only needed if different from the period's start/end.
+  // E.g. in case of a plan change.
   start: datetimeSchema.optional(),
   end: datetimeSchema.optional(),
+
+  // Line item name and details.
   name: z.string(),
   details: z.string().optional(),
+
+  // Price per unit.
   price: currencySchema,
+
+  // Quantity of units.
   quantity: z.number(),
+
+  // Units of the quantity.
   units: unitsSchema,
+
+  // Total amount.
   total: currencySchema,
 });
 
 export type BillingItem = z.infer<typeof billingItemSchema>;
 
 export const resourceUsageSchema = z.object({
+  // Partner's resource ID.
   resourceId: z.string(),
+
+  // Metric name.
+  // Ex: "Database size"
   name: z.string(),
+
+  // Type of the metric.
+  // - total: measured total value, such as Database size
+  // - interval: usage during the period, such as i/o or number of queries.
+  // - rate: rate of usage, such as queries per second.
   type: usageTypeSchema,
+
+  // Metric units.
+  // Ex: "GB".
   units: unitsSchema,
+
+  // Metric value for the day. Could be a final or an interim value for the day.
   dayValue: z.number(),
+
+  // Metric value for the billing period. Could be a final or an interim value for the period.
   periodValue: z.number(),
+
+  // The limit value of the metric for a billing period, if a limit is defined by the plan.
   planValue: z.number().optional(),
 });
 
 export type ResourceUsage = z.infer<typeof resourceUsageSchema>;
 
 export const billingDataSchema = z.object({
+  // The update timestamp.
   timestamp: datetimeSchema,
+
+  // End of day timestamp for daily usage.
   eod: datetimeSchema,
+
+  // Period for the billing cycle.
   period: z.object({
     start: datetimeSchema,
     end: datetimeSchema,
   }),
+
+  // Billing data (interim invoicing data).
   billing: z.array(billingItemSchema),
+
+  // Usage data.
   usage: z.array(resourceUsageSchema),
 });
 
@@ -229,14 +286,26 @@ export type BillingData = z.infer<typeof billingDataSchema>;
 
 export const invoiceSchema = z.object({
   test: z.boolean().optional(),
+
+  // Vercel Marketplace invoice ID.
   invoiceId: z.string(),
+
+  // Partner-defined invoice ID.
   externalId: z.string().optional(),
+
+  // Invoice date.
   invoiceDate: datetimeSchema,
+
+  // Billing cycle period.
   period: z.object({
     start: datetimeSchema,
     end: datetimeSchema,
   }),
+
+  // Invoice's memo.
   memo: z.string().optional(),
+
+  // Invoice's state.
   state: z.enum([
     "pending",
     "scheduled",
@@ -246,9 +315,16 @@ export const invoiceSchema = z.object({
     "refund_requested",
     "refunded",
   ]),
+
+  // Invoice's total.
   total: currencySchema,
+
+  // Refund amount if refund was requested.
   refundTotal: currencySchema.optional(),
+
+  // Refund reason if refund was requested.
   refundReason: z.string().optional(),
+
   created: datetimeSchema,
   updated: datetimeSchema,
 });
@@ -256,8 +332,10 @@ export const invoiceSchema = z.object({
 export type Invoice = z.infer<typeof invoiceSchema>;
 
 export const invoiceItemSchema = z.object({
-  // Resource and billing plan IDs.
+  // Partner's resource ID.
   resourceId: z.string(),
+
+  // Partner's billing plan ID.
   billingPlanId: z.string(),
 
   // Start and end are only needed if different from the period's start/end.
