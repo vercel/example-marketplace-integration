@@ -51,7 +51,8 @@ export const billingPlanSchema = z.object({
   // Ex: "Use all you want up to 20G"
   description: z.string().min(1),
 
-  // Set this to `false` if this plan is completely free.
+  // Set this field to `false` if this plan is completely free.
+  // Defaults to `true`.
   paymentMethodRequired: z.boolean().optional().default(true),
 
   // Plan's cost, if available. Only relevant for fixed-cost plans.
