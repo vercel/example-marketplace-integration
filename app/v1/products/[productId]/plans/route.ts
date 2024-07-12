@@ -18,7 +18,7 @@ export const GET = withAuth(
       if (metadata.primaryRegion === "sfo1") {
         response.plans = response.plans.map((plan) => ({
           ...plan,
-          name: `${plan.name} (us-east-1)`,
+          name: `${plan.name} (us-west-1)`,
           description: plan.name === "Pro" ? `9$ every Gb` : plan.description,
         }));
       }
