@@ -69,10 +69,7 @@ const IntegrationsSsoTokenResponse = z.object({
   id_token: z.string(),
 });
 
-export async function exchangeCodeForToken(
-  code: string,
-  redirectUrl: string
-): Promise<string> {
+export async function exchangeCodeForToken(code: string): Promise<string> {
   const { id_token } = IntegrationsSsoTokenResponse.parse(
     await fetchVercelApi("/v1/integrations/sso/token", {
       method: "POST",
@@ -80,7 +77,6 @@ export async function exchangeCodeForToken(
         code,
         client_id: env.INTEGRATION_CLIENT_ID,
         client_secret: env.INTEGRATION_CLIENT_SECRET,
-        redirect_uri: redirectUrl,
       },
     })
   );

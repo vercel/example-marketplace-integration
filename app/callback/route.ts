@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  const token = await exchangeCodeForToken(code, `${host}/callback`);
+  const token = await exchangeCodeForToken(code);
 
   createSession(token);
 
