@@ -8,32 +8,21 @@ interface Params {
 }
 
 export const GET = withAuth(
-  async (_claims, _request, { params }: { params: Params }) => {
+  async (_claims, request, { params }: { params: Params }) => {
     const response = await getProductBillingPlans(params.productId);
 
-    return Response.json(response);
-  }
-);
-
-// Experimental and unstable API
-export const POST = withAuth(
-  async (_claims, request, { params }: { params: Params }) => {
-    const requestBody = await readRequestBodyWithSchema(
-      request,
-      resourceSchema.pick({
-        metadata: true,
-      })
-    );
-
-    if (!requestBody.success) {
-      return new Response(null, { status: 400 });
+    const url = new URL(request.url);
+    const metadataQuery = url.searchParams.get("metadata");
+    if (metadataQuery) {
+      const metadata: Record<string, string> = JSON.parse(metadataQuery);
+      if (metadata.primaryRegion === "sfo1") {
+        response.plans = response.plans.map((plan) => ({
+          ...plan,
+          name: `${plan.name} (us-west-1)`,
+          description: plan.name === "Pro" ? `9$ every Gb` : plan.description,
+        }));
+      }
     }
-
-    const response = await getProductBillingPlans(
-      params.productId,
-      requestBody.data.metadata
-    );
-
     return Response.json(response);
   }
 );
