@@ -9,13 +9,7 @@ interface Params {
 interface PostResourceREPLRequestBody {
   input: string;
 }
-
-interface PostResourceREPLResponseBody {
-  result: Block[];
-  status: "ok" | "error";
-}
-
-// Some simple, standard block library (does Vercel have an existing implementation?)
+ 
 
 interface TextBlock {
   type: "text";
