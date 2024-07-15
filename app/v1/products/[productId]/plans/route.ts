@@ -19,7 +19,7 @@ export const GET = withAuth(
         response.plans = response.plans.map((plan) => ({
           ...plan,
           name: `${plan.name} (us-west-1)`,
-          description: plan.name === "Pro" ? `9$ every Gb` : plan.description,
+          description: plan.name === "Pro" ? `$9 every Gb` : plan.description,
         }));
       }
     }
