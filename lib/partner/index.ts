@@ -37,7 +37,7 @@ const billingPlans: BillingPlan[] = [
     id: "pro200",
     name: "Pro",
     type: "subscription",
-    description: "10$ every Gb",
+    description: "$10 every Gb",
     paymentMethodRequired: true,
     details: [
       { label: "20G storage and 200K queries", value: "$25.00" },
