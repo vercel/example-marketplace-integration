@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { getSession } from "../auth";
-import { refundInvoice, submitInvoice } from "@/lib/vercel/api";
+import { refundInvoice, submitInvoice } from "@/lib/vercel/marketplace-api";
 
 export async function submitInvoiceAction(formData: FormData): Promise<void> {
   const session = await getSession();
