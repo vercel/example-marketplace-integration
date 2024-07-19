@@ -1,4 +1,3 @@
- 
 import { withAuth } from "@/lib/vercel/auth";
 
 interface Params {
@@ -8,8 +7,8 @@ interface Params {
 
 interface PostResourceREPLRequestBody {
   input: string;
+  readOnly?: boolean;
 }
- 
 
 interface TextBlock {
   type: "text";
@@ -109,268 +108,294 @@ async function* makeIterator() {
 }
 
 export const POST = withAuth(
-  async (_claims, request, { params }: { params: Params }) => { 
-  const body: PostResourceREPLRequestBody = await request.json(); 
+  async (_claims, request, { params }: { params: Params }) => {
+    const body: PostResourceREPLRequestBody = await request.json();
 
-  if (body.input.includes("throw")) {
-    return Response.json(
-      {},
-      {
-        status: 500,
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type, Authorization",
-        },
-      }
-    );
-  }
-
-  if (body.input.includes("error")) {
-    return Response.json(
-      [
+    if (body.input.includes("throw")) {
+      return Response.json(
+        {},
         {
-          type: "paragraph",
-          children: [
-            {
-              type: "text",
-              bold: true,
-              text: "Invalid command 'error'",
-              color: "#ff0000",
-            },
-          ],
-        },
-      ] satisfies Block[],
-      {
-        status: 400,
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type, Authorization",
-        },
-      }
-    );
-  }
-
-  if (body.input.includes("table")) {
-    return Response.json(
-      [
-        {
-          type: "table",
-          header: [
-            {
-              type: "text",
-              text: "Name",
-              bold: true,
-            },
-            {
-              type: "text",
-              text: "Age",
-              bold: true,
-            },
-            {
-              type: "text",
-              text: "Gender",
-              bold: true,
-            },
-            {
-              type: "text",
-              text: "Gender",
-              bold: true,
-            },
-          ],
-          rows: [
-            [
-              {
-                type: "text",
-                text: "John",
-              },
-              {
-                type: "text",
-                text: "25",
-              },
-              {
-                type: "text",
-                text: "Male",
-              },
-              {
-                type: "text",
-                text: "Gender",
-              },
-            ],
-            [
-              {
-                type: "text",
-                text: "Jane",
-              },
-              {
-                type: "text",
-                text: "30",
-              },
-              {
-                type: "text",
-                text: "Female",
-              },
-              {
-                type: "text",
-                text: "Gender",
-              },
-            ],
-          ],
-        },
-      ] satisfies Block[],
-      {
-        status: 200,
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type, Authorization",
-        },
-      }
-    );
-  }
-
-  if (body.input.includes("stream")) {
-    const iterator = makeIterator();
-    const stream = iteratorToStream(iterator);
-
-    return new Response(stream, {
-      status: 200,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization",
-        "Content-Type": "application/jsonl",
-      },
-    });
-  }
-
-  if (body.input.includes("help")) {
-    return Response.json(
-      [
-        {
-          type: "paragraph",
-          children: [
-            {
-              color: "#a3f04b",
-              type: "text",
-              bold: true,
-              text: "test:",
-            },
-            {
-              type: "text",
-              text: "renders a paragraph with a link",
-              italic: true,
-            },
-          ],
-        },
-        {
-          type: "paragraph",
-          children: [
-            {
-              color: "#a3f04b",
-              type: "text",
-              bold: true,
-              text: "table:",
-            },
-            {
-              type: "text",
-              text: "renders a sample table",
-              italic: true,
-            },
-          ],
-        },
-        {
-          type: "paragraph",
-          children: [
-            {
-              type: "text",
-              color: "#a3f04b",
-              bold: true,
-              text: "error:",
-            },
-            {
-              type: "text",
-              text: "returns a 400 error with a message",
-              italic: true,
-            },
-          ],
-        },
-        {
-          type: "paragraph",
-          children: [
-            {
-              color: "#a3f04b",
-              type: "text",
-              bold: true,
-              text: "throw:",
-            },
-            {
-              type: "text",
-              text: "returns a 500 error without a message",
-              italic: true,
-            },
-          ],
-        },
-        {
-          type: "paragraph",
-          children: [
-            {
-              color: "#a3f04b",
-              type: "text",
-              text: "stream:",
-            },
-            {
-              type: "text",
-              text: "streams some text",
-              italic: true,
-            },
-          ],
-        },
-      ] satisfies Block[],
-      {
-        status: 200,
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type, Authorization",
-        },
-      }
-    );
-  }
-
-  return Response.json(
-    [
-      {
-        type: "paragraph",
-        children: [
-          {
-            type: "text",
-            bold: true,
-            text: "Hello",
+          status: 500,
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization",
           },
-          {
-            type: "text",
-            text: "World",
-            italic: true,
-            color: "#a3f04b",
-          },
-          {
-            type: "text",
-            text: "Link",
-            href: "https://www.vercel.com",
-          },
-        ],
-      },
-    ] satisfies Block[],
-    {
-      status: 200,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization",
-      },
+        }
+      );
     }
-  );
-});
- 
+
+    if (body.input.includes("error")) {
+      return Response.json(
+        [
+          {
+            type: "paragraph",
+            children: [
+              {
+                type: "text",
+                bold: true,
+                text: "Invalid command 'error'",
+                color: "#ff0000",
+              },
+            ],
+          },
+        ] satisfies Block[],
+        {
+          status: 400,
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization",
+          },
+        }
+      );
+    }
+
+    if (body.readOnly && body.input.includes("write")) {
+      return Response.json(
+        [
+          {
+            type: "paragraph",
+            children: [
+              {
+                type: "text",
+                bold: true,
+                text: "You don't have permission to write to this resource",
+                color: "#ff0000",
+              },
+            ],
+          },
+        ] satisfies Block[],
+        {
+          status: 200,
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization",
+          },
+        }
+      );
+    }
+
+    if (body.input.includes("table")) {
+      return Response.json(
+        [
+          {
+            type: "table",
+            header: [
+              {
+                type: "text",
+                text: "Name",
+                bold: true,
+              },
+              {
+                type: "text",
+                text: "Age",
+                bold: true,
+              },
+              {
+                type: "text",
+                text: "Gender",
+                bold: true,
+              },
+              {
+                type: "text",
+                text: "Gender",
+                bold: true,
+              },
+            ],
+            rows: [
+              [
+                {
+                  type: "text",
+                  text: "John",
+                },
+                {
+                  type: "text",
+                  text: "25",
+                },
+                {
+                  type: "text",
+                  text: "Male",
+                },
+                {
+                  type: "text",
+                  text: "Gender",
+                },
+              ],
+              [
+                {
+                  type: "text",
+                  text: "Jane",
+                },
+                {
+                  type: "text",
+                  text: "30",
+                },
+                {
+                  type: "text",
+                  text: "Female",
+                },
+                {
+                  type: "text",
+                  text: "Gender",
+                },
+              ],
+            ],
+          },
+        ] satisfies Block[],
+        {
+          status: 200,
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization",
+          },
+        }
+      );
+    }
+
+    if (body.input.includes("stream")) {
+      const iterator = makeIterator();
+      const stream = iteratorToStream(iterator);
+
+      return new Response(stream, {
+        status: 200,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization",
+          "Content-Type": "application/jsonl",
+        },
+      });
+    }
+
+    if (body.input.includes("help")) {
+      return Response.json(
+        [
+          {
+            type: "paragraph",
+            children: [
+              {
+                color: "#a3f04b",
+                type: "text",
+                bold: true,
+                text: "test:",
+              },
+              {
+                type: "text",
+                text: "renders a paragraph with a link",
+                italic: true,
+              },
+            ],
+          },
+          {
+            type: "paragraph",
+            children: [
+              {
+                color: "#a3f04b",
+                type: "text",
+                bold: true,
+                text: "table:",
+              },
+              {
+                type: "text",
+                text: "renders a sample table",
+                italic: true,
+              },
+            ],
+          },
+          {
+            type: "paragraph",
+            children: [
+              {
+                type: "text",
+                color: "#a3f04b",
+                bold: true,
+                text: "error:",
+              },
+              {
+                type: "text",
+                text: "returns a 400 error with a message",
+                italic: true,
+              },
+            ],
+          },
+          {
+            type: "paragraph",
+            children: [
+              {
+                color: "#a3f04b",
+                type: "text",
+                bold: true,
+                text: "throw:",
+              },
+              {
+                type: "text",
+                text: "returns a 500 error without a message",
+                italic: true,
+              },
+            ],
+          },
+          {
+            type: "paragraph",
+            children: [
+              {
+                color: "#a3f04b",
+                type: "text",
+                text: "stream:",
+              },
+              {
+                type: "text",
+                text: "streams some text",
+                italic: true,
+              },
+            ],
+          },
+        ] satisfies Block[],
+        {
+          status: 200,
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization",
+          },
+        }
+      );
+    }
+
+    return Response.json(
+      [
+        {
+          type: "paragraph",
+          children: [
+            {
+              type: "text",
+              bold: true,
+              text: "Hello",
+            },
+            {
+              type: "text",
+              text: "World",
+              italic: true,
+              color: "#a3f04b",
+            },
+            {
+              type: "text",
+              text: "Link",
+              href: "https://www.vercel.com",
+            },
+          ],
+        },
+      ] satisfies Block[],
+      {
+        status: 200,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        },
+      }
+    );
+  }
+);
