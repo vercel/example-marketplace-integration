@@ -8,6 +8,7 @@ interface Params {
 
 interface PostResourceREPLRequestBody {
   input: string;
+  readOnly?: boolean;
 }
  
 
@@ -125,6 +126,32 @@ export const POST = withAuth(
       }
     );
   }
+
+if (body.readOnly && body.input.includes("write")) {
+      return Response.json(
+        [
+          {
+            type: "paragraph",
+            children: [
+              {
+                type: "text",
+                bold: true,
+                text: "You don't have permission to write to this resource",
+                color: "#ff0000",
+              },
+            ],
+          },
+        ] satisfies Block[],
+        {
+          status: 200,
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization",
+          },
+        }
+      );
+    }
 
   if (body.input.includes("error")) {
     return Response.json(
