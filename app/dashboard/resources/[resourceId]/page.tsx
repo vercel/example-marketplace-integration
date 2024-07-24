@@ -8,7 +8,7 @@ import {
   updateResourceNotificationAction,
 } from "./actions";
 import { getSession } from "../../auth";
-import { getAccountInfo } from "@/lib/vercel/api";
+import { getAccountInfo } from "@/lib/vercel/marketplace-api";
 import { FormButton } from "../../components/form-button";
 import { Resource } from "@/lib/vercel/schemas";
 import { Section } from "../../components/section";

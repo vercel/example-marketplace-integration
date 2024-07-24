@@ -1,4 +1,4 @@
-import { getAccountInfo } from "@/lib/vercel/api";
+import { getAccountInfo } from "@/lib/vercel/marketplace-api";
 import { getSession } from "./auth";
 import { Nav } from "./nav";
 

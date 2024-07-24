@@ -7,7 +7,7 @@ import {
   updateResourceNotification,
 } from "@/lib/partner";
 import { Notification, Resource } from "@/lib/vercel/schemas";
-import { dispatchEvent, updateSecrets } from "@/lib/vercel/api";
+import { dispatchEvent, updateSecrets } from "@/lib/vercel/marketplace-api";
 import { getSession } from "../../auth";
 import { revalidatePath } from "next/cache";
 

@@ -1,7 +1,7 @@
 import { getInstallation, listResources } from "@/lib/partner";
 import Link from "next/link";
 import { getSession } from "./auth";
-import { getAccountInfo } from "@/lib/vercel/api";
+import { getAccountInfo } from "@/lib/vercel/marketplace-api";
 import { Resource } from "@/lib/vercel/schemas";
 
 export default async function DashboardPage() {

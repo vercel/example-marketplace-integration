@@ -1,7 +1,7 @@
 import { mockBillingData } from "@/data/mock-billing-data";
 import { cronJob } from "@/lib/cron";
 import { listInstallations } from "@/lib/partner";
-import { sendBillingData } from "@/lib/vercel/api";
+import { sendBillingData } from "@/lib/vercel/marketplace-api";
 
 export const dynamic = "force-dynamic";
 

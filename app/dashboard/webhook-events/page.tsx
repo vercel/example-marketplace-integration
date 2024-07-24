@@ -1,5 +1,5 @@
 import { getSession } from "../auth";
-import { getAccountInfo, getInvoice } from "@/lib/vercel/api";
+import { getAccountInfo, getInvoice } from "@/lib/vercel/marketplace-api";
 import { Section } from "../components/section";
 import { getWebhookEvents } from "@/lib/partner";
 import { WebhookEvent } from "@/lib/vercel/schemas";

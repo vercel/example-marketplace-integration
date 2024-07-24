@@ -55,7 +55,7 @@ const billingPlanMap = new Map(billingPlans.map((plan) => [plan.id, plan]));
 
 export async function installIntegration(
   installationId: string,
-  request: InstallIntegrationRequest
+  request: InstallIntegrationRequest & { type: "marketplace" | "external" }
 ): Promise<void> {
   const pipeline = kv.pipeline();
   await pipeline.set(installationId, request);
@@ -252,8 +252,10 @@ export async function getResourceBillingPlans(
 
 export async function getInstallation(
   installationId: string
-): Promise<InstallIntegrationRequest> {
-  const installation = await kv.get<InstallIntegrationRequest>(installationId);
+): Promise<InstallIntegrationRequest & { type: "marketplace" | "external" }> {
+  const installation = await kv.get<
+    InstallIntegrationRequest & { type: "marketplace" | "external" }
+  >(installationId);
 
   if (!installation) {
     throw new Error(`Installation '${installationId}' not found`);

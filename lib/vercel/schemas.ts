@@ -383,31 +383,22 @@ export const createInvoiceRequest = z.object({
 
 export type CreateInvoiceRequest = z.infer<typeof createInvoiceRequest>;
 
-export const refundInvoiceRequest = z.object({
+export const refundInvoiceRequestSchema = z.object({
   action: z.enum(["refund"]),
   total: currencySchema,
   reason: z.string(),
 });
 
-export type RefundInvoiceRequest = z.infer<typeof refundInvoiceRequest>;
+export type RefundInvoiceRequest = z.infer<typeof refundInvoiceRequestSchema>;
 
 // Webhooks
 
-export const webhookEventSchema = z.object({
+const webhookEventBaseSchema = z.object({
   id: z.string().min(1),
-  type: z.string().min(1),
   createdAt: z.number(),
-  payload: z.unknown(),
-}) as unknown as z.ZodType<WebhookEvent>;
+});
 
-export interface WebhookEvent {
-  id: string;
-  type: string;
-  createdAt: number;
-  payload: unknown;
-}
-
-export const invoiceWebhookPayloadSchema = z.object({
+const invoiceWebhookPayloadSchema = z.object({
   installationId: z.string().min(1),
   period: z.object({
     start: datetimeSchema,
@@ -418,37 +409,35 @@ export const invoiceWebhookPayloadSchema = z.object({
   invoiceTotal: currencySchema,
 });
 
-export type InvoiceWebhookPayload = z.infer<typeof invoiceWebhookPayloadSchema>;
+const invoiceCreatedWebhookEventSchema = webhookEventBaseSchema.extend({
+  type: z.literal("marketplace.invoice.created"),
+  payload: invoiceWebhookPayloadSchema,
+});
 
-export interface InvoiceCreatedEvent extends WebhookEvent {
-  type: "marketplace.invoice.created";
-  payload: InvoiceWebhookPayload;
-}
+const invoicePaidWebhookEventSchema = webhookEventBaseSchema.extend({
+  type: z.literal("marketplace.invoice.paid"),
+  payload: invoiceWebhookPayloadSchema,
+});
 
-export function isInvoiceCreatedEvent(
-  event: WebhookEvent
-): event is InvoiceCreatedEvent {
-  return event.type === "marketplace.invoice.created";
-}
+const invoiceNotPaidWebhookEventSchema = webhookEventBaseSchema.extend({
+  type: z.literal("marketplace.invoice.notpaid"),
+  payload: invoiceWebhookPayloadSchema,
+});
 
-export interface InvoicePaidEvent extends WebhookEvent {
-  type: "marketplace.invoice.paid";
-  payload: InvoiceWebhookPayload;
-}
+const integrationConfigurationRemovedWebhookEventSchema =
+  webhookEventBaseSchema.extend({
+    type: z.literal("integration-configuration.removed"),
+    payload: z.object({
+      configuration: z.object({
+        id: z.string(),
+      }),
+    }),
+  });
 
-export function isInvoicePaidEvent(
-  event: WebhookEvent
-): event is InvoicePaidEvent {
-  return event.type === "marketplace.invoice.paid";
-}
-
-export interface InvoiceNotPaidEvent extends WebhookEvent {
-  type: "marketplace.invoice.notpaid";
-  payload: InvoiceWebhookPayload;
-}
-
-export function isInvoiceNotPaidEvent(
-  event: WebhookEvent
-): event is InvoiceNotPaidEvent {
-  return event.type === "marketplace.invoice.notpaid";
-}
+export type WebhookEvent = z.infer<typeof webhookEventSchema>;
+export const webhookEventSchema = z.discriminatedUnion("type", [
+  invoiceCreatedWebhookEventSchema,
+  invoicePaidWebhookEventSchema,
+  invoiceNotPaidWebhookEventSchema,
+  integrationConfigurationRemovedWebhookEventSchema,
+]);

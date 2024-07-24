@@ -17,7 +17,10 @@ export const PUT = withAuth(async (claims, request) => {
     return new Response(null, { status: 400 });
   }
 
-  await installIntegration(claims.installation_id, requestBody.data);
+  await installIntegration(claims.installation_id, {
+    type: "marketplace",
+    ...requestBody.data,
+  });
 
   return new Response(null, { status: 201 });
 });

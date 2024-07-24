@@ -1,6 +1,6 @@
 import { getInstallation } from "@/lib/partner";
 import { getSession } from "../auth";
-import { getAccountInfo } from "@/lib/vercel/api";
+import { getAccountInfo } from "@/lib/vercel/marketplace-api";
 import { Section } from "../components/section";
 
 export default async function IntallationPage() {
