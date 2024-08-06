@@ -28,13 +28,12 @@ export const POST = withAuth(async (claims, request) => {
           code: "validation_error",
           fields: [
             {
-              dataPath: "",
-              keyword: "required",
-              message: "should have required property 'foo'",
+              key: "region",
+              message: "Invalid region",
             },
           ],
           message:
-            "Failed to validate metadata: metadata should have required property 'foo'",
+            "Failed to validate metadata: metadata should have valid property 'region'",
         },
       },
       {
@@ -42,11 +41,11 @@ export const POST = withAuth(async (claims, request) => {
       }
     );
   }
-  if (requestBody.data.name === "generic-user-error") {
+  if (requestBody.data.name === "generic-error") {
     return Response.json(
       {
         error: {
-          code: "generic_user_error",
+          code: "generic-error",
           message: "You cannot provision resources for this user",
         },
       },
