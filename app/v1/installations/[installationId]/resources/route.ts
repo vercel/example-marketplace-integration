@@ -21,6 +21,40 @@ export const POST = withAuth(async (claims, request) => {
     return new Response(null, { status: 400 });
   }
 
+  if (requestBody.data.name === "validation_error") {
+    return Response.json(
+      {
+        error: {
+          code: "validation_error",
+          fields: [
+            {
+              key: "region",
+              message: "Invalid region",
+            },
+          ],
+          message:
+            "Failed to validate metadata: metadata should have valid property 'region'",
+        },
+      },
+      {
+        status: 400,
+      }
+    );
+  }
+  if (requestBody.data.name === "generic_error") {
+    return Response.json(
+      {
+        error: {
+          code: "generic_error",
+          message: "You cannot provision resources for this user",
+        },
+      },
+      {
+        status: 400,
+      }
+    );
+  }
+
   const resource = await provisionResource(
     claims.installation_id,
     requestBody.data
