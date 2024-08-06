@@ -21,7 +21,7 @@ export const POST = withAuth(async (claims, request) => {
     return new Response(null, { status: 400 });
   }
 
-  if (requestBody.data.name === "validation-error") {
+  if (requestBody.data.name === "validation_error") {
     return Response.json(
       {
         error: {
@@ -41,11 +41,11 @@ export const POST = withAuth(async (claims, request) => {
       }
     );
   }
-  if (requestBody.data.name === "generic-error") {
+  if (requestBody.data.name === "generic_error") {
     return Response.json(
       {
         error: {
-          code: "generic-error",
+          code: "generic_error",
           message: "You cannot provision resources for this user",
         },
       },
