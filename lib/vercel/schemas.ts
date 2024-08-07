@@ -152,8 +152,7 @@ export const provisionResourceRequestSchema = resourceSchema
     metadata: true,
   })
   .extend({
-    billingPlanId: z.string().min(1),
-    acceptedPolicies: z.record(datetimeSchema),
+    billingPlanId: z.string().min(1), 
   });
 
 export type ProvisionResourceRequest = z.infer<
