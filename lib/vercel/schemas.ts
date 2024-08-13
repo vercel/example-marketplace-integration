@@ -332,11 +332,11 @@ export const invoiceSchema = z.object({
 export type Invoice = z.infer<typeof invoiceSchema>;
 
 export const invoiceItemSchema = z.object({
-  // Partner's resource ID.
-  resourceId: z.string(),
-
   // Partner's billing plan ID.
   billingPlanId: z.string(),
+
+  // Partner's resource ID.
+  resourceId: z.string().optional(),
 
   // Start and end are only needed if different from the period's start/end.
   start: datetimeSchema.optional(),
@@ -352,6 +352,25 @@ export const invoiceItemSchema = z.object({
 });
 
 export type InvoiceItem = z.infer<typeof invoiceItemSchema>;
+
+export const invoiceDiscountSchema = z.object({
+  // Partner's billing plan ID.
+  billingPlanId: z.string(),
+
+  // Partner's resource ID.
+  resourceId: z.string().optional(),
+
+  // Start and end are only needed if different from the period's start/end.
+  start: datetimeSchema.optional(),
+  end: datetimeSchema.optional(),
+
+  // Item details.
+  name: z.string(),
+  details: z.string().optional(),
+  amount: currencySchema,
+});
+
+export type InvoiceDiscount = z.infer<typeof invoiceDiscountSchema>;
 
 export const createInvoiceRequest = z.object({
   // Test mode.
@@ -379,6 +398,9 @@ export const createInvoiceRequest = z.object({
 
   // Invoice items.
   items: z.array(invoiceItemSchema),
+
+  // Invoice discounts.
+  discounts: z.array(invoiceDiscountSchema).optional(),
 });
 
 export type CreateInvoiceRequest = z.infer<typeof createInvoiceRequest>;

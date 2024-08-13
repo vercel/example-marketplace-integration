@@ -5,6 +5,7 @@ import {
   BillingData,
   CreateInvoiceRequest,
   Invoice,
+  InvoiceDiscount,
   RefundInvoiceRequest,
 } from "./schemas";
 import { mockBillingData } from "@/data/mock-billing-data";
@@ -110,7 +111,7 @@ export async function getInvoice(
 
 export async function submitInvoice(
   installationId: string,
-  opts?: { test?: boolean; maxAmount?: number }
+  opts?: { test?: boolean; maxAmount?: number; discountPercent?: number }
 ): Promise<{ invoiceId: string }> {
   const test = opts?.test ?? false;
   const maxAmount = opts?.maxAmount ?? undefined;
@@ -130,6 +131,20 @@ export async function submitInvoice(
     }
   }
 
+  const discounts: InvoiceDiscount[] = [];
+  if (opts?.discountPercent !== undefined && opts.discountPercent > 0) {
+    const total = items.reduce((acc, item) => acc + parseFloat(item.total), 0);
+    if (total > 0) {
+      const discount = total * opts.discountPercent;
+      discounts.push({
+        resourceId: undefined,
+        billingPlanId: items[0].billingPlanId,
+        name: "Discount",
+        amount: discount.toFixed(2),
+      });
+    }
+  }
+
   const invoiceRequest: CreateInvoiceRequest = {
     test: test ? { result: "paid", validate: false } : undefined,
     externalId: new Date().toISOString().replace(/[^0-9]/g, ""),
@@ -143,6 +158,12 @@ export async function submitInvoice(
       quantity: item.quantity,
       units: item.units,
       total: item.total,
+    })),
+    discounts: discounts.map((discount) => ({
+      resourceId: discount.resourceId!,
+      billingPlanId: discount.billingPlanId,
+      name: discount.name,
+      amount: discount.amount,
     })),
   };
   console.log("Submitting invoice:", invoiceRequest);
