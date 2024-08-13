@@ -139,7 +139,7 @@ export async function submitInvoice(
       discounts.push({
         resourceId: undefined,
         billingPlanId: items[0].billingPlanId,
-        name: "Discount",
+        name: "Discount1",
         amount: discount.toFixed(2),
       });
     }
