@@ -16,7 +16,7 @@ export async function submitInvoiceAction(formData: FormData): Promise<void> {
   try {
     const { invoiceId: resultInvoiceId } = await submitInvoice(
       session.installation_id,
-      { test, maxAmount }
+      { test, maxAmount, discountPercent: 0.2 }
     );
     invoiceId = resultInvoiceId;
   } catch (e) {
