@@ -32,6 +32,10 @@ export const installIntegrationRequestSchema = z.object({
   }),
 });
 
+export const updateInstallationRequestSchema = z.object({
+  billingPlanId: z.string(),
+});
+
 export type InstallIntegrationRequest = z.infer<
   typeof installIntegrationRequestSchema
 >;

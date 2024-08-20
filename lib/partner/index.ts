@@ -64,6 +64,16 @@ export async function installIntegration(
   await pipeline.exec();
 }
 
+export async function updateInstallation(
+  installationId: string,
+  billingPlanId: string
+): Promise<void> {
+  const installation = getInstallation(installationId);
+  const pipeline = kv.pipeline();
+  await pipeline.set(installationId, { ...installation, billingPlanId });
+  await pipeline.exec();
+}
+
 export async function uninstallIntegration(installationId: string) {
   const pipeline = kv.pipeline();
   await pipeline.del(installationId);
@@ -98,6 +108,7 @@ export async function provisionResource(
     serializeResource(resource)
   );
   await kv.lpush(`${installationId}:resources`, resource.id);
+  await updateInstallation(installationId, request.billingPlanId);
 
   return {
     ...resource,
@@ -236,6 +247,13 @@ function deserializeResource(serializedResource: SerializedResource): Resource {
   return { ...serializedResource, billingPlan };
 }
 
+export async function getInstallationtBillingPlans(
+  _installationId: string,
+  _experimental_metadata?: Record<string, unknown>
+): Promise<GetBillingPlansResponse> {
+  return { plans: billingPlans };
+}
+
 export async function getProductBillingPlans(
   _productId: string,
   _experimental_metadata?: Record<string, unknown>
@@ -252,9 +270,17 @@ export async function getResourceBillingPlans(
 
 export async function getInstallation(
   installationId: string
-): Promise<InstallIntegrationRequest & { type: "marketplace" | "external" }> {
+): Promise<
+  InstallIntegrationRequest & {
+    type: "marketplace" | "external";
+    billingPlanId: string;
+  }
+> {
   const installation = await kv.get<
-    InstallIntegrationRequest & { type: "marketplace" | "external" }
+    InstallIntegrationRequest & {
+      type: "marketplace" | "external";
+      billingPlanId: string;
+    }
   >(installationId);
 
   if (!installation) {
