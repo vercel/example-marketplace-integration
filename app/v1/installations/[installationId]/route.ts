@@ -1,7 +1,7 @@
 import {
+  getAllBillingPlans,
   getInstallation,
   getInstallationtBillingPlans,
-  getProductBillingPlans,
   installIntegration,
   uninstallIntegration,
   updateInstallation,
@@ -43,9 +43,7 @@ export const DELETE = withAuth(async (claims) => {
 
 export const GET = withAuth(async (claims) => {
   const installation = await getInstallation(claims.installation_id);
-  const billingPlans = await getInstallationtBillingPlans(
-    claims.installation_id
-  );
+  const billingPlans = await getAllBillingPlans(claims.installation_id);
   const billingPlan = billingPlans.plans.find(
     (plan) => plan.id === installation.billingPlanId
   );

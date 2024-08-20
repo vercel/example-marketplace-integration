@@ -247,18 +247,40 @@ function deserializeResource(serializedResource: SerializedResource): Resource {
   return { ...serializedResource, billingPlan };
 }
 
-export async function getInstallationtBillingPlans(
+export async function getAllBillingPlans(
   _installationId: string,
   _experimental_metadata?: Record<string, unknown>
+): Promise<GetBillingPlansResponse> { 
+  return {
+    plans:billingPlans
+  };
+}
+
+export async function getInstallationtBillingPlans(
+  installationId: string,
+  _experimental_metadata?: Record<string, unknown>
 ): Promise<GetBillingPlansResponse> {
-  return { plans: billingPlans };
+  const resources = await listResources(installationId);
+  return {
+    plans:
+      resources.resources.length > 2
+        ? billingPlans.filter((p) => p.paymentMethodRequired)
+        : billingPlans,
+  };
 }
 
 export async function getProductBillingPlans(
   _productId: string,
+  installationId: string,
   _experimental_metadata?: Record<string, unknown>
 ): Promise<GetBillingPlansResponse> {
-  return { plans: billingPlans };
+  const resources = await listResources(installationId);
+  return {
+    plans:
+      resources.resources.length > 2
+        ? billingPlans.filter((p) => p.paymentMethodRequired)
+        : billingPlans,
+  };
 }
 
 export async function getResourceBillingPlans(
@@ -268,9 +290,7 @@ export async function getResourceBillingPlans(
   return { plans: billingPlans };
 }
 
-export async function getInstallation(
-  installationId: string
-): Promise<
+export async function getInstallation(installationId: string): Promise<
   InstallIntegrationRequest & {
     type: "marketplace" | "external";
     billingPlanId: string;
