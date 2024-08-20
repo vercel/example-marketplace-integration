@@ -48,7 +48,10 @@ export const GET = withAuth(async (claims) => {
     (plan) => plan.id === installation.billingPlanId
   );
   return Response.json({
-    billingPlan,
+    billingPlan: {
+      ...billingPlan,
+      scope: "installation",
+    },
   });
 });
 
