@@ -8,8 +8,8 @@ interface Params {
 }
 
 export const GET = withAuth(
-  async (_claims, request, { params }: { params: Params }) => {
-    const response = await getProductBillingPlans(params.productId);
+  async (claims, request, { params }: { params: Params }) => {
+    const response = await getProductBillingPlans(params.productId,claims.installation_id);
 
     const url = new URL(request.url);
     const metadataQuery = url.searchParams.get("metadata");

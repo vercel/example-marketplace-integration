@@ -1,7 +1,17 @@
-import { installIntegration, uninstallIntegration } from "@/lib/partner";
+import {
+  getAllBillingPlans,
+  getInstallation,
+  getInstallationtBillingPlans,
+  installIntegration,
+  uninstallIntegration,
+  updateInstallation,
+} from "@/lib/partner";
 import { readRequestBodyWithSchema } from "@/lib/utils";
 import { withAuth } from "@/lib/vercel/auth";
-import { installIntegrationRequestSchema } from "@/lib/vercel/schemas";
+import {
+  installIntegrationRequestSchema,
+  updateInstallationRequestSchema,
+} from "@/lib/vercel/schemas";
 
 interface Params {
   installationId: string;
@@ -27,6 +37,35 @@ export const PUT = withAuth(async (claims, request) => {
 
 export const DELETE = withAuth(async (claims) => {
   await uninstallIntegration(claims.installation_id);
+
+  return new Response(null, { status: 204 });
+});
+
+export const GET = withAuth(async (claims) => {
+  const installation = await getInstallation(claims.installation_id);
+  const billingPlans = await getAllBillingPlans(claims.installation_id);
+  const billingPlan = billingPlans.plans.find(
+    (plan) => plan.id === installation.billingPlanId
+  );
+  return Response.json({
+    billingPlan,
+  });
+});
+
+export const PATCH = withAuth(async (claims, request) => {
+  const requestBody = await readRequestBodyWithSchema(
+    request,
+    updateInstallationRequestSchema
+  );
+
+  if (!requestBody.success) {
+    return new Response(null, { status: 400 });
+  }
+
+  await updateInstallation(
+    claims.installation_id,
+    requestBody.data.billingPlanId
+  );
 
   return new Response(null, { status: 204 });
 });
