@@ -63,6 +63,23 @@ export const billingPlanSchema = z.object({
   // Ex: "$20.00/month"
   cost: z.string().min(1).optional(),
 
+// Plan's details always expanded.
+  // Ex: [
+  //   { label: "SOC2 Compliant" },
+  //   { label: "SLA", value: "99.999%" },
+  //   { label: "Maximum database size", value: "20G" },
+  //   { label: "Cost per extra 100K queries", value: "$0.10"},
+  // ]
+  highlightedDetails: z
+    .array(
+      z.object({
+        label: z.string().min(1),
+        value: z.string().min(1).optional(),
+      }),
+    )
+    .optional()
+    .describe("Highlighted plan's details"),
+    
   // Plan's details.
   // Ex: [
   //   { label: "SOC2 Compliant" },

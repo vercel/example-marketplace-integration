@@ -20,12 +20,17 @@ const billingPlans: BillingPlan[] = [
   {
     id: "default",
     name: "Hobby",
+    cost: "Free",
     description: "Use all you want up to 20G",
     type: "subscription",
     paymentMethodRequired: false,
     details: [
       { label: "Max storage size", value: "20G" },
       { label: "Max queries per day", value: "100K" },
+    ],
+    highlightedDetails: [
+      { label: "High availability", value: "Single zone" },
+      { label: "Dataset size", value: "100Mb" },
     ],
     maxResources: 3,
     requiredPolicies: [
@@ -36,9 +41,14 @@ const billingPlans: BillingPlan[] = [
   {
     id: "pro200",
     name: "Pro",
+    cost: "$10 every Gb",
     type: "subscription",
     description: "$10 every Gb",
     paymentMethodRequired: true,
+    highlightedDetails: [
+      { label: "High availability", value: "Multi zone" },
+      { label: "Dataset size", value: "500Mb" },
+    ],
     details: [
       { label: "20G storage and 200K queries", value: "$25.00" },
       { label: "Extra storage", value: "$10.00 per 10G" },
@@ -250,9 +260,9 @@ function deserializeResource(serializedResource: SerializedResource): Resource {
 export async function getAllBillingPlans(
   _installationId: string,
   _experimental_metadata?: Record<string, unknown>
-): Promise<GetBillingPlansResponse> { 
+): Promise<GetBillingPlansResponse> {
   return {
-    plans:billingPlans
+    plans: billingPlans,
   };
 }
 
