@@ -19,6 +19,12 @@ export async function GET(request: NextRequest) {
 
   const resourceId = request.nextUrl.searchParams.get("resource_id");
 
+  if (request.nextUrl.searchParams.get("support")) {
+    redirect(
+      `/dashboard/support${resourceId ? "?resource_id=" + resourceId : ""}`
+    );
+  }
+
   if (resourceId) {
     redirect(`/dashboard/resources/${resourceId}`);
   } else {
