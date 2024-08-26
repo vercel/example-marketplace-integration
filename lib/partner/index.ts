@@ -78,7 +78,7 @@ export async function updateInstallation(
   installationId: string,
   billingPlanId: string
 ): Promise<void> {
-  const installation = getInstallation(installationId);
+  const installation = await getInstallation(installationId);
   const pipeline = kv.pipeline();
   await pipeline.set(installationId, { ...installation, billingPlanId });
   await pipeline.exec();
