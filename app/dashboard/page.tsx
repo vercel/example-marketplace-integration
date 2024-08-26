@@ -1,27 +1,18 @@
-import { getInstallation, listResources } from "@/lib/partner";
-import Link from "next/link";
+import { listResources } from "@/lib/partner";
 import { getSession } from "./auth";
-import { getAccountInfo } from "@/lib/vercel/marketplace-api";
 import { Resource } from "@/lib/vercel/schemas";
 
 export default async function DashboardPage() {
-  const session = await getSession();
-
-  const [{ resources }, installation, account] = await Promise.all([
-    listResources(session.installation_id),
-    getInstallation(session.installation_id),
-    getAccountInfo(session.installation_id),
-  ]);
-
   return (
     <main className="space-y-8">
-      <Resources installationId={session.installation_id} />
+      <Resources />
     </main>
   );
 }
 
-async function Resources({ installationId }: { installationId: string }) {
-  const { resources } = await listResources(installationId);
+async function Resources() {
+  const session = await getSession();
+  const { resources } = await listResources(session.installation_id);
 
   // {/* grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 */}
   return (
