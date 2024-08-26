@@ -2,6 +2,8 @@ import { OidcClaims, verifyToken } from "@/lib/vercel/auth";
 import { cookies } from "next/headers";
 
 export async function getSession(): Promise<OidcClaims> {
+  const allCookies = cookies().getAll();
+  console.log(allCookies);
   const idToken = cookies().get("id-token");
 
   if (!idToken) {
