@@ -85,8 +85,15 @@ export async function updateInstallation(
 }
 
 export async function uninstallIntegration(installationId: string) {
+  const installation = await getInstallation(installationId);
+  if (!installation || installation.deletedAt) {
+    return;
+  }
   const pipeline = kv.pipeline();
-  await pipeline.del(installationId);
+  await pipeline.set(installationId, {
+    ...installation,
+    deletedAt: Date.now(),
+  });
   await pipeline.lrem("installations", 0, installationId);
   await pipeline.exec();
 }
@@ -304,12 +311,14 @@ export async function getInstallation(installationId: string): Promise<
   InstallIntegrationRequest & {
     type: "marketplace" | "external";
     billingPlanId: string;
+    deletedAt?: number;
   }
 > {
   const installation = await kv.get<
     InstallIntegrationRequest & {
       type: "marketplace" | "external";
       billingPlanId: string;
+      deletedAt?: number;
     }
   >(installationId);
 

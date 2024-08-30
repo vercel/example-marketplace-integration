@@ -1,4 +1,5 @@
 import { getAccountInfo } from "@/lib/vercel/marketplace-api";
+import { getInstallation } from "@/lib/partner";
 import { getSession } from "./auth";
 import { Nav } from "./nav";
 
@@ -9,6 +10,7 @@ export default async function DashboardLayout({
 }) {
   const session = await getSession();
   const account = await getAccountInfo(session.installation_id);
+  const installation = await getInstallation(session.installation_id);
 
   return (
     <div className="w-[800px] mx-auto">
@@ -39,6 +41,15 @@ export default async function DashboardLayout({
             </div>
             <h1 className="text-xl font-bold">
               {`${account.name}'s`} Dashboard
+              {installation?.deletedAt ? (
+                <>
+                  {" "}
+                  <span className="text-red-500">
+                    (deleted at{" "}
+                    {new Date(installation.deletedAt).toLocaleString()})
+                  </span>
+                </>
+              ) : null}
             </h1>
           </div>
           <div className="flex items-center gap-2">
