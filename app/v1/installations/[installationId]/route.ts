@@ -45,6 +45,9 @@ export const DELETE = withAuth(async (claims) => {
 
 export const GET = withAuth(async (claims) => {
   const installation = await getInstallation(claims.installation_id);
+  if (!installation || installation.deletedAt) {
+    return new Response(null, { status: 404 });
+  }
   const billingPlans = await getAllBillingPlans(claims.installation_id);
   const billingPlan = billingPlans.plans.find(
     (plan) => plan.id === installation.billingPlanId
