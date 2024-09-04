@@ -45,7 +45,7 @@ export default async function DashboardLayout({
                 <>
                   {" "}
                   <span className="text-red-500">
-                    (deleted at{" "}
+                    (deleted on{" "}
                     {new Date(installation.deletedAt).toLocaleString()})
                   </span>
                 </>

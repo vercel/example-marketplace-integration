@@ -30,7 +30,7 @@ export async function dispatchEvent(
   });
 }
 
-type AccountInfo = {
+export type AccountInfo = {
   name: string;
   contact: {
     email: string;
@@ -150,15 +150,27 @@ export async function submitInvoice(
     externalId: new Date().toISOString().replace(/[^0-9]/g, ""),
     invoiceDate: new Date().toISOString(),
     period: billingData.period,
-    items: items.map((item) => ({
-      resourceId: item.resourceId!,
-      billingPlanId: item.billingPlanId,
-      name: item.name,
-      price: item.price,
-      quantity: item.quantity,
-      units: item.units,
-      total: item.total,
-    })),
+    items:
+      items.length > 0
+        ? items.map((item) => ({
+            resourceId: item.resourceId!,
+            billingPlanId: item.billingPlanId,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+            units: item.units,
+            total: item.total,
+          }))
+        : [
+            {
+              billingPlanId: "pro200",
+              name: "Lone item. Maybe final invoice?",
+              price: "1.80",
+              quantity: 1,
+              units: "n/a",
+              total: "1.80",
+            },
+          ],
     discounts: discounts.map((discount) => ({
       resourceId: discount.resourceId!,
       billingPlanId: discount.billingPlanId,
