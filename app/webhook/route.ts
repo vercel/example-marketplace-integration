@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import { env } from "@/lib/env";
 import { type WebhookEvent, webhookEventSchema } from "@/lib/vercel/schemas";
-import { storeWebhookEvent, uninstallIntegration } from "@/lib/partner";
+import { storeWebhookEvent, uninstallInstallation } from "@/lib/partner";
 
 export async function POST(req: Request): Promise<Response> {
   const rawBody = await req.text();
@@ -29,7 +29,7 @@ export async function POST(req: Request): Promise<Response> {
 
     switch (type) {
       case "integration-configuration.removed": {
-        await uninstallIntegration(payload.configuration.id);
+        await uninstallInstallation(payload.configuration.id);
       }
     }
   }

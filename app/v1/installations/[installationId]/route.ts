@@ -3,7 +3,7 @@ import {
   getInstallation,
   getInstallationtBillingPlans,
   installIntegration,
-  uninstallIntegration,
+  uninstallInstallation,
   updateInstallation,
 } from "@/lib/partner";
 import { readRequestBodyWithSchema } from "@/lib/utils";
@@ -38,9 +38,11 @@ export const PUT = withAuth(async (claims, request) => {
 });
 
 export const DELETE = withAuth(async (claims) => {
-  await uninstallIntegration(claims.installation_id);
-
-  return new Response(null, { status: 204 });
+  const response = await uninstallInstallation(claims.installation_id);
+  if (!response) {
+    return new Response(null, { status: 204 });
+  }
+  return Response.json(response);
 });
 
 export const GET = withAuth(async (claims) => {

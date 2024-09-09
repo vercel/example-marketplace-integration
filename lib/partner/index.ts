@@ -84,10 +84,12 @@ export async function updateInstallation(
   await pipeline.exec();
 }
 
-export async function uninstallIntegration(installationId: string) {
+export async function uninstallInstallation(
+  installationId: string
+): Promise<{ finalized: boolean } | undefined> {
   const installation = await getInstallation(installationId);
   if (!installation || installation.deletedAt) {
-    return;
+    return undefined;
   }
   const pipeline = kv.pipeline();
   await pipeline.set(installationId, {
@@ -96,6 +98,10 @@ export async function uninstallIntegration(installationId: string) {
   });
   await pipeline.lrem("installations", 0, installationId);
   await pipeline.exec();
+
+  // Installation is finalized immediately if it's on a free plan.
+  const billingPlan = billingPlanMap.get(installation.billingPlanId);
+  return { finalized: billingPlan?.paymentMethodRequired === false };
 }
 
 export async function listInstallations(): Promise<string[]> {
