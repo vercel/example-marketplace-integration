@@ -2,11 +2,6 @@
 
 Welcome to the Example Marketplace Integration. This repository contains a reference implementation for a Vercel Marketplace Integration.
 
-## Prerequisities
-
-- A Vercel team.
-- The Vercel Marketplace feature flag must be enabled for your team. Please contact Vercel with your Team ID (Vercel Dashboard > Settings > Team ID) to enable the feature flag.
-
 ## Getting Started
 
 1. Clone the code to your machine.
