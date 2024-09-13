@@ -1,3 +1,4 @@
+import { env } from "@/lib/env";
 import { installIntegration } from "@/lib/partner";
 import { exchangeExternalCodeForToken } from "@/lib/vercel/external-api";
 
@@ -6,9 +7,15 @@ export default async function Page({
 }: {
   searchParams: { code: string; next: string };
 }) {
+  if (!env.VERCEL_EXTERNAL_REDIRECT_URI) {
+    throw new Error(
+      `VERCEL_EXTERNAL_REDIRECT_URI is not set, cannot connect account`
+    );
+  }
+
   const result = await exchangeExternalCodeForToken(
     code,
-    process.env.VERCEL_EXTERNAL_REDIRECT_URI as string
+    env.VERCEL_EXTERNAL_REDIRECT_URI
   );
 
   await installIntegration(result.installation_id, {
