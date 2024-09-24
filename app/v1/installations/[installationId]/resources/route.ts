@@ -41,16 +41,16 @@ export const POST = withAuth(async (claims, request) => {
       }
     );
   }
-  if (requestBody.data.name === "generic_error") {
+  if (requestBody.data.name === "conflict") {
     return Response.json(
       {
         error: {
-          code: "generic_error",
+          code: "conflict",
           message: "You cannot provision resources for this user",
         },
       },
       {
-        status: 400,
+        status: 409,
       }
     );
   }
