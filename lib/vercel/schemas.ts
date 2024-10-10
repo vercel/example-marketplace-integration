@@ -484,3 +484,10 @@ export const webhookEventSchema = z.discriminatedUnion("type", [
   invoiceNotPaidWebhookEventSchema,
   integrationConfigurationRemovedWebhookEventSchema,
 ]);
+
+export type UnknownWebhookEvent = z.infer<typeof unknownWebhookEventSchema>;
+export const unknownWebhookEventSchema = webhookEventBaseSchema.extend({
+  type: z.string(),
+  payload: z.unknown(),
+  unknown: z.boolean().optional().default(true),
+});

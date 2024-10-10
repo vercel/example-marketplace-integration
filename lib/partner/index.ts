@@ -12,6 +12,7 @@ import {
   UpdateResourceResponse,
   Notification,
   WebhookEvent,
+  UnknownWebhookEvent,
 } from "@/lib/vercel/schemas";
 import { kv } from "@vercel/kv";
 import { compact } from "lodash";
@@ -335,7 +336,9 @@ export async function getInstallation(installationId: string): Promise<
   return installation;
 }
 
-export async function storeWebhookEvent(event: WebhookEvent): Promise<void> {
+export async function storeWebhookEvent(
+  event: WebhookEvent | UnknownWebhookEvent
+): Promise<void> {
   const pipeline = kv.pipeline();
   await pipeline.lpush("webhook_events", event);
   await pipeline.ltrim("webhook_events", 0, 100);
