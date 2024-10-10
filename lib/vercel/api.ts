@@ -32,7 +32,9 @@ export async function fetchVercelApi(
   const res = await fetch(url, options);
 
   console.log(
-    `<< ${options.method || "GET"} ${url} ${res.status} ${res.statusText}`
+    `<< ${options.method || "GET"} ${url} ${res.status} ${
+      res.statusText
+    } ${res.headers.get("X-Vercel-Id")}`
   );
 
   if (!res.ok) {
