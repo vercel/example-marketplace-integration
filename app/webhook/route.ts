@@ -15,27 +15,43 @@ export async function POST(req: Request): Promise<Response> {
     });
   }
 
+  let json: any;
+  try {
+    json = JSON.parse(rawBody);
+  } catch (e) {
+    console.error("Failed to parse webhook event: not a json:", rawBody, e);
+  }
+  if (!json) {
+    return new Response("", { status: 200 });
+  }
+
   let event: WebhookEvent | undefined;
   try {
-    const json = JSON.parse(rawBody);
     event = webhookEventSchema.parse(json);
   } catch (e) {
-    console.error("Failed to parse webhook event:", rawBody, e);
+    console.error("Failed to parse webhook event: unknown event:", rawBody, e);
   }
-  if (event) {
-    const { id, type, createdAt, payload } = event;
-    console.log("webhook event:", id, type, new Date(createdAt), payload);
-    await storeWebhookEvent(event);
+  if (!event) {
+    await storeWebhookEvent({ ...json, unknown: true });
+    return new Response("", { status: 200 });
+  }
 
-    switch (type) {
-      case "integration-configuration.removed": {
-        await uninstallInstallation(payload.configuration.id);
-      }
+  const { id, type, createdAt, payload } = event;
+  console.log("webhook event:", id, type, new Date(createdAt), payload);
+  await storeWebhookEvent(event);
+
+  switch (type) {
+    case "integration-configuration.removed": {
+      await uninstallInstallation(payload.configuration.id);
     }
   }
+
   return new Response("", { status: 200 });
 }
 
 function sha1(data: Buffer, secret: string): string {
-  return crypto.createHmac("sha1", secret).update(data).digest("hex");
+  return crypto
+    .createHmac("sha1", secret)
+    .update(new Uint8Array(data))
+    .digest("hex");
 }

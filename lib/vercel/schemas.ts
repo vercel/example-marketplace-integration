@@ -63,7 +63,7 @@ export const billingPlanSchema = z.object({
   // Ex: "$20.00/month"
   cost: z.string().min(1).optional(),
 
-// Plan's details always expanded.
+  // Plan's details always expanded.
   // Ex: [
   //   { label: "SOC2 Compliant" },
   //   { label: "SLA", value: "99.999%" },
@@ -75,11 +75,11 @@ export const billingPlanSchema = z.object({
       z.object({
         label: z.string().min(1),
         value: z.string().min(1).optional(),
-      }),
+      })
     )
     .optional()
     .describe("Highlighted plan's details"),
-    
+
   // Plan's details.
   // Ex: [
   //   { label: "SOC2 Compliant" },
@@ -173,7 +173,7 @@ export const provisionResourceRequestSchema = resourceSchema
     metadata: true,
   })
   .extend({
-    billingPlanId: z.string().min(1), 
+    billingPlanId: z.string().min(1),
   });
 
 export type ProvisionResourceRequest = z.infer<
@@ -438,6 +438,7 @@ export type RefundInvoiceRequest = z.infer<typeof refundInvoiceRequestSchema>;
 const webhookEventBaseSchema = z.object({
   id: z.string().min(1),
   createdAt: z.number(),
+  unknown: z.boolean().optional(),
 });
 
 const invoiceWebhookPayloadSchema = z.object({

@@ -34,7 +34,8 @@ function EventCard({ event }: { event: WebhookEvent }) {
         <span className="text-gray-600 text-sm">ID: {event.id}</span>
       </div>
       <h2 className="text-lg font-medium mb-2">
-        {event.type} ({new Date(event.createdAt).toISOString()})
+        {event.type} {event.unknown ? "(unknown)" : ""} (
+        {new Date(event.createdAt).toISOString()})
       </h2>
       <details className="mt-4">
         <summary>Payload</summary>
