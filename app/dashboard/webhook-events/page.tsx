@@ -1,8 +1,7 @@
 import { getSession } from "../auth";
-import { getAccountInfo, getInvoice } from "@/lib/vercel/marketplace-api";
-import { Section } from "../components/section";
 import { getWebhookEvents } from "@/lib/partner";
 import { WebhookEvent } from "@/lib/vercel/schemas";
+import { EventActions } from "./actions-ui";
 
 export default async function Page() {
   await getSession();
@@ -43,6 +42,7 @@ function EventCard({ event }: { event: WebhookEvent }) {
           <code>{JSON.stringify(event.payload, null, 2)}</code>
         </pre>
       </details>
+      <EventActions event={event} />
     </div>
   );
 }

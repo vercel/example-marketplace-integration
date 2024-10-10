@@ -7,6 +7,7 @@ import {
   Invoice,
   InvoiceDiscount,
   RefundInvoiceRequest,
+  UpdateDeploymentActionRequest,
 } from "./schemas";
 import { mockBillingData } from "@/data/mock-billing-data";
 import { fetchVercelApi } from "./api";
@@ -207,4 +208,32 @@ export async function refundInvoice(
       } satisfies RefundInvoiceRequest,
     }
   )) as { invoiceId: string };
+}
+
+export async function updateDeploymentAction({
+  deploymentId,
+  installationId,
+  resourceId,
+  action,
+  status,
+  statusText,
+}: {
+  deploymentId: string;
+  installationId: string;
+  resourceId: string;
+  action: string;
+  status: "succeeded" | "failed";
+  statusText?: string;
+}): Promise<void> {
+  await fetchVercelApi(
+    `/v1/deployments/${deploymentId}/integrations/${installationId}/resources/${resourceId}/actions/${action}`,
+    {
+      installationId,
+      method: "PATCH",
+      data: {
+        status,
+        statusText,
+      } satisfies UpdateDeploymentActionRequest,
+    }
+  );
 }

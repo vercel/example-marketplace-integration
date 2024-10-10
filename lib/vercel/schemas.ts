@@ -433,6 +433,15 @@ export const refundInvoiceRequestSchema = z.object({
 
 export type RefundInvoiceRequest = z.infer<typeof refundInvoiceRequestSchema>;
 
+export type UpdateDeploymentActionRequest = z.infer<
+  typeof updateDeploymentActionRequestSchema
+>;
+
+export const updateDeploymentActionRequestSchema = z.object({
+  status: z.enum(["succeeded", "failed"]),
+  statusText: z.string().optional(),
+});
+
 // Webhooks
 
 const webhookEventBaseSchema = z.object({
@@ -477,12 +486,44 @@ const integrationConfigurationRemovedWebhookEventSchema =
     }),
   });
 
+export type DeploymentIntegrationActionStartEvent = z.infer<
+  typeof deploymentIntegrationActionStartEventSchema
+>;
+const deploymentIntegrationActionStartEventSchema =
+  webhookEventBaseSchema.extend({
+    type: z.literal("deployment.integration.action.start"),
+    payload: z.object({
+      user: z
+        .object({
+          id: z.string(),
+        })
+        .passthrough(),
+      team: z
+        .object({
+          id: z.string(),
+        })
+        .passthrough(),
+      installationId: z.string(),
+      action: z.string(),
+      resourceId: z.string(),
+      deployment: z
+        .object({
+          id: z.string(),
+        })
+        .passthrough(),
+      configuration: z.object({
+        id: z.string(),
+      }),
+    }),
+  });
+
 export type WebhookEvent = z.infer<typeof webhookEventSchema>;
 export const webhookEventSchema = z.discriminatedUnion("type", [
   invoiceCreatedWebhookEventSchema,
   invoicePaidWebhookEventSchema,
   invoiceNotPaidWebhookEventSchema,
   integrationConfigurationRemovedWebhookEventSchema,
+  deploymentIntegrationActionStartEventSchema,
 ]);
 
 export type UnknownWebhookEvent = z.infer<typeof unknownWebhookEventSchema>;
