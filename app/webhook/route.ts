@@ -1,6 +1,10 @@
 import crypto from "crypto";
 import { env } from "@/lib/env";
-import { type WebhookEvent, webhookEventSchema } from "@/lib/vercel/schemas";
+import {
+  unknownWebhookEventSchema,
+  type WebhookEvent,
+  webhookEventSchema,
+} from "@/lib/vercel/schemas";
 import { storeWebhookEvent, uninstallInstallation } from "@/lib/partner";
 
 export async function POST(req: Request): Promise<Response> {
@@ -32,7 +36,11 @@ export async function POST(req: Request): Promise<Response> {
     console.error("Failed to parse webhook event: unknown event:", rawBody, e);
   }
   if (!event) {
-    await storeWebhookEvent({ ...json, unknown: true });
+    try {
+      await storeWebhookEvent(unknownWebhookEventSchema.parse(json));
+    } catch (e) {
+      console.error("Failed to parse webhook event: not an event:", rawBody, e);
+    }
     return new Response("", { status: 200 });
   }
 
