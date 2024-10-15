@@ -437,9 +437,24 @@ export type UpdateDeploymentActionRequest = z.infer<
   typeof updateDeploymentActionRequestSchema
 >;
 
+export type DeploymentActionOutcome = z.infer<
+  typeof deploymentActionResourceSecretsOutcomeSchema
+>;
+
+export const deploymentActionResourceSecretsOutcomeSchema = z.object({
+  kind: z.literal("resource-secrets"),
+  secrets: z.array(
+    z.object({
+      name: z.string(),
+      value: z.string(),
+    })
+  ),
+});
+
 export const updateDeploymentActionRequestSchema = z.object({
   status: z.enum(["succeeded", "failed"]),
   statusText: z.string().optional(),
+  outcomes: z.array(deploymentActionResourceSecretsOutcomeSchema).optional(),
 });
 
 // Webhooks

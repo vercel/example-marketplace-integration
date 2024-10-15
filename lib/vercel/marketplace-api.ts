@@ -4,6 +4,7 @@ import { z } from "zod";
 import {
   BillingData,
   CreateInvoiceRequest,
+  DeploymentActionOutcome,
   Invoice,
   InvoiceDiscount,
   RefundInvoiceRequest,
@@ -217,6 +218,7 @@ export async function updateDeploymentAction({
   action,
   status,
   statusText,
+  outcomes,
 }: {
   deploymentId: string;
   installationId: string;
@@ -224,6 +226,7 @@ export async function updateDeploymentAction({
   action: string;
   status: "succeeded" | "failed";
   statusText?: string;
+  outcomes?: DeploymentActionOutcome[];
 }): Promise<void> {
   await fetchVercelApi(
     `/v1/deployments/${deploymentId}/integrations/${installationId}/resources/${resourceId}/actions/${action}`,
@@ -233,6 +236,7 @@ export async function updateDeploymentAction({
       data: {
         status,
         statusText,
+        outcomes,
       } satisfies UpdateDeploymentActionRequest,
     }
   );

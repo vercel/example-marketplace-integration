@@ -16,6 +16,17 @@ export async function succeedAction(
     resourceId: payload.resourceId,
     action: payload.action,
     status: "succeeded",
+    outcomes: [
+      {
+        kind: "resource-secrets",
+        secrets: [
+          {
+            name: "TOP_SECRET",
+            value: "Value set in action",
+          },
+        ],
+      },
+    ],
   });
 }
 
