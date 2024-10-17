@@ -36,6 +36,7 @@ export const POST = withAuth(
       importedResources.push({
         id: importedResource.id,
         secrets: buildSecrets(result.data.productId),
+        status: "ready",
       });
     }
 
