@@ -28,7 +28,7 @@ export const POST = withAuth(
           productId: result.data.productId,
           name: resource.name,
           metadata: {},
-          billingPlanId: "imported-resource",
+          billingPlanId: "default",
         },
         resource.id
       );
