@@ -532,3 +532,14 @@ export const unknownWebhookEventSchema = webhookEventBaseSchema.extend({
   payload: z.unknown(),
   unknown: z.boolean().optional().default(true),
 });
+
+export type ResourceImportRequest = z.infer<typeof resourceImportRequestSchema>;
+export const resourceImportRequestSchema = z.object({
+  productId: z.string(),
+  resources: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+    })
+  ),
+});
