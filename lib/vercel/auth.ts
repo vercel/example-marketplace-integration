@@ -22,11 +22,23 @@ export function withAuth(
     claims: OidcClaims,
     req: NextRequest,
     ...rest: any[]
-  ) => Promise<Response>
+  ) => Promise<Response>,
+  {
+    getAuthorizationToken = getBearerAuthorizationToken,
+  }: {
+    getAuthorizationToken?: (
+      request: NextRequest
+    ) => string | null | Promise<string | null>;
+  } = {}
 ): (req: NextRequest, ...rest: any[]) => Promise<Response> {
   return async (req: NextRequest, ...rest: any[]): Promise<Response> => {
     try {
-      const token = getAuthorizationToken(req);
+      const token = await getAuthorizationToken(req);
+
+      if (!token) {
+        throw new AuthError("Invalid Authorization header, no token found");
+      }
+
       const claims = await verifyToken(token);
 
       return callback(claims, req, ...rest);
@@ -71,12 +83,12 @@ export async function verifyToken(token: string): Promise<OidcClaims> {
   }
 }
 
-function getAuthorizationToken(req: Request): string {
+export function getBearerAuthorizationToken(req: Request): string | null {
   const authHeader = req.headers.get("Authorization");
   const match = authHeader?.match(/^bearer (.+)$/i);
 
   if (!match) {
-    throw new AuthError("Invalid Authorization header");
+    return null;
   }
 
   return match[1];
