@@ -2,7 +2,10 @@
 
 import { DeploymentIntegrationActionStartEvent } from "@/lib/vercel/schemas";
 import { getSession } from "../auth";
-import { updateDeploymentAction } from "@/lib/vercel/marketplace-api";
+import {
+  updateDeploymentAction,
+  getDeployment,
+} from "@/lib/vercel/marketplace-api";
 
 export async function succeedAction(
   event: DeploymentIntegrationActionStartEvent
@@ -10,6 +13,14 @@ export async function succeedAction(
   await getSession();
 
   const { payload } = event;
+
+  const deployment = await getDeployment(
+    event.payload.installationId,
+    event.payload.deployment.id
+  );
+
+  const newSecret = `Value set in action for ${deployment.id}, branch ${deployment.gitSource?.ref}, sha ${deployment.gitSource?.sha}`;
+
   await updateDeploymentAction({
     deploymentId: payload.deployment.id,
     installationId: payload.installationId,
@@ -22,7 +33,7 @@ export async function succeedAction(
         secrets: [
           {
             name: "TOP_SECRET",
-            value: "Value set in action",
+            value: newSecret,
           },
         ],
       },

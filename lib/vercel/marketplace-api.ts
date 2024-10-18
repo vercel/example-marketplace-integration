@@ -241,3 +241,17 @@ export async function updateDeploymentAction({
     }
   );
 }
+
+// See https://vercel.com/docs/rest-api/endpoints/deployments#get-a-deployment-by-id-or-url
+export async function getDeployment(
+  installationId: string,
+  deploymentId: string
+): Promise<any> {
+  return fetchVercelApi(
+    `/v13/deployments/${deploymentId}?withGitRepoInfo=true`,
+    {
+      installationId,
+      method: "GET",
+    }
+  );
+}
