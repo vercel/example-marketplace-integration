@@ -1,58 +1,48 @@
 import { provisionResource } from "@/lib/partner";
 import { readRequestBodyWithSchema } from "@/lib/utils";
-import { getBearerAuthorizationToken, withAuth } from "@/lib/vercel/auth";
+import { withAuth } from "@/lib/vercel/auth";
 import { resourceImportRequestSchema } from "@/lib/vercel/schemas";
 
-export const POST = withAuth(
-  async (claims, request) => {
-    const result = await readRequestBodyWithSchema(
-      request,
-      resourceImportRequestSchema
+export const POST = withAuth(async (claims, request) => {
+  const result = await readRequestBodyWithSchema(
+    request,
+    resourceImportRequestSchema
+  );
+
+  if (!result.success) {
+    return Response.json({
+      error: {
+        type: "validation_error",
+        message: "Invalid request body",
+      },
+    });
+  }
+
+  const importedResources = [];
+
+  for (const resource of result.data.resources) {
+    const importedResource = await provisionResource(
+      claims.installation_id,
+      {
+        productId: result.data.productId,
+        name: resource.name,
+        metadata: {},
+        billingPlanId: "default",
+      },
+      resource.id
     );
 
-    if (!result.success) {
-      return Response.json({
-        error: {
-          type: "validation_error",
-          message: "Invalid request body",
-        },
-      });
-    }
-
-    const importedResources = [];
-
-    for (const resource of result.data.resources) {
-      const importedResource = await provisionResource(
-        claims.installation_id,
-        {
-          productId: result.data.productId,
-          name: resource.name,
-          metadata: {},
-          billingPlanId: "default",
-        },
-        resource.id
-      );
-
-      importedResources.push({
-        id: importedResource.id,
-        secrets: buildSecrets(result.data.productId),
-        status: "ready",
-      });
-    }
-
-    return Response.json({
-      resources: importedResources,
+    importedResources.push({
+      id: importedResource.id,
+      secrets: buildSecrets(result.data.productId),
+      status: "ready",
     });
-  },
-  {
-    getAuthorizationToken(request) {
-      const bearerToken = getBearerAuthorizationToken(request);
-
-      // TODO: decrypt token using CLIENT_SECRET
-      return bearerToken;
-    },
   }
-);
+
+  return Response.json({
+    resources: importedResources,
+  });
+});
 
 function buildSecrets(
   productId: string

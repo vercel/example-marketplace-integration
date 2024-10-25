@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import { env } from "../env";
 import { JWTExpired, JWTInvalid } from "jose/errors";
+import { createDecipheriv } from "crypto";
 
 export interface OidcClaims {
   sub: string;
@@ -22,18 +23,11 @@ export function withAuth(
     claims: OidcClaims,
     req: NextRequest,
     ...rest: any[]
-  ) => Promise<Response>,
-  {
-    getAuthorizationToken = getBearerAuthorizationToken,
-  }: {
-    getAuthorizationToken?: (
-      request: NextRequest
-    ) => string | null | Promise<string | null>;
-  } = {}
+  ) => Promise<Response>
 ): (req: NextRequest, ...rest: any[]) => Promise<Response> {
   return async (req: NextRequest, ...rest: any[]): Promise<Response> => {
     try {
-      const token = await getAuthorizationToken(req);
+      const token = await getRequestAuthJWT(req);
 
       if (!token) {
         throw new AuthError("Invalid Authorization header, no token found");
@@ -83,7 +77,27 @@ export async function verifyToken(token: string): Promise<OidcClaims> {
   }
 }
 
-export function getBearerAuthorizationToken(req: Request): string | null {
+function getRequestAuthJWT(req: Request): string | null {
+  switch (req.headers.get("x-vercel-auth")) {
+    case "shared-secret":
+      return getSharedSecretAuthorizationToken(req);
+
+    default:
+      return getBearerAuthorizationToken(req);
+  }
+}
+
+function getSharedSecretAuthorizationToken(req: Request): string | null {
+  const token = getBearerAuthorizationToken(req);
+
+  if (!token) {
+    return null;
+  }
+
+  return decryptAuthToken(env.INTEGRATION_CLIENT_SECRET, token);
+}
+
+function getBearerAuthorizationToken(req: Request): string | null {
   const authHeader = req.headers.get("Authorization");
   const match = authHeader?.match(/^bearer (.+)$/i);
 
@@ -92,6 +106,18 @@ export function getBearerAuthorizationToken(req: Request): string | null {
   }
 
   return match[1];
+}
+
+function decryptAuthToken(clientSecret: string, token: string): string {
+  const [hexIv, hexCipherText] = token.split(".");
+  const iv = Buffer.from(hexIv, "hex");
+  const decipher = createDecipheriv(
+    "aes-192-cbc",
+    Buffer.from(clientSecret),
+    iv
+  );
+
+  return decipher.update(hexCipherText, "hex", "utf8") + decipher.final("utf8");
 }
 
 class AuthError extends Error {}
