@@ -143,6 +143,7 @@ export async function provisionResource(
       {
         name: "TOP_SECRET",
         value: `birds aren't real (${new Date().toISOString()})`,
+        prefix: "SUPER",
       },
     ],
   };

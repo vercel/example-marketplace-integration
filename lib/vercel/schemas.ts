@@ -181,7 +181,13 @@ export type ProvisionResourceRequest = z.infer<
 >;
 
 export const provisionResourceResponseSchema = resourceSchema.extend({
-  secrets: z.array(z.object({ name: z.string(), value: z.string() })),
+  secrets: z.array(
+    z.object({
+      name: z.string(),
+      value: z.string(),
+      prefix: z.string().optional(),
+    })
+  ),
 });
 
 export type ProvisionResourceResponse = z.infer<
