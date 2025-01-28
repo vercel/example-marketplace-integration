@@ -59,6 +59,10 @@ export const billingPlanSchema = z.object({
   // Defaults to `true`.
   paymentMethodRequired: z.boolean().optional().default(true),
 
+  // Use when payment method is required. The amount will be used to
+  // test if the user's payment method can handle the charge.
+  preauthorizationAmount: z.number().optional(),
+
   // Plan's cost, if available. Only relevant for fixed-cost plans.
   // Ex: "$20.00/month"
   cost: z.string().min(1).optional(),
