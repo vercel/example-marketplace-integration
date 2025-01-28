@@ -185,7 +185,13 @@ export type ProvisionResourceRequest = z.infer<
 >;
 
 export const provisionResourceResponseSchema = resourceSchema.extend({
-  secrets: z.array(z.object({ name: z.string(), value: z.string() })),
+  secrets: z.array(
+    z.object({
+      name: z.string(),
+      value: z.string(),
+      prefix: z.string().optional(),
+    })
+  ),
 });
 
 export type ProvisionResourceResponse = z.infer<
@@ -550,4 +556,15 @@ export const unknownWebhookEventSchema = webhookEventBaseSchema.extend({
   type: z.string(),
   payload: z.unknown(),
   unknown: z.boolean().optional().default(true),
+});
+
+export type ResourceImportRequest = z.infer<typeof resourceImportRequestSchema>;
+export const resourceImportRequestSchema = z.object({
+  productId: z.string(),
+  resources: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+    })
+  ),
 });

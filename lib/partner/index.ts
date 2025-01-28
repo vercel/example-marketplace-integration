@@ -16,6 +16,7 @@ import {
 } from "@/lib/vercel/schemas";
 import { kv } from "@vercel/kv";
 import { compact } from "lodash";
+import { z } from "zod";
 
 const billingPlans: BillingPlan[] = [
   {
@@ -113,14 +114,15 @@ export async function listInstallations(): Promise<string[]> {
 
 export async function provisionResource(
   installationId: string,
-  request: ProvisionResourceRequest
+  request: ProvisionResourceRequest,
+  id: string = nanoid()
 ): Promise<ProvisionResourceResponse> {
   const billingPlan = billingPlanMap.get(request.billingPlanId);
   if (!billingPlan) {
     throw new Error(`Unknown billing plan ${request.billingPlanId}`);
   }
   const resource = {
-    id: nanoid(),
+    id,
     status: "ready",
     name: request.name,
     billingPlan,
@@ -142,6 +144,7 @@ export async function provisionResource(
       {
         name: "TOP_SECRET",
         value: `birds aren't real (${new Date().toISOString()})`,
+        prefix: "SUPER",
       },
     ],
   };

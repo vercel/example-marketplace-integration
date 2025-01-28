@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import { env } from "../env";
 import { JWTExpired, JWTInvalid } from "jose/errors";
+import { createDecipheriv } from "crypto";
 
 export interface OidcClaims {
   sub: string;
@@ -26,7 +27,12 @@ export function withAuth(
 ): (req: NextRequest, ...rest: any[]) => Promise<Response> {
   return async (req: NextRequest, ...rest: any[]): Promise<Response> => {
     try {
-      const token = getAuthorizationToken(req);
+      const token = await getRequestAuthJWT(req);
+
+      if (!token) {
+        throw new AuthError("Invalid Authorization header, no token found");
+      }
+
       const claims = await verifyToken(token);
 
       return callback(claims, req, ...rest);
@@ -71,15 +77,47 @@ export async function verifyToken(token: string): Promise<OidcClaims> {
   }
 }
 
-function getAuthorizationToken(req: Request): string {
+function getRequestAuthJWT(req: Request): string | null {
+  switch (req.headers.get("x-vercel-auth")) {
+    case "shared-secret":
+      return getSharedSecretAuthorizationToken(req);
+
+    default:
+      return getBearerAuthorizationToken(req);
+  }
+}
+
+function getSharedSecretAuthorizationToken(req: Request): string | null {
+  const token = getBearerAuthorizationToken(req);
+
+  if (!token) {
+    return null;
+  }
+
+  return decryptAuthToken(env.INTEGRATION_CLIENT_SECRET, token);
+}
+
+function getBearerAuthorizationToken(req: Request): string | null {
   const authHeader = req.headers.get("Authorization");
   const match = authHeader?.match(/^bearer (.+)$/i);
 
   if (!match) {
-    throw new AuthError("Invalid Authorization header");
+    return null;
   }
 
   return match[1];
+}
+
+function decryptAuthToken(clientSecret: string, token: string): string {
+  const [hexIv, hexCipherText] = token.split(".");
+  const iv = Buffer.from(hexIv, "hex");
+  const decipher = createDecipheriv(
+    "aes-192-cbc",
+    Buffer.from(clientSecret),
+    iv
+  );
+
+  return decipher.update(hexCipherText, "hex", "utf8") + decipher.final("utf8");
 }
 
 class AuthError extends Error {}
