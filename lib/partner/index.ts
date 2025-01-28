@@ -46,6 +46,7 @@ const billingPlans: BillingPlan[] = [
     type: "subscription",
     description: "$10 every Gb",
     paymentMethodRequired: true,
+    preauthorizationAmount: 5,
     highlightedDetails: [
       { label: "High availability", value: "Multi zone" },
       { label: "Dataset size", value: "500Mb" },
