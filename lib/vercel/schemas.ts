@@ -130,6 +130,34 @@ export type GetBillingPlansResponse = z.infer<
   typeof getBillingPlansResponseSchema
 >;
 
+// Provisioning of direct purchases
+
+export const balanceSchema = z.object({
+  currencyValueInCents: z.number(),
+  credit: z.string().optional(),
+  nameLabel: z.string().optional(),
+  resourceId: z.string().optional(),
+});
+
+export type Balance = z.infer<typeof balanceSchema>;
+
+export const provisionPurchaseRequestSchema = z.object({
+  invoiceId: z.string().min(1),
+});
+
+export type ProvisionPurchaseRequest = z.infer<
+  typeof provisionPurchaseRequestSchema
+>;
+
+export const provisionPurchaseResponseSchema = z.object({
+  timestamp: z.number(),
+  balances: z.array(balanceSchema),
+});
+
+export type ProvisionPurchaseResponse = z.infer<
+  typeof provisionPurchaseResponseSchema
+>;
+
 // Product
 
 const metadataSchema = z.record(z.unknown());
@@ -220,6 +248,33 @@ export type ListResourcesResponse = z.infer<typeof listResourcesResponseSchema>;
 export const getResourceResponseSchema = resourceSchema;
 
 export type GetResourceResponse = z.infer<typeof getResourceResponseSchema>;
+
+export const importResourceRequestSchema = z.object({
+  productId: z.string().min(1),
+  name: z.string().min(1),
+  status: resourceStateSchema,
+  metadata: metadataSchema.optional(),
+  billingPlan: billingPlanSchema.optional(),
+  notification: notificationSchema.optional(),
+  secrets: z
+    .array(
+      z.object({
+        name: z.string(),
+        value: z.string(),
+      })
+    )
+    .optional(),
+});
+
+export type ImportResourceRequest = z.infer<typeof importResourceRequestSchema>;
+
+export const importResourceResponseSchema = z.object({
+  name: z.string().min(1),
+});
+
+export type ImportResourceResponse = z.infer<
+  typeof importResourceResponseSchema
+>;
 
 // Billing data.
 
@@ -351,6 +406,36 @@ export const invoiceSchema = z.object({
 
   created: datetimeSchema,
   updated: datetimeSchema,
+
+  items: z
+    .array(
+      z.object({
+        resourceId: z.string().optional(),
+        billingPlanId: z.string(),
+        name: z.string(),
+        price: currencySchema,
+        quantity: z.number(),
+        units: unitsSchema,
+        total: currencySchema,
+        details: z.string().optional(),
+        start: datetimeSchema.optional(),
+        end: datetimeSchema.optional(),
+      })
+    )
+    .optional(),
+  discounts: z
+    .array(
+      z.object({
+        resourceId: z.string().optional(),
+        billingPlanId: z.string(),
+        name: z.string(),
+        amount: currencySchema,
+        details: z.string().optional(),
+        start: datetimeSchema.optional(),
+        end: datetimeSchema.optional(),
+      })
+    )
+    .optional(),
 });
 
 export type Invoice = z.infer<typeof invoiceSchema>;

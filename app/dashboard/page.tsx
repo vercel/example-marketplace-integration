@@ -1,4 +1,4 @@
-import { listResources } from "@/lib/partner";
+import { getResourceBalance, listResources } from "@/lib/partner";
 import { getSession } from "./auth";
 import { Resource } from "@/lib/vercel/schemas";
 
@@ -12,7 +12,8 @@ export default async function DashboardPage() {
 
 async function Resources() {
   const session = await getSession();
-  const { resources } = await listResources(session.installation_id);
+  const installationId = session.installation_id;
+  const { resources } = await listResources(installationId);
 
   // {/* grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 */}
   return (
@@ -26,7 +27,11 @@ async function Resources() {
       ) : (
         <div className="flex flex-col gap-4">
           {resources.map((resource) => (
-            <ResourceCard key={resource.id} resource={resource} />
+            <ResourceCard
+              installationId={installationId}
+              key={resource.id}
+              resource={resource}
+            />
           ))}
         </div>
       )}
@@ -34,7 +39,14 @@ async function Resources() {
   );
 }
 
-function ResourceCard({ resource }: { resource: Resource }) {
+async function ResourceCard({
+  installationId,
+  resource,
+}: {
+  installationId: string;
+  resource: Resource;
+}) {
+  const balance = await getResourceBalance(installationId, resource.id);
   return (
     <a
       className="bg-white rounded-lg shadow-md p-4"
@@ -59,6 +71,11 @@ function ResourceCard({ resource }: { resource: Resource }) {
       <p className="text-gray-600 text-sm">
         Billing Plan: {resource.billingPlan?.name}
       </p>
+      {balance ? (
+        <p className="text-gray-600 text-sm">
+          Balance: {balance.currencyValueInCents} cents
+        </p>
+      ) : null}
     </a>
   );
 }

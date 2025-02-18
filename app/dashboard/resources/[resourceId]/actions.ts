@@ -1,8 +1,11 @@
 "use server";
 
 import {
+  addResourceBalanceInternal,
   clearResourceNotification,
+  cloneResource,
   getResource,
+  importResourceToVercel,
   updateResource,
   updateResourceNotification,
 } from "@/lib/partner";
@@ -10,6 +13,7 @@ import { Notification, Resource } from "@/lib/vercel/schemas";
 import { dispatchEvent, updateSecrets } from "@/lib/vercel/marketplace-api";
 import { getSession } from "../../auth";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 export async function updateResourceAction(formData: FormData): Promise<void> {
   const session = await getSession();
@@ -103,6 +107,36 @@ export async function setExampleNotificationAction(formData: FormData) {
         "Your resource failed to provision because of complicated technical reasons. Please reach out to help@acmecorp.com",
       href: "https://acmecorp.com/help",
     }
+  );
+
+  revalidatePath("/dashboard");
+  revalidatePath(`/dashboard/resources/${formData.get("resourceId")}`);
+}
+
+export async function cloneResourceAction(formData: FormData) {
+  const session = await getSession();
+  const resourceId = formData.get("resourceId") as string;
+  const clonedResource = await cloneResource(
+    session.installation_id,
+    resourceId
+  );
+  revalidatePath("/dashboard");
+  redirect(`/dashboard/resources/${clonedResource.id}`);
+}
+
+export async function importResourceToVercelAction(formData: FormData) {
+  const session = await getSession();
+  const resourceId = formData.get("resourceId") as string;
+  await importResourceToVercel(session.installation_id, resourceId);
+}
+
+export async function addResourceBalance(formData: FormData) {
+  const session = await getSession();
+
+  await addResourceBalanceInternal(
+    session.installation_id,
+    formData.get("resourceId") as string,
+    Number(formData.get("currencyValueInCents") as string)
   );
 
   revalidatePath("/dashboard");
