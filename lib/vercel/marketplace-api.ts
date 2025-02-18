@@ -2,6 +2,7 @@ import { getInstallation, getResource } from "../partner";
 import { env } from "../env";
 import { z } from "zod";
 import {
+  Balance,
   BillingData,
   CreateInvoiceRequest,
   DeploymentActionOutcome,
@@ -10,6 +11,7 @@ import {
   Invoice,
   InvoiceDiscount,
   RefundInvoiceRequest,
+  SubmitPrepaymentBalanceRequest,
   UpdateDeploymentActionRequest,
 } from "./schemas";
 import { mockBillingData } from "@/data/mock-billing-data";
@@ -103,6 +105,20 @@ export async function importResource(
       data: request,
     }
   )) as ImportResourceResponse;
+}
+
+export async function submitPrepaymentBalances(
+  installationId: string,
+  balances: Balance[]
+): Promise<void> {
+  await fetchVercelApi(`/v1/installations/${installationId}/billing/balance`, {
+    installationId,
+    method: "POST",
+    data: {
+      timestamp: new Date().toISOString(),
+      balances,
+    } satisfies SubmitPrepaymentBalanceRequest,
+  });
 }
 
 export async function sendBillingData(
