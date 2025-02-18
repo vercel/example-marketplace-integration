@@ -141,6 +141,15 @@ export const balanceSchema = z.object({
 
 export type Balance = z.infer<typeof balanceSchema>;
 
+export const submitPrepaymentBalanceRequestSchema = z.object({
+  timestamp: datetimeSchema,
+  balances: z.array(balanceSchema),
+});
+
+export type SubmitPrepaymentBalanceRequest = z.infer<
+  typeof submitPrepaymentBalanceRequestSchema
+>;
+
 export const provisionPurchaseRequestSchema = z.object({
   invoiceId: z.string().min(1),
 });

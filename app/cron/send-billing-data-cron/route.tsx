@@ -1,7 +1,15 @@
 import { mockBillingData } from "@/data/mock-billing-data";
 import { cronJob } from "@/lib/cron";
-import { listInstallations } from "@/lib/partner";
-import { sendBillingData } from "@/lib/vercel/marketplace-api";
+import {
+  getResourceBalance,
+  listInstallations,
+  listResources,
+} from "@/lib/partner";
+import {
+  sendBillingData,
+  submitPrepaymentBalances,
+} from "@/lib/vercel/marketplace-api";
+import { Balance } from "@/lib/vercel/schemas";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +23,15 @@ export const GET = cronJob(async (request: Request) => {
     if (!dryRun) {
       try {
         await sendBillingData(installationId, data);
+        const { resources } = await listResources(installationId);
+        const balances = (
+          await Promise.all(
+            resources.map((resource) =>
+              getResourceBalance(installationId, resource.id)
+            )
+          )
+        ).filter((x) => x !== null) as Balance[];
+        await submitPrepaymentBalances(installationId, balances);
       } catch (e) {
         error = e instanceof Error ? e.message : String(e);
       }
