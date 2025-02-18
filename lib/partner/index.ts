@@ -13,9 +13,16 @@ import {
   Notification,
   WebhookEvent,
   UnknownWebhookEvent,
+  ProvisionPurchaseRequest,
+  ProvisionPurchaseResponse,
+  Balance,
 } from "@/lib/vercel/schemas";
 import { kv } from "@vercel/kv";
 import { compact } from "lodash";
+import {
+  getInvoice,
+  importResource as importResourceToVercelApi,
+} from "../vercel/marketplace-api";
 
 const billingPlans: BillingPlan[] = [
   {
@@ -251,6 +258,126 @@ export async function getResource(
   }
 
   return null;
+}
+
+export async function cloneResource(
+  installationId: string,
+  resourceId: string
+) {
+  const resource = await getResource(installationId, resourceId);
+
+  if (!resource) {
+    throw new Error(`Cannot find resource ${resourceId}`);
+  }
+
+  const newName = `${resource.name}-clone`;
+
+  const clonedResource = await provisionResource(installationId, {
+    productId: resource.productId,
+    name: newName,
+    metadata: resource.metadata,
+    billingPlanId: resource.billingPlan?.id || "",
+  });
+  return clonedResource;
+}
+
+export async function importResourceToVercel(
+  installationId: string,
+  resourceId: string
+): Promise<void> {
+  const resource = await getResource(installationId, resourceId);
+
+  if (!resource) {
+    throw new Error(`Cannot find resource ${resourceId}`);
+  }
+
+  const response = await importResourceToVercelApi(
+    installationId,
+    resource.id,
+    {
+      name: resource.name,
+      productId: resource.productId,
+      status: resource.status,
+      metadata: resource.metadata,
+      billingPlan: resource.billingPlan,
+      notification: resource.notification,
+      secrets: [
+        {
+          name: "TOP_SECRET",
+          value: `birds aren't real (${new Date().toISOString()})`,
+        },
+        {
+          name: "TOP_SECRET_CLONED",
+          value: `birds aren't real (${new Date().toISOString()})`,
+        },
+      ],
+    }
+  );
+}
+
+export async function provisionPurchase(
+  installationId: string,
+  request: ProvisionPurchaseRequest
+): Promise<ProvisionPurchaseResponse> {
+  const invoice = await getInvoice(installationId, request.invoiceId);
+  if (invoice.state !== "paid") {
+    throw new Error(`Invoice ${request.invoiceId} is not paid`);
+  }
+
+  const balanceByResource: Record<string, Balance> = {};
+
+  for (const item of invoice.items ?? []) {
+    if (!item.resourceId) {
+      continue;
+    }
+    const amountInCents = Math.floor(parseFloat(item.total) * 100);
+    const balance = await addResourceBalanceInternal(
+      installationId,
+      item.resourceId,
+      amountInCents
+    );
+    balanceByResource[item.resourceId] = balance;
+  }
+
+  return {
+    timestamp: Date.now(),
+    balances: Object.values(balanceByResource),
+  };
+}
+
+export async function addResourceBalanceInternal(
+  installationId: string,
+  resourceId: string,
+  currencyValueInCents: number
+): Promise<Balance> {
+  const result = await kv.incrby(
+    `${installationId}:${resourceId}:balance`,
+    currencyValueInCents
+  );
+  return {
+    currencyValueInCents: result,
+    credit: String(result * 1_000),
+    nameLabel: "Tokens",
+    resourceId,
+  };
+}
+
+export async function getResourceBalance(
+  installationId: string,
+  resourceId: string
+): Promise<Balance | null> {
+  const result = await kv.get<number>(
+    `${installationId}:${resourceId}:balance`
+  );
+  if (result === null) {
+    return null;
+  }
+  return {
+    currencyValueInCents: result,
+    credit: String(result * 1_000),
+    nameLabel: "Tokens",
+    resourceId,
+  };
 }
 
 type SerializedResource = Omit<Resource, "billingPlan"> & {

@@ -5,6 +5,8 @@ import {
   BillingData,
   CreateInvoiceRequest,
   DeploymentActionOutcome,
+  ImportResourceRequest,
+  ImportResourceResponse,
   Invoice,
   InvoiceDiscount,
   RefundInvoiceRequest,
@@ -86,6 +88,21 @@ export async function exchangeCodeForToken(code: string): Promise<string> {
   );
 
   return id_token;
+}
+
+export async function importResource(
+  installationId: string,
+  resourceId: string,
+  request: ImportResourceRequest
+): Promise<ImportResourceResponse> {
+  return (await fetchVercelApi(
+    `/v1/installations/${installationId}/resources/${resourceId}`,
+    {
+      installationId,
+      method: "PUT",
+      data: request,
+    }
+  )) as ImportResourceResponse;
 }
 
 export async function sendBillingData(

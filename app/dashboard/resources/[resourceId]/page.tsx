@@ -1,4 +1,4 @@
-import { getResource } from "@/lib/partner";
+import { getResource, getResourceBalance } from "@/lib/partner";
 import Link from "next/link";
 import {
   clearResourceNotificationAction,
@@ -6,6 +6,9 @@ import {
   setExampleNotificationAction,
   updateResourceAction,
   updateResourceNotificationAction,
+  addResourceBalance,
+  importResourceToVercelAction,
+  cloneResourceAction,
 } from "./actions";
 import { getSession } from "../../auth";
 import { getAccountInfo } from "@/lib/vercel/marketplace-api";
@@ -19,14 +22,17 @@ export default async function ResourcePage({
   params: { resourceId: string };
 }) {
   const session = await getSession();
+  const installationId = session.installation_id;
   const [resource, account] = await Promise.all([
-    await getResource(session.installation_id, resourceId),
-    await getAccountInfo(session.installation_id),
+    await getResource(installationId, resourceId),
+    await getAccountInfo(installationId),
   ]);
 
   if (!resource) {
     throw new Error(`Resource ${resourceId} not found`);
   }
+
+  const balance = await getResourceBalance(installationId, resource.id);
 
   return (
     <main className="space-y-8">
@@ -73,11 +79,56 @@ export default async function ResourcePage({
         </form>
       </Section>
 
+      <Section title="Balance">
+        <div className="p-2">
+          {balance ? (
+            <div className="flex gap-2">
+              <span>Balance: {balance.currencyValueInCents}</span>
+              <span>Credit: {balance.credit}</span>
+              <span>Name: {balance.nameLabel}</span>
+            </div>
+          ) : (
+            <div>No balance</div>
+          )}
+        </div>
+        <form action={addResourceBalance} className="p-2">
+          <input type="hidden" name="resourceId" value={resource.id} />
+          <div className="space-y-4">
+            <div className="flex flex-col">
+              <label>Add credit value in cents</label>
+              <input
+                type="number"
+                name="currencyValueInCents"
+                className="border border-1 border-slate-400"
+                defaultValue={10_00}
+              />
+            </div>
+            <div className="flex justify-end">
+              <FormButton className="rounded bg-blue-500 text-white px-2 py-1 disabled:opacity-50">
+                Add Balance
+              </FormButton>
+            </div>
+          </div>
+        </form>
+      </Section>
+
       <Section title="Actions">
-        <form action={rotateCredentialsAction}>
+        <form action={cloneResourceAction} className="p-2">
+          <input type="hidden" name="resourceId" value={resource.id} />
+          <FormButton className="rounded bg-blue-500 text-white px-2 py-1 disabled:opacity-50">
+            Clone Resource
+          </FormButton>
+        </form>
+        <form action={rotateCredentialsAction} className="p-2">
           <input type="hidden" name="resourceId" value={resource.id} />
           <FormButton className="rounded bg-blue-500 text-white px-2 py-1 disabled:opacity-50">
             Rotate Credentials
+          </FormButton>
+        </form>
+        <form action={importResourceToVercelAction} className="p-2">
+          <input type="hidden" name="resourceId" value={resource.id} />
+          <FormButton className="rounded bg-blue-500 text-white px-2 py-1 disabled:opacity-50">
+            Import Resource to Vercel
           </FormButton>
         </form>
       </Section>
