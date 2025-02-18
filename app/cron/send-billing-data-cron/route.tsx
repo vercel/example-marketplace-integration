@@ -9,6 +9,7 @@ import {
   sendBillingData,
   submitPrepaymentBalances,
 } from "@/lib/vercel/marketplace-api";
+import { Balance } from "@/lib/vercel/schemas";
 
 export const dynamic = "force-dynamic";
 
@@ -29,7 +30,7 @@ export const GET = cronJob(async (request: Request) => {
               getResourceBalance(installationId, resource.id)
             )
           )
-        ).filter((x) => x !== null);
+        ).filter((x) => x !== null) as Balance[];
         await submitPrepaymentBalances(installationId, balances);
       } catch (e) {
         error = e instanceof Error ? e.message : String(e);
