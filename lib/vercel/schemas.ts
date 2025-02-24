@@ -21,6 +21,8 @@ export const usageTypeSchema = z.enum(["total", "interval", "rate"]);
 
 export type UsageType = z.infer<typeof usageTypeSchema>;
 
+const metadataSchema = z.record(z.unknown());
+
 // Account and Installation
 
 export const installIntegrationRequestSchema = z.object({
@@ -30,10 +32,13 @@ export const installIntegrationRequestSchema = z.object({
     access_token: z.string().min(1),
     token_type: z.string().min(1),
   }),
+  billingPlanId: z.string().optional(),
+  metadata: metadataSchema.optional(),
 });
 
 export const updateInstallationRequestSchema = z.object({
   billingPlanId: z.string(),
+  metadata: metadataSchema.optional(),
 });
 
 export type InstallIntegrationRequest = z.infer<
@@ -168,8 +173,6 @@ export type ProvisionPurchaseResponse = z.infer<
 >;
 
 // Product
-
-const metadataSchema = z.record(z.unknown());
 
 const notificationSchema = z.object({
   level: z.enum(["info", "warn", "error"]),
