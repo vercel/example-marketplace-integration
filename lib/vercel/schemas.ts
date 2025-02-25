@@ -55,13 +55,28 @@ export const billingPlanSchema = z.object({
   // Ex: "Use all you want up to 20G"
   description: z.string().min(1),
 
+  // Plan scope. To use `installation` level billing plans,
+  // Installation-level Billing Plans must be enabled on your integration.
+  scope: z.enum(["installation", "resource"]).optional().default("resource"),
+
   // Set this field to `false` if this plan is completely free.
   // Defaults to `true`.
   paymentMethodRequired: z.boolean().optional().default(true),
 
   // Use when payment method is required. The amount will be used to
   // test if the user's payment method can handle the charge.
+  // Can only be used with "subscription" plans.
   preauthorizationAmount: z.number().optional(),
+
+  // Optional, ignored unless plan type is `prepayment`. The minimum amount of credits
+  // a user can purchase at a time. The value is a decimal string representation of
+  // the USD amount, e.g. "4.39" for $4.39 USD as the minumum amount.
+  minimumAmount: currencySchema.optional(),
+
+  // Optional, ignored unless plan type is `prepayment`. The maximum amount of credits
+  // a user can purchase at a time. The value is a decimal string representation of
+  // the USD amount, e.g. "86.82" for $86.82 USD as the maximum amount.
+  maximumAmount: currencySchema.optional(),
 
   // Plan's cost, if available. Only relevant for fixed-cost plans.
   // Ex: "$20.00/month"
@@ -100,8 +115,7 @@ export const billingPlanSchema = z.object({
     )
     .optional(),
 
-  // Max number of that can be installed on this plan.
-  // Ex: `maxResources: 1` for "Hobby" plan.
+  // Deprecated.
   maxResources: z.number().optional(),
 
   // Policies to be accepted by the customer.
@@ -118,6 +132,9 @@ export const billingPlanSchema = z.object({
 
   // Date/time when the plan becomes effective. Important for billing plan changes.
   effectiveDate: datetimeSchema.optional(),
+
+  // If true, the plan is disabled and cannot be selected. Example: "disabled": true` for "Hobby" plan.
+  disabled: z.boolean().optional(),
 });
 
 export type BillingPlan = z.infer<typeof billingPlanSchema>;
