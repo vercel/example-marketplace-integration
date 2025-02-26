@@ -27,6 +27,7 @@ import {
 const billingPlans: BillingPlan[] = [
   {
     id: "default",
+    scope: "resource",
     name: "Hobby",
     cost: "Free",
     description: "Use all you want up to 20G",
@@ -48,6 +49,7 @@ const billingPlans: BillingPlan[] = [
   },
   {
     id: "pro200",
+    scope: "resource",
     name: "Pro",
     cost: "$10 every Gb",
     type: "subscription",
@@ -66,6 +68,19 @@ const billingPlans: BillingPlan[] = [
     requiredPolicies: [
       { id: "1", name: "Terms of Service", url: "https://partner/toc" },
     ],
+    effectiveDate: "2021-01-01T00:00:00Z",
+  },
+  {
+    id: "prepay10",
+    scope: "resource",
+    name: "Prepay 10",
+    cost: "$10 for 1,000 tokens",
+    type: "prepayment",
+    description: "$10 for 1,000 tokens",
+    paymentMethodRequired: true,
+    minimumAmount: "10.00",
+    highlightedDetails: [{ label: "Token types", value: "input/output" }],
+    details: [{ label: "Token types", value: "input/output" }],
     effectiveDate: "2021-01-01T00:00:00Z",
   },
 ];
@@ -391,6 +406,7 @@ function serializeResource(resource: Resource): SerializedResource {
 function deserializeResource(serializedResource: SerializedResource): Resource {
   const billingPlan = billingPlanMap.get(serializedResource.billingPlan) ?? {
     id: serializedResource.billingPlan,
+    scope: "resource",
     type: "subscription",
     name: "Unknown",
     description: "Unknown",
