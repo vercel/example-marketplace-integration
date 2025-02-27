@@ -355,7 +355,7 @@ export async function provisionPurchase(
   }
 
   return {
-    timestamp: Date.now(),
+    timestamp: new Date().toISOString(),
     balances: Object.values(balanceByResource),
   };
 }
