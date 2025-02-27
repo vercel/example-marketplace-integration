@@ -176,7 +176,7 @@ export type ProvisionPurchaseRequest = z.infer<
 >;
 
 export const provisionPurchaseResponseSchema = z.object({
-  timestamp: z.number(),
+  timestamp: datetimeSchema,
   balances: z.array(balanceSchema),
 });
 
