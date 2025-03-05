@@ -2,7 +2,7 @@ import { getInstallation, getInstallationBalance } from "@/lib/partner";
 import { getSession } from "../auth";
 import { getAccountInfo } from "@/lib/vercel/marketplace-api";
 import { Section } from "../components/section";
-import { addInstallationBalance } from "./actions";
+import { addInstallationBalance, sendBillingDataAction } from "./actions";
 import { FormButton } from "../components/form-button";
 
 export default async function IntallationPage() {
@@ -62,6 +62,14 @@ export default async function IntallationPage() {
               </FormButton>
             </div>
           </div>
+        </form>
+      </Section>
+
+      <Section title="Submit Billing Data">
+        <form action={sendBillingDataAction} className="p-2">
+          <FormButton className="rounded bg-blue-500 text-white px-2 py-1 disabled:opacity-50">
+            Submit
+          </FormButton>
         </form>
       </Section>
     </main>
