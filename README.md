@@ -1,4 +1,4 @@
-# Example Marketplace Integration (installation-level billing)
+# Example Marketplace Integration
 
 Welcome to the Example Marketplace Integration. This repository contains a reference implementation for a Vercel Marketplace Integration.
 
