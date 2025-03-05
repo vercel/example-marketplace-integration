@@ -1,6 +1,7 @@
 import { mockBillingData } from "@/data/mock-billing-data";
 import { cronJob } from "@/lib/cron";
 import {
+  getInstallationBalance,
   getResourceBalance,
   listInstallations,
   listResources,
@@ -26,9 +27,12 @@ export const GET = cronJob(async (request: Request) => {
         const { resources } = await listResources(installationId);
         const balances = (
           await Promise.all(
-            resources.map((resource) =>
-              getResourceBalance(installationId, resource.id)
-            )
+            [
+              getInstallationBalance(installationId),
+              ...resources.map((resource) =>
+                getResourceBalance(installationId, resource.id)
+              ),
+            ].filter((x) => x !== null)
           )
         ).filter((x) => x !== null) as Balance[];
         await submitPrepaymentBalances(installationId, balances);
