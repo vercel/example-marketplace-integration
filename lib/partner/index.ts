@@ -339,24 +339,58 @@ export async function provisionPurchase(
     throw new Error(`Invoice ${request.invoiceId} is not paid`);
   }
 
-  const balanceByResource: Record<string, Balance> = {};
+  const balances: Record<string, Balance> = {};
 
   for (const item of invoice.items ?? []) {
-    if (!item.resourceId) {
-      continue;
-    }
     const amountInCents = Math.floor(parseFloat(item.total) * 100);
-    const balance = await addResourceBalanceInternal(
-      installationId,
-      item.resourceId,
-      amountInCents
-    );
-    balanceByResource[item.resourceId] = balance;
+    if (item.resourceId) {
+      const balance = await addResourceBalanceInternal(
+        installationId,
+        item.resourceId,
+        amountInCents
+      );
+      balances[item.resourceId] = balance;
+    } else {
+      const balance = await addInstallationBalanceInternal(
+        installationId,
+        amountInCents
+      );
+      balances[""] = balance;
+    }
   }
 
   return {
     timestamp: new Date().toISOString(),
-    balances: Object.values(balanceByResource),
+    balances: Object.values(balances),
+  };
+}
+
+export async function addInstallationBalanceInternal(
+  installationId: string,
+  currencyValueInCents: number
+): Promise<Balance> {
+  const result = await kv.incrby(
+    `${installationId}:balance`,
+    currencyValueInCents
+  );
+  return {
+    currencyValueInCents: result,
+    credit: String(result * 1_000),
+    nameLabel: "Tokens",
+  };
+}
+
+export async function getInstallationBalance(
+  installationId: string
+): Promise<Balance | null> {
+  const result = await kv.get<number>(`${installationId}:balance`);
+  if (result === null) {
+    return null;
+  }
+  return {
+    currencyValueInCents: result,
+    credit: String(result * 1_000),
+    nameLabel: "Tokens",
   };
 }
 
