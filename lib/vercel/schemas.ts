@@ -337,7 +337,8 @@ export type BillingItem = z.infer<typeof billingItemSchema>;
 
 export const resourceUsageSchema = z.object({
   // Partner's resource ID.
-  resourceId: z.string(),
+  // An absent value indicates installation-level usage.
+  resourceId: z.string().optional(),
 
   // Metric name.
   // Ex: "Database size"

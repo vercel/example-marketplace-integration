@@ -42,10 +42,44 @@ export async function mockBillingData(
       units: "1k",
     },
   } as const;
-  const usage = resources
+
+  const resourceUsage = resources
     .map((r) => mockUsageData(r, timestamp, startOfMoth, bod))
     .flat();
-  const billing = usage
+
+  const installationUsage = Object.values(
+    resourceUsage.reduce((acc, resourceUsage) => {
+      let usage: ResourceUsage = acc[resourceUsage.name];
+      if (!acc[resourceUsage.name]) {
+        usage = {
+          ...resourceUsage,
+          resourceId: undefined,
+          dayValue: 0,
+          periodValue: 0,
+          planValue: undefined,
+        };
+        acc[resourceUsage.name] = usage;
+      }
+      switch (usage.type) {
+        case "total":
+        case "interval":
+          usage.dayValue += resourceUsage.dayValue;
+          usage.periodValue += resourceUsage.periodValue;
+          break;
+        case "rate":
+          usage.dayValue = Math.max(usage.dayValue, resourceUsage.dayValue);
+          usage.periodValue = Math.max(
+            usage.periodValue,
+            resourceUsage.periodValue
+          );
+          break;
+      }
+      return acc;
+    }, {} as Record<string, ResourceUsage>)
+  );
+  const usage = [...installationUsage, ...resourceUsage];
+
+  const billing = resourceUsage
     .map((u) => {
       const resource = resources.find((r) => r.id === u.resourceId);
       const pricing = pricingModel[u.name];
