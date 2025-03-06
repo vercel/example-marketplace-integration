@@ -6,6 +6,7 @@ import { createSession } from "../dashboard/auth";
 export async function GET(request: NextRequest) {
   const host = getHost(request);
   const code = request.nextUrl.searchParams.get("code");
+  const state = request.nextUrl.searchParams.get("state");
 
   if (!code) {
     return new Response("Missing code", {
@@ -13,7 +14,7 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  const token = await exchangeCodeForToken(code);
+  const token = await exchangeCodeForToken(code, state);
 
   createSession(token);
 
