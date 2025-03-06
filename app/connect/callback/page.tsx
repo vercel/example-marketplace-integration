@@ -2,6 +2,8 @@ import { env } from "@/lib/env";
 import { installIntegration } from "@/lib/partner";
 import { exchangeExternalCodeForToken } from "@/lib/vercel/external-api";
 
+export const dynamic = "force-dynamic";
+
 export default async function Page({
   searchParams: { code, next },
 }: {

@@ -7,6 +7,8 @@ import {
 } from "@/lib/vercel/schemas";
 import { storeWebhookEvent, uninstallInstallation } from "@/lib/partner";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: Request): Promise<Response> {
   const rawBody = await req.text();
   const rawBodyBuffer = Buffer.from(rawBody, "utf-8");
