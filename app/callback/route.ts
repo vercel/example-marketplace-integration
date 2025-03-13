@@ -19,18 +19,26 @@ export async function GET(request: NextRequest) {
   createSession(token);
 
   const resourceId = request.nextUrl.searchParams.get("resource_id");
+  const invoiceId = request.nextUrl.searchParams.get("invoice_id");
+
+  if (invoiceId) {
+    redirect(`/dashboard/invoices?id=${invoiceId}`);
+    return;
+  }
 
   if (request.nextUrl.searchParams.get("support")) {
     redirect(
       `/dashboard/support${resourceId ? "?resource_id=" + resourceId : ""}`
     );
+    return;
   }
 
   if (resourceId) {
     redirect(`/dashboard/resources/${resourceId}`);
-  } else {
-    redirect("/dashboard");
+    return;
   }
+
+  redirect("/dashboard");
 }
 
 function getHost(request: NextRequest): string {
