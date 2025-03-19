@@ -50,7 +50,7 @@ export async function verifyToken(token: string): Promise<OidcClaims> {
     );
 
     if (claims.aud !== env.INTEGRATION_CLIENT_ID) {
-      throw new AuthError("Invalid audience");
+      throw new AuthError(`Invalid audience: ${claims.aud}`);
     }
 
     if (claims.iss !== "https://marketplace.vercel.com") {
