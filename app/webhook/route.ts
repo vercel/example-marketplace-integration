@@ -5,7 +5,8 @@ import {
   type WebhookEvent,
   webhookEventSchema,
 } from "@/lib/vercel/schemas";
-import { storeWebhookEvent, uninstallInstallation } from "@/lib/partner";
+import { listInstallations, storeWebhookEvent, uninstallInstallation } from "@/lib/partner";
+import { fetchVercelApi } from "@/lib/vercel/api";
 
 export const dynamic = "force-dynamic";
 
@@ -53,6 +54,63 @@ export async function POST(req: Request): Promise<Response> {
   switch (type) {
     case "integration-configuration.removed": {
       await uninstallInstallation(payload.configuration.id);
+      break;
+    }
+    case "deployment.created": {
+      const deploymentId = payload.deployment.id
+      const installationId = await getInstallationId(payload.installationIds)
+      if (!installationId) {
+        console.error(`No installations found for deployment ${deploymentId}`, payload)
+        break;
+      }
+      await fetchVercelApi(
+        `/v1/deployments/${deploymentId}/checks`,
+        {
+          data: {
+            blocking: true,
+            rerequestable: true,
+            name: "Test Check",
+          },
+          method: "POST",
+          installationId
+        },
+      );
+      break;
+    }
+    case "deployment.ready": {
+      const deploymentId = payload.deployment.id
+      const installationId = await getInstallationId(payload.installationIds)
+      if (!installationId) {
+        console.error(`No installations found for deployment ${deploymentId}`, payload)
+        break;
+      }
+
+      const data = (await fetchVercelApi(
+        `/v1/deployments/${deploymentId}/checks`,
+        {
+          method: "get",
+          installationId
+        },
+      )) as { checks: { id: string }[] };
+
+      const checkId = data.checks[0]?.id;
+
+      if (!checkId) {
+        console.error(`No Check found for deployment ${deploymentId}`, data)
+      }
+
+      await fetchVercelApi(
+        `/v1/deployments/${deploymentId}/checks/${data.checks[0]?.id}`,
+        {
+          data: {
+            conclusion: "succeeded",
+            status: "completed",
+          },
+          method: "PATCH",
+          installationId
+        },
+      )
+      break;
     }
   }
 
@@ -64,4 +122,10 @@ function sha1(data: Buffer, secret: string): string {
     .createHmac("sha1", secret)
     .update(new Uint8Array(data))
     .digest("hex");
+}
+
+async function getInstallationId(installationIds: string[] | undefined) {
+  const installations = await listInstallations()
+  const installationId = installationIds?.find((id) => installations.includes(id))
+  return installationId
 }
