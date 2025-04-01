@@ -620,33 +620,44 @@ const integrationConfigurationRemovedWebhookEventSchema =
 export type DeploymentIntegrationActionStartEvent = z.infer<
   typeof deploymentIntegrationActionStartEventSchema
 >;
+
+const deploymentWebhookPayloadEventSchema = z.object({
+  user: z
+    .object({
+      id: z.string(),
+    })
+    .passthrough(),
+  team: z
+    .object({
+      id: z.string(),
+    })
+    .passthrough(),
+  installationIds: z.string().array().optional(),
+  deployment: z
+    .object({
+      id: z.string(),
+    })
+    .passthrough(),
+});
+
 const deploymentIntegrationActionStartEventSchema =
   webhookEventBaseSchema.extend({
     type: z.literal("deployment.integration.action.start"),
-    payload: z.object({
-      user: z
-        .object({
-          id: z.string(),
-        })
-        .passthrough(),
-      team: z
-        .object({
-          id: z.string(),
-        })
-        .passthrough(),
+    payload: deploymentWebhookPayloadEventSchema.extend({
       installationId: z.string(),
       action: z.string(),
-      resourceId: z.string(),
-      deployment: z
-        .object({
-          id: z.string(),
-        })
-        .passthrough(),
-      configuration: z.object({
+      resourceId: z.string(), configuration: z.object({
         id: z.string(),
       }),
-    }),
+    })
   });
+
+const deploymentEvent = <T extends string>(eventType: T) => {
+  return webhookEventBaseSchema.extend({
+    type: z.literal(eventType),
+    payload: deploymentWebhookPayloadEventSchema,
+  });
+}
 
 export type WebhookEvent = z.infer<typeof webhookEventSchema>;
 export const webhookEventSchema = z.discriminatedUnion("type", [
@@ -655,6 +666,13 @@ export const webhookEventSchema = z.discriminatedUnion("type", [
   invoiceNotPaidWebhookEventSchema,
   integrationConfigurationRemovedWebhookEventSchema,
   deploymentIntegrationActionStartEventSchema,
+  deploymentEvent("deployment.created"),
+  deploymentEvent("deployment.ready"),
+  deploymentEvent("deployment.promoted"),
+  deploymentEvent("deployment.succeeded"),
+  deploymentEvent("deployment.error"),
+  deploymentEvent("deployment.cancelled"),
+  deploymentEvent("deployment.check-rerequested"),
 ]);
 
 export type UnknownWebhookEvent = z.infer<typeof unknownWebhookEventSchema>;
