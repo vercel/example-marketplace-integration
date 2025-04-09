@@ -63,6 +63,7 @@ Vercel CLI 33.5.5
 - Set the "Base URL" to your deployed project's URL e.g. https://example-marketplace-integration.vercel.app
 - Set the "Redirect Login URL" to your deployed projects URL with the path `/callback` e.g. https://example-marketplace-integration.vercel.app/callback
 - Click the "Update" button at the bottom to save your changes.
+-
 
 6. In the same Marketplace Integration Settings, create a product for your Vercel Integration using the "Create Product" button. A "product" maps to your own products you want to sell on Vercel. Depending on the product type (e.g. storage), the Vercel dashboard will understand how to interact with your product.
 
