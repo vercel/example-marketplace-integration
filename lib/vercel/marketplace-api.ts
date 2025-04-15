@@ -1,22 +1,21 @@
 import { getInstallation, getResource } from "../partner";
 import { env } from "../env";
 import { z } from "zod";
-import {
-  type RequestTransferToMarketplace,
-  RequestTransferToMarketplaceSchema,
-  type Balance,
-  type BillingData,
-  type BillingPlan,
-  type CreateInvoiceRequest,
-  type DeploymentActionOutcome,
-  type ImportResourceRequest,
-  type ImportResourceResponse,
-  type Invoice,
-  type InvoiceDiscount,
-  type RefundInvoiceRequest,
-  type RequestTransferToMarketplaceRequest,
-  type SubmitPrepaymentBalanceRequest,
-  type UpdateDeploymentActionRequest,
+import type {
+  Balance,
+  BillingData,
+  BillingPlan,
+  CreateInvoiceRequest,
+  DeploymentActionOutcome,
+  ImportResourceRequest,
+  ImportResourceResponse,
+  Invoice,
+  InvoiceDiscount,
+  RefundInvoiceRequest,
+  RequestTransferToMarketplace,
+  RequestTransferToMarketplaceResponse,
+  SubmitPrepaymentBalanceRequest,
+  UpdateDeploymentActionRequest,
 } from "./schemas";
 import { mockBillingData } from "@/data/mock-billing-data";
 import { fetchVercelApi } from "./api";
@@ -308,7 +307,7 @@ export async function requestTransferToMarketplace(
   transferId: string,
   requester: string,
   billingPlan: BillingPlan
-): Promise<{ continueUrl: string }> {
+): Promise<RequestTransferToMarketplaceResponse> {
   const result = (await fetchVercelApi(
     `/v1/installations/${installationId}/transfers/to-marketplace`,
     {
@@ -318,8 +317,8 @@ export async function requestTransferToMarketplace(
         transferId,
         requester: { name: requester },
         billingPlan,
-      },
-    } satisfies RequestTransferToMarketplaceRequest
-  )) as { continueUrl: string };
+      } satisfies RequestTransferToMarketplace,
+    }
+  )) as RequestTransferToMarketplaceResponse;
   return result;
 }

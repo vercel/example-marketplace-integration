@@ -683,13 +683,22 @@ export const unknownWebhookEventSchema = webhookEventBaseSchema.extend({
   unknown: z.boolean().optional().default(true),
 });
 
+// Transfer to/from Marketplacce
+
 export type RequestTransferToMarketplace = z.infer<
   typeof requestTransferToMarketplaceSchema
 >;
 export const requestTransferToMarketplaceSchema = z.object({
-  transferId: z.string(),
+  transferId: z.string().min(1),
   requester: z.object({
-    name: z.string(),
+    name: z.string().min(1),
   }),
   billingPlan: billingPlanSchema,
+});
+
+export type RequestTransferToMarketplaceResponse = z.infer<
+  typeof requestTransferToMarketplaceResponseSchema
+>;
+export const requestTransferToMarketplaceResponseSchema = z.object({
+  continueUrl: z.string().url(),
 });
