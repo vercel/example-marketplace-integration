@@ -1,19 +1,22 @@
 import { getInstallation, getResource } from "../partner";
 import { env } from "../env";
 import { z } from "zod";
-import type {
-  Balance,
-  BillingData,
-  BillingPlan,
-  CreateInvoiceRequest,
-  DeploymentActionOutcome,
-  ImportResourceRequest,
-  ImportResourceResponse,
-  Invoice,
-  InvoiceDiscount,
-  RefundInvoiceRequest,
-  SubmitPrepaymentBalanceRequest,
-  UpdateDeploymentActionRequest,
+import {
+  type RequestTransferToMarketplace,
+  RequestTransferToMarketplaceSchema,
+  type Balance,
+  type BillingData,
+  type BillingPlan,
+  type CreateInvoiceRequest,
+  type DeploymentActionOutcome,
+  type ImportResourceRequest,
+  type ImportResourceResponse,
+  type Invoice,
+  type InvoiceDiscount,
+  type RefundInvoiceRequest,
+  type RequestTransferToMarketplaceRequest,
+  type SubmitPrepaymentBalanceRequest,
+  type UpdateDeploymentActionRequest,
 } from "./schemas";
 import { mockBillingData } from "@/data/mock-billing-data";
 import { fetchVercelApi } from "./api";
@@ -53,7 +56,7 @@ export async function getAccountInfo(
   })) as AccountInfo;
 }
 
-export async function updateSecrets( // vercel fetch api
+export async function updateSecrets(
   installationId: string,
   resourceId: string,
   secrets: { name: string; value: string }[]
@@ -315,12 +318,8 @@ export async function requestTransferToMarketplace(
         transferId,
         requester: { name: requester },
         billingPlan,
-      } satisfies {
-        transferId: string;
-        requester: { name: string };
-        billingPlan: BillingPlan;
       },
-    }
+    } satisfies RequestTransferToMarketplaceRequest
   )) as { continueUrl: string };
   return result;
 }
