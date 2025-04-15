@@ -1,5 +1,5 @@
 import { nanoid } from "nanoid";
-import {
+import type {
   BillingPlan,
   GetBillingPlansResponse,
   GetResourceResponse,
@@ -24,7 +24,7 @@ import {
   importResource as importResourceToVercelApi,
 } from "../vercel/marketplace-api";
 
-const billingPlans: BillingPlan[] = [
+export const billingPlans: BillingPlan[] = [
   {
     id: "default",
     scope: "resource",
@@ -342,7 +342,7 @@ export async function provisionPurchase(
   const balances: Record<string, Balance> = {};
 
   for (const item of invoice.items ?? []) {
-    const amountInCents = Math.floor(parseFloat(item.total) * 100);
+    const amountInCents = Math.floor(Number.parseFloat(item.total) * 100);
     if (item.resourceId) {
       const balance = await addResourceBalanceInternal(
         installationId,

@@ -9,7 +9,7 @@ import {
   updateResource,
   updateResourceNotification,
 } from "@/lib/partner";
-import { Notification, Resource } from "@/lib/vercel/schemas";
+import type { Notification, Resource } from "@/lib/vercel/schemas";
 import { dispatchEvent, updateSecrets } from "@/lib/vercel/marketplace-api";
 import { getSession } from "../../auth";
 import { revalidatePath } from "next/cache";
