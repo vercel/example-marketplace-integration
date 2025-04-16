@@ -1,9 +1,10 @@
 import { getInstallation, getResource } from "../partner";
 import { env } from "../env";
 import { z } from "zod";
-import {
+import type {
   Balance,
   BillingData,
+  BillingPlan,
   CreateInvoiceRequest,
   DeploymentActionOutcome,
   ImportResourceRequest,
@@ -11,6 +12,8 @@ import {
   Invoice,
   InvoiceDiscount,
   RefundInvoiceRequest,
+  RequestTransferToMarketplace,
+  RequestTransferToMarketplaceResponse,
   SubmitPrepaymentBalanceRequest,
   UpdateDeploymentActionRequest,
 } from "./schemas";
@@ -159,20 +162,26 @@ export async function submitInvoice(
 
   let items = billingData.billing.filter((item) => Boolean(item.resourceId));
   if (maxAmount !== undefined) {
-    const total = items.reduce((acc, item) => acc + parseFloat(item.total), 0);
+    const total = items.reduce(
+      (acc, item) => acc + Number.parseFloat(item.total),
+      0
+    );
     if (total > maxAmount) {
       const ratio = maxAmount / total;
       items = items.map((item) => ({
         ...item,
         quantity: item.quantity * ratio,
-        total: (parseFloat(item.total) * ratio).toFixed(2),
+        total: (Number.parseFloat(item.total) * ratio).toFixed(2),
       }));
     }
   }
 
   const discounts: InvoiceDiscount[] = [];
   if (opts?.discountPercent !== undefined && opts.discountPercent > 0) {
-    const total = items.reduce((acc, item) => acc + parseFloat(item.total), 0);
+    const total = items.reduce(
+      (acc, item) => acc + Number.parseFloat(item.total),
+      0
+    );
     if (total > 0) {
       const discount = total * opts.discountPercent;
       discounts.push({
@@ -291,4 +300,25 @@ export async function getDeployment(
       method: "GET",
     }
   );
+}
+
+export async function requestTransferToMarketplace(
+  installationId: string,
+  transferId: string,
+  requester: string,
+  billingPlan: BillingPlan
+): Promise<RequestTransferToMarketplaceResponse> {
+  const result = (await fetchVercelApi(
+    `/v1/installations/${installationId}/transfers/to-marketplace`,
+    {
+      installationId,
+      method: "POST",
+      data: {
+        transferId,
+        requester: { name: requester },
+        billingPlan,
+      } satisfies RequestTransferToMarketplace,
+    }
+  )) as RequestTransferToMarketplaceResponse;
+  return result;
 }

@@ -646,10 +646,11 @@ const deploymentIntegrationActionStartEventSchema =
     payload: deploymentWebhookPayloadEventSchema.extend({
       installationId: z.string(),
       action: z.string(),
-      resourceId: z.string(), configuration: z.object({
+      resourceId: z.string(),
+      configuration: z.object({
         id: z.string(),
       }),
-    })
+    }),
   });
 
 const deploymentEvent = <T extends string>(eventType: T) => {
@@ -657,7 +658,7 @@ const deploymentEvent = <T extends string>(eventType: T) => {
     type: z.literal(eventType),
     payload: deploymentWebhookPayloadEventSchema,
   });
-}
+};
 
 export type WebhookEvent = z.infer<typeof webhookEventSchema>;
 export const webhookEventSchema = z.discriminatedUnion("type", [
@@ -680,4 +681,24 @@ export const unknownWebhookEventSchema = webhookEventBaseSchema.extend({
   type: z.string(),
   payload: z.unknown(),
   unknown: z.boolean().optional().default(true),
+});
+
+// Transfer to/from Marketplacce
+
+export type RequestTransferToMarketplace = z.infer<
+  typeof requestTransferToMarketplaceSchema
+>;
+export const requestTransferToMarketplaceSchema = z.object({
+  transferId: z.string().min(1),
+  requester: z.object({
+    name: z.string().min(1),
+  }),
+  billingPlan: billingPlanSchema,
+});
+
+export type RequestTransferToMarketplaceResponse = z.infer<
+  typeof requestTransferToMarketplaceResponseSchema
+>;
+export const requestTransferToMarketplaceResponseSchema = z.object({
+  continueUrl: z.string().url(),
 });

@@ -1,4 +1,4 @@
-import { OidcClaims, verifyToken } from "@/lib/vercel/auth";
+import { type OidcClaims, verifyToken } from "@/lib/vercel/auth";
 import { cookies } from "next/headers";
 
 export async function getSession(): Promise<OidcClaims> {
