@@ -3,6 +3,10 @@ import { createRemoteJWKSet, jwtVerify } from "jose";
 import { env } from "../env";
 import { JWTExpired, JWTInvalid } from "jose/errors";
 
+const JWKS = createRemoteJWKSet(
+  new URL(`https://marketplace.vercel.com/.well-known/jwks`)
+);
+
 export interface OidcClaims {
   sub: string;
   aud: string;
@@ -42,12 +46,7 @@ export function withAuth(
 
 export async function verifyToken(token: string): Promise<OidcClaims> {
   try {
-    const { payload: claims } = await jwtVerify<OidcClaims>(
-      token,
-      await createRemoteJWKSet(
-        new URL(`https://marketplace.vercel.com/.well-known/jwks`)
-      )
-    );
+    const { payload: claims } = await jwtVerify<OidcClaims>(token, JWKS);
 
     if (claims.aud !== env.INTEGRATION_CLIENT_ID) {
       throw new AuthError("Invalid audience");
