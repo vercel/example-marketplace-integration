@@ -702,3 +702,47 @@ export type RequestTransferToMarketplaceResponse = z.infer<
 export const requestTransferToMarketplaceResponseSchema = z.object({
   continueUrl: z.string().url(),
 });
+
+export type TransferInstallationToMarketplaceRequest = z.infer<
+  typeof TransferInstallationToMarketplaceRequestSchema
+>;
+
+export const TransferInstallationToMarketplaceRequestSchema = z.object({
+  transferId: z
+    .string()
+    .describe('Provided in the "request-transfer-to-marketplace".'),
+  billingPlanId: z
+    .string()
+    .optional()
+    .describe(
+      'Transfer billing plan, if one was provided in the "request-transfer-to-marketplace".'
+    ),
+  metadata: metadataSchema
+    .optional()
+    .describe(
+      'Installation-level metadata, if one was provided in the "request-transfer-to-marketplace".'
+    ),
+  scopes: z
+    .array(z.string().min(1))
+    .describe("Scopes for the new installation post transfer."),
+  acceptedPolicies: z.record(datetimeSchema),
+  credentials: z.object({
+    access_token: z.string().min(1),
+    token_type: z.string().min(1),
+  }),
+  account: z
+    .object({
+      name: z.string().optional(),
+      url: z.string().url(),
+      contact: z
+        .object({
+          email: z.string().email(),
+          name: z.string().optional(),
+        })
+        .nullable()
+        .optional(),
+    })
+    .describe(
+      "The account information for this installation. Use Get Account Info API to re-fetch this data post transfer."
+    ),
+});
