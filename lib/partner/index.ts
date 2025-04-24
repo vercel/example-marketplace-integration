@@ -125,7 +125,11 @@ export async function uninstallInstallation(
 
   // Installation is finalized immediately if it's on a free plan.
   const billingPlan = billingPlanMap.get(installation.billingPlanId);
-  return { finalized: billingPlan?.paymentMethodRequired === false };
+  return {
+    finalized:
+      billingPlan?.paymentMethodRequired === false ||
+      process.env.FORCE_FINALIZE_INSTALLATION === "true",
+  };
 }
 
 export async function listInstallations(): Promise<string[]> {
