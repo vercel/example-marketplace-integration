@@ -20,7 +20,6 @@ Resolving deltas: 100% (120/120), done.
 2. Deploy the example Marketplace integration to your Vercel team.
 
 ```sh
-
 $ cd example-marketplace-integration
 $ vc link
 Vercel CLI 33.5.5
@@ -54,21 +53,33 @@ Vercel CLI 33.5.5
 ✅  Added Environment Variable INTEGRATION_CLIENT_SECRET to Project example-marketplace-integration [211ms]
 ```
 
-4. On your Vercel project, visit the Storage tab (Vercel Dashboard > (Your Project) > Storage tab) and create a new Vercel KV database. You should be prompted to connect your new store to your project, if not, connect it manually. Once connected, you should see the `KV_URL`, `KV_REST_API_URL`, `KV_REST_API_TOKEN`, `KV_REST_API_READ_ONLY_TOKEN` environment variables in your project. This database is used to store state for your example marketplace integration.
+4. Secure cron jobs with `CRON_SECRET`
+
+```sh
+$ vercel env add CRON_SECRET
+Vercel CLI 41.6.2
+? What’s the value of CRON_SECRET? my-cron-secret
+? Add CRON_SECRET to which Environments (select multiple)? Production, Preview,Development
+✅  Added Environment Variable CRON_SECRET to Project example-marketplace-integration [103ms]
+```
+
+See [Securing cron jobs](https://vercel.com/docs/cron-jobs/manage-cron-jobs#securing-cron-jobs) for more information.
+
+5. On your Vercel project, visit the Storage tab (Vercel Dashboard > (Your Project) > Storage tab) and create a new Vercel KV database. You should be prompted to connect your new store to your project, if not, connect it manually. Once connected, you should see the `KV_URL`, `KV_REST_API_URL`, `KV_REST_API_TOKEN`, `KV_REST_API_READ_ONLY_TOKEN` environment variables in your project. This database is used to store state for your example marketplace integration.
 
 ![](/docs/assets/example-integration-kv.png)
 
-5. Return to your Vercel Integration in the [Integrations Console](https://vercel.com/dashboard/integrations/console) and update the Marketplace Integration Settings (near the bottom of the page).
+6. Return to your Vercel Integration in the [Integrations Console](https://vercel.com/dashboard/integrations/console) and update the Marketplace Integration Settings (near the bottom of the page).
 
 - Set the "Base URL" to your deployed project's URL e.g. https://example-marketplace-integration.vercel.app
 - Set the "Redirect Login URL" to your deployed projects URL with the path `/callback` e.g. https://example-marketplace-integration.vercel.app/callback
 - Click the "Update" button at the bottom to save your changes.
 
-6. In the same Marketplace Integration Settings, create a product for your Vercel Integration using the "Create Product" button. A "product" maps to your own products you want to sell on Vercel. Depending on the product type (e.g. storage), the Vercel dashboard will understand how to interact with your product.
+7. In the same Marketplace Integration Settings, create a product for your Vercel Integration using the "Create Product" button. A "product" maps to your own products you want to sell on Vercel. Depending on the product type (e.g. storage), the Vercel dashboard will understand how to interact with your product.
 
 - Fill out relevant metadata for your product like product name and logo.
 
-7. If you created a "storage" product type, you should be able to:
+8. If you created a "storage" product type, you should be able to:
 
 - Create a database for your product in the Storage tab via the "Create Store" button.
 - View and manage your new database for your product.;
