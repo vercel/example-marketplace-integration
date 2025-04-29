@@ -35,7 +35,9 @@ export default function TransferToVercelRedirect({
     <div className="flex flex-col items-center space-y-4">
       {continueUrl ? (
         <section className="p-4 border rounded text-center">
-          <p className="mb-4">Please go to Vercel to complete the transfer.</p>
+          <p className="mb-4">
+            Please go to Vercel Marketplace to complete the transfer.
+          </p>
           <div className="flex justify-center gap-4">
             <a
               href={continueUrl}
