@@ -10,9 +10,10 @@ export default async function Page({
       <div className="flex items-center justify-between border-b pb-4 mb-8">
         <div className="flex items-center gap-4">
           <div className="w-10 h-10 bg-gray-100"></div>
-          <h1 className="text-2xl font-bold text-blue-600">
-            ACME Marketplace Team
-          </h1>
+          <h1 className="text-2xl font-bold text-blue-600">ACME Corp</h1>
+        </div>
+        <div className="font-mono text-sm ">
+          Configuration ID: {configurationId}
         </div>
         <div className="text-lg font-medium">ACME</div>
       </div>
@@ -34,7 +35,6 @@ export default async function Page({
           </div>
         </div>
 
-        {/* Payment Methods */}
         <div className="bg-white rounded-lg border p-6 mb-6">
           <div className="pb-3 mb-4">
             <h2 className="text-2xl font-semibold">Payment Methods</h2>
@@ -51,36 +51,30 @@ export default async function Page({
                   <div className="text-gray-500">Expires 04/2025</div>
                 </div>
               </div>
-              <button className="px-4 py-2 border rounded-md hover:bg-gray-50">
+              <button className="px-4 py-2 border rounded-md" disabled={true}>
                 Edit
               </button>
             </div>
 
-            <button className="w-full py-2 border rounded-md hover:bg-gray-50">
+            <button className="w-full py-2 border rounded-md" disabled={true}>
               Add Payment Method
             </button>
           </div>
         </div>
 
-        {/* Account Ownership */}
         <div className="bg-white rounded-lg border p-6">
           <div className="pb-3 mb-4">
             <h2 className="text-2xl font-semibold">Account Ownership</h2>
             <p className="text-gray-500 text-base">
-              Transfer your account ownership and billing to a Vercel team
+              Transfer your account ownership and billing to your Vercel team
             </p>
           </div>
 
           <div className="space-y-6">
             <p className="text-gray-600">
               Transferring ownership will move all billing responsibilities to
-              the selected Vercel team. This action cannot be undone without
-              contacting support.
+              the selected Vercel team.
             </p>
-
-            <div className="font-mono text-sm bg-gray-50 p-3 rounded border">
-              Configuration ID: {configurationId}
-            </div>
 
             <TransferToVercelRedirect configurationId={configurationId} />
           </div>
