@@ -12,6 +12,8 @@ import type {
   Invoice,
   InvoiceDiscount,
   RefundInvoiceRequest,
+  RequestTransferFromMarketplace,
+  RequestTransferFromMarketplaceResponse,
   RequestTransferToMarketplace,
   RequestTransferToMarketplaceResponse,
   SubmitPrepaymentBalanceRequest,
@@ -320,5 +322,24 @@ export async function requestTransferToMarketplace(
       } satisfies RequestTransferToMarketplace,
     }
   )) as RequestTransferToMarketplaceResponse;
+  return result;
+}
+
+export async function requestTransferFromMarketplace(
+  installationId: string,
+  transferId: string,
+  requester: string
+): Promise<RequestTransferFromMarketplaceResponse> {
+  const result = (await fetchVercelApi(
+    `/v1/installations/${installationId}/transfers/from-marketplace`,
+    {
+      installationId,
+      method: "POST",
+      data: {
+        transferId,
+        requester: { name: requester },
+      } satisfies RequestTransferFromMarketplace,
+    }
+  )) as RequestTransferFromMarketplaceResponse;
   return result;
 }
