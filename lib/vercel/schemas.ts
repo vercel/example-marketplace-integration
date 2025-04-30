@@ -746,3 +746,32 @@ export const TransferInstallationToMarketplaceRequestSchema = z.object({
       "The account information for this installation. Use Get Account Info API to re-fetch this data post transfer."
     ),
 });
+
+export type RequestTransferFromMarketplace = z.infer<
+  typeof requestTransferFromMarketplaceSchema
+>;
+export const requestTransferFromMarketplaceSchema = z.object({
+  transferId: z.string().min(1),
+  requester: z.object({
+    name: z.string().min(1),
+  }),
+});
+
+export type RequestTransferFromMarketplaceResponse = z.infer<
+  typeof requestTransferToMarketplaceResponseSchema
+>;
+export const requestTransferFromMarketplaceResponseSchema = z.object({
+  continueUrl: z.string().url(),
+});
+
+export type TransferInstallationFromMarketplaceRequest = z.infer<
+  typeof TransferInstallationFromMarketplaceRequestSchema
+>;
+
+export const TransferInstallationFromMarketplaceRequestSchema = z.object({
+  transferId: z.string(),
+  requester: z.object({
+    name: z.string().min(1),
+  }),
+  scopes: z.array(z.string().min(1)),
+});
