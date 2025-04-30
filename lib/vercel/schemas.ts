@@ -765,10 +765,10 @@ export const requestTransferFromMarketplaceResponseSchema = z.object({
 });
 
 export type TransferInstallationFromMarketplaceRequest = z.infer<
-  typeof TransferInstallationFromMarketplaceRequestSchema
+  typeof transferInstallationFromMarketplaceRequestSchema
 >;
 
-export const TransferInstallationFromMarketplaceRequestSchema = z.object({
+export const transferInstallationFromMarketplaceRequestSchema = z.object({
   transferId: z.string(),
   requester: z.object({
     name: z.string().min(1),
