@@ -646,10 +646,11 @@ const deploymentIntegrationActionStartEventSchema =
     payload: deploymentWebhookPayloadEventSchema.extend({
       installationId: z.string(),
       action: z.string(),
-      resourceId: z.string(), configuration: z.object({
+      resourceId: z.string(),
+      configuration: z.object({
         id: z.string(),
       }),
-    })
+    }),
   });
 
 const deploymentEvent = <T extends string>(eventType: T) => {
@@ -657,7 +658,7 @@ const deploymentEvent = <T extends string>(eventType: T) => {
     type: z.literal(eventType),
     payload: deploymentWebhookPayloadEventSchema,
   });
-}
+};
 
 export type WebhookEvent = z.infer<typeof webhookEventSchema>;
 export const webhookEventSchema = z.discriminatedUnion("type", [
@@ -680,4 +681,98 @@ export const unknownWebhookEventSchema = webhookEventBaseSchema.extend({
   type: z.string(),
   payload: z.unknown(),
   unknown: z.boolean().optional().default(true),
+});
+
+// Transfer to/from Marketplacce
+
+export type RequestTransferToMarketplace = z.infer<
+  typeof requestTransferToMarketplaceSchema
+>;
+export const requestTransferToMarketplaceSchema = z.object({
+  transferId: z.string().min(1),
+  requester: z.object({
+    name: z.string().min(1),
+  }),
+  billingPlan: billingPlanSchema,
+});
+
+export type RequestTransferToMarketplaceResponse = z.infer<
+  typeof requestTransferToMarketplaceResponseSchema
+>;
+export const requestTransferToMarketplaceResponseSchema = z.object({
+  continueUrl: z.string().url(),
+});
+
+export type TransferInstallationToMarketplaceRequest = z.infer<
+  typeof TransferInstallationToMarketplaceRequestSchema
+>;
+
+export const TransferInstallationToMarketplaceRequestSchema = z.object({
+  transferId: z
+    .string()
+    .describe('Provided in the "request-transfer-to-marketplace".'),
+  billingPlanId: z
+    .string()
+    .optional()
+    .describe(
+      'Transfer billing plan, if one was provided in the "request-transfer-to-marketplace".'
+    ),
+  metadata: metadataSchema
+    .optional()
+    .describe(
+      'Installation-level metadata, if one was provided in the "request-transfer-to-marketplace".'
+    ),
+  scopes: z
+    .array(z.string().min(1))
+    .describe("Scopes for the new installation post transfer."),
+  acceptedPolicies: z.record(datetimeSchema),
+  credentials: z.object({
+    access_token: z.string().min(1),
+    token_type: z.string().min(1),
+  }),
+  account: z
+    .object({
+      name: z.string().optional(),
+      url: z.string().url(),
+      contact: z
+        .object({
+          email: z.string().email(),
+          name: z.string().optional(),
+        })
+        .nullable()
+        .optional(),
+    })
+    .describe(
+      "The account information for this installation. Use Get Account Info API to re-fetch this data post transfer."
+    ),
+});
+
+export type RequestTransferFromMarketplace = z.infer<
+  typeof requestTransferFromMarketplaceSchema
+>;
+export const requestTransferFromMarketplaceSchema = z.object({
+  transferId: z.string().min(1),
+  requester: z.object({
+    name: z.string().min(1),
+  }),
+});
+
+export type RequestTransferFromMarketplaceResponse = z.infer<
+  typeof requestTransferToMarketplaceResponseSchema
+>;
+export const requestTransferFromMarketplaceResponseSchema = z.object({
+  continueUrl: z.string().url(),
+});
+
+export type TransferInstallationFromMarketplaceRequest = z.infer<
+  typeof transferInstallationFromMarketplaceRequestSchema
+>;
+
+export const transferInstallationFromMarketplaceRequestSchema = z.object({
+  transferId: z.string(),
+  scopes: z.array(z.string().min(1)),
+  credentials: z.object({
+    access_token: z.string().min(1),
+    token_type: z.string().min(1),
+  }),
 });

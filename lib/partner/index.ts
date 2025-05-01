@@ -1,5 +1,5 @@
 import { nanoid } from "nanoid";
-import {
+import type {
   BillingPlan,
   GetBillingPlansResponse,
   GetResourceResponse,
@@ -24,7 +24,7 @@ import {
   importResource as importResourceToVercelApi,
 } from "../vercel/marketplace-api";
 
-const billingPlans: BillingPlan[] = [
+export const billingPlans: BillingPlan[] = [
   {
     id: "default",
     scope: "resource",
@@ -125,7 +125,11 @@ export async function uninstallInstallation(
 
   // Installation is finalized immediately if it's on a free plan.
   const billingPlan = billingPlanMap.get(installation.billingPlanId);
-  return { finalized: billingPlan?.paymentMethodRequired === false };
+  return {
+    finalized:
+      billingPlan?.paymentMethodRequired === false ||
+      process.env.FORCE_FINALIZE_INSTALLATION === "true",
+  };
 }
 
 export async function listInstallations(): Promise<string[]> {
@@ -342,7 +346,7 @@ export async function provisionPurchase(
   const balances: Record<string, Balance> = {};
 
   for (const item of invoice.items ?? []) {
-    const amountInCents = Math.floor(parseFloat(item.total) * 100);
+    const amountInCents = Math.floor(Number.parseFloat(item.total) * 100);
     if (item.resourceId) {
       const balance = await addResourceBalanceInternal(
         installationId,
