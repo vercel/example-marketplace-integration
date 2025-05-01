@@ -770,8 +770,9 @@ export type TransferInstallationFromMarketplaceRequest = z.infer<
 
 export const transferInstallationFromMarketplaceRequestSchema = z.object({
   transferId: z.string(),
-  requester: z.object({
-    name: z.string().min(1),
-  }),
   scopes: z.array(z.string().min(1)),
+  credentials: z.object({
+    access_token: z.string().min(1),
+    token_type: z.string().min(1),
+  }),
 });
