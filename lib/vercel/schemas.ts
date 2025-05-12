@@ -238,8 +238,14 @@ export type ProvisionResourceRequest = z.infer<
   typeof provisionResourceRequestSchema
 >;
 
+const environmentOverrideTargets = z.enum(['production', 'preview', 'development']);
+
 export const provisionResourceResponseSchema = resourceSchema.extend({
-  secrets: z.array(z.object({ name: z.string(), value: z.string() })),
+  secrets: z.array(z.object({
+    name: z.string(),
+    value: z.string(),
+    environmentOverrides: z.record(environmentOverrideTargets, z.string()).optional(),
+  })),
 });
 
 export type ProvisionResourceResponse = z.infer<

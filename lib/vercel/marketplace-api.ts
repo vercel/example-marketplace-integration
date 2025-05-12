@@ -55,7 +55,7 @@ export async function getAccountInfo(
 export async function updateSecrets(
   installationId: string,
   resourceId: string,
-  secrets: { name: string; value: string }[]
+  secrets: { name: string; value: string; environmentOverrides?: Record<string, string> }[]
 ): Promise<void> {
   const resource = await getResource(installationId, resourceId);
 
