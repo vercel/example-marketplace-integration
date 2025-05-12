@@ -1,5 +1,5 @@
 import { nanoid } from "nanoid";
-import {
+import type {
   BillingPlan,
   GetBillingPlansResponse,
   GetResourceResponse,
@@ -157,13 +157,19 @@ export async function provisionResource(
   await kv.lpush(`${installationId}:resources`, resource.id);
   await updateInstallation(installationId, request.billingPlanId);
 
+  const currentDate = new Date().toISOString();
+
   return {
     ...resource,
 
     secrets: [
       {
         name: "TOP_SECRET",
-        value: `birds aren't real (${new Date().toISOString()})`,
+        value: `birds aren't real (${currentDate})`,
+        environmentOverrides: resource.productId === 'with-env-override' ? {
+            'production': `birds ARE real (${currentDate})`,
+            'preview': `birds ARE real (${currentDate})`,
+        } : undefined,
       },
     ],
   };

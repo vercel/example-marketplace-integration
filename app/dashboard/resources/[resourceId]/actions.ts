@@ -54,10 +54,16 @@ export async function rotateCredentialsAction(
     throw new Error(`Unknown resource '${formData.get("resourceId")}`);
   }
 
+  const currentDate = new Date().toISOString();
+
   await updateSecrets(session.installation_id, resource.id, [
     {
       name: "TOP_SECRET",
-      value: `birds aren't real (${new Date().toISOString()})`,
+      value: `birds aren't real (${currentDate})`,
+      environmentOverrides: resource.productId === 'with-env-override' ? {
+          'production': `birds ARE real (${currentDate})`,
+          'preview': `birds might be real (${currentDate})`,
+      } : undefined,
     },
   ]);
 }
