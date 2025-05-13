@@ -55,6 +55,7 @@ export const GET = withAuth(async (claims) => {
     (plan) => plan.id === installation.billingPlanId
   );
   return Response.json({
+    metadata: installation.metadata,
     billingPlan: {
       ...billingPlan,
       scope: "installation",
@@ -72,10 +73,10 @@ export const PATCH = withAuth(async (claims, request) => {
     return new Response(null, { status: 400 });
   }
 
-  await updateInstallation(
-    claims.installation_id,
-    requestBody.data.billingPlanId
-  );
+  await updateInstallation(claims.installation_id, {
+    billingPlanId: requestBody.data.billingPlanId,
+    metadata: requestBody.data.metadata,
+  });
 
   return new Response(null, { status: 204 });
 });
