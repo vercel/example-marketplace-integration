@@ -1,4 +1,4 @@
-# Example Marketplace Integration
+# Example Marketplace Integration (single product mode)
 
 Welcome to the Example Marketplace Integration. This repository contains a reference implementation for a Vercel Marketplace Integration.
 
