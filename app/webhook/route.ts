@@ -111,6 +111,8 @@ export async function POST(req: Request): Promise<Response> {
         },
       )
 
+      await delay(8000); // Wait for 8 seconds
+
       await fetchVercelApi(
         `/v1/deployments/${deploymentId}/checks/${data.checks[0]?.id}`,
         {
@@ -158,6 +160,8 @@ export async function POST(req: Request): Promise<Response> {
         },
       )
 
+      await delay(8000); // Wait for 8 seconds
+
       await fetchVercelApi(
         `/v1/deployments/${deploymentId}/checks/${data.checks[0]?.id}`,
         {
@@ -182,6 +186,8 @@ function sha1(data: Buffer, secret: string): string {
     .update(new Uint8Array(data))
     .digest("hex");
 }
+
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 async function getInstallationId(installationIds: string[] | undefined) {
   const installations = await listInstallations()
