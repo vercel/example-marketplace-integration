@@ -99,6 +99,65 @@ export async function POST(req: Request): Promise<Response> {
         console.error(`No Check found for deployment ${deploymentId}`, data)
       }
 
+
+      await fetchVercelApi(
+        `/v1/deployments/${deploymentId}/checks/${data.checks[0]?.id}`,
+        {
+          data: {
+            status: "running",
+          },
+          method: "PATCH",
+          installationId
+        },
+      )
+
+      await fetchVercelApi(
+        `/v1/deployments/${deploymentId}/checks/${data.checks[0]?.id}`,
+        {
+          data: {
+            conclusion: "failed",
+            status: "completed",
+          },
+          method: "PATCH",
+          installationId
+        },
+      )
+      break;
+    }
+    case 'deployment.check-rerequested': {
+      const deploymentId = payload.deployment.id
+      const installationId = await getInstallationId(payload.installationIds)
+      if (!installationId) {
+        console.error(`No installations found for deployment ${deploymentId}`, payload)
+        break;
+      }
+
+      const data = (await fetchVercelApi(
+        `/v1/deployments/${deploymentId}/checks`,
+        {
+          method: "get",
+          installationId
+        },
+      )) as { checks: { id: string }[] };
+
+      const checkId = data.checks[0]?.id;
+
+      if (!checkId) {
+        console.error(`No Check found for deployment ${deploymentId}`, data)
+      }
+
+
+      await fetchVercelApi(
+        `/v1/deployments/${deploymentId}/checks/${data.checks[0]?.id}`,
+        {
+          data: {
+            status: "running",
+          },
+          method: "PATCH",
+          installationId
+        },
+      )
+
       await fetchVercelApi(
         `/v1/deployments/${deploymentId}/checks/${data.checks[0]?.id}`,
         {
