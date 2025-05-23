@@ -100,11 +100,18 @@ export async function installIntegration(
 
 export async function updateInstallation(
   installationId: string,
-  billingPlanId: string
+  {
+    billingPlanId,
+    metadata,
+  }: { billingPlanId: string; metadata?: Record<string, unknown> }
 ): Promise<void> {
   const installation = await getInstallation(installationId);
   const pipeline = kv.pipeline();
-  await pipeline.set(installationId, { ...installation, billingPlanId });
+  await pipeline.set(installationId, {
+    ...installation,
+    billingPlanId,
+    metadata: metadata !== undefined ? metadata : installation.metadata,
+  });
   await pipeline.exec();
 }
 
@@ -155,7 +162,9 @@ export async function provisionResource(
     serializeResource(resource)
   );
   await kv.lpush(`${installationId}:resources`, resource.id);
-  await updateInstallation(installationId, request.billingPlanId);
+  await updateInstallation(installationId, {
+    billingPlanId: request.billingPlanId,
+  });
 
   const currentDate = new Date().toISOString();
 
@@ -477,6 +486,14 @@ export async function getInstallationtBillingPlans(
   };
 }
 
+export async function getNewInstallationtBillingPlans(
+  _experimental_metadata?: Record<string, unknown>
+): Promise<GetBillingPlansResponse> {
+  return {
+    plans: billingPlans,
+  };
+}
+
 export async function getProductBillingPlans(
   _productId: string,
   installationId: string,
@@ -502,6 +519,7 @@ export async function getInstallation(installationId: string): Promise<
   InstallIntegrationRequest & {
     type: "marketplace" | "external";
     billingPlanId: string;
+    metadata?: Record<string, unknown>;
     deletedAt?: number;
   }
 > {
@@ -509,6 +527,7 @@ export async function getInstallation(installationId: string): Promise<
     InstallIntegrationRequest & {
       type: "marketplace" | "external";
       billingPlanId: string;
+      metadata?: Record<string, unknown>;
       deletedAt?: number;
     }
   >(installationId);
