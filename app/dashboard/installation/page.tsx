@@ -4,6 +4,7 @@ import { getAccountInfo } from "@/lib/vercel/marketplace-api";
 import { Section } from "../components/section";
 import { addInstallationBalance, sendBillingDataAction } from "./actions";
 import { FormButton } from "../components/form-button";
+import TransferFromVercelRedirect from "./transfer-from-vercel-redirect";
 
 export const dynamic = "force-dynamic";
 
@@ -73,6 +74,9 @@ export default async function IntallationPage() {
             Submit
           </FormButton>
         </form>
+      </Section>
+      <Section title="Transfer from Vercel">
+        <TransferFromVercelRedirect configurationId={session.installation_id} />
       </Section>
     </main>
   );
