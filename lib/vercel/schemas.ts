@@ -238,14 +238,22 @@ export type ProvisionResourceRequest = z.infer<
   typeof provisionResourceRequestSchema
 >;
 
-const environmentOverrideTargets = z.enum(['production', 'preview', 'development']);
+const environmentOverrideTargets = z.enum([
+  "production",
+  "preview",
+  "development",
+]);
 
 export const provisionResourceResponseSchema = resourceSchema.extend({
-  secrets: z.array(z.object({
-    name: z.string(),
-    value: z.string(),
-    environmentOverrides: z.record(environmentOverrideTargets, z.string()).optional(),
-  })),
+  secrets: z.array(
+    z.object({
+      name: z.string(),
+      value: z.string(),
+      environmentOverrides: z
+        .record(environmentOverrideTargets, z.string())
+        .optional(),
+    })
+  ),
 });
 
 export type ProvisionResourceResponse = z.infer<
@@ -638,7 +646,20 @@ const deploymentWebhookPayloadEventSchema = z.object({
       id: z.string(),
     })
     .passthrough(),
-  installationIds: z.string().array().optional(),
+  // Deprecated, use `integrations` instead.
+  installationIds: z.string().array().optional().describe("@deprecated"),
+  integrations: z
+    .object({
+      installationId: z.string(),
+      resources: z
+        .object({
+          externalResourceId: z.string(),
+        })
+        .array()
+        .optional(),
+    })
+    .array()
+    .optional(),
   deployment: z
     .object({
       id: z.string(),
@@ -652,10 +673,11 @@ const deploymentIntegrationActionStartEventSchema =
     payload: deploymentWebhookPayloadEventSchema.extend({
       installationId: z.string(),
       action: z.string(),
-      resourceId: z.string(), configuration: z.object({
+      resourceId: z.string(),
+      configuration: z.object({
         id: z.string(),
       }),
-    })
+    }),
   });
 
 const deploymentEvent = <T extends string>(eventType: T) => {
@@ -663,7 +685,7 @@ const deploymentEvent = <T extends string>(eventType: T) => {
     type: z.literal(eventType),
     payload: deploymentWebhookPayloadEventSchema,
   });
-}
+};
 
 export type WebhookEvent = z.infer<typeof webhookEventSchema>;
 export const webhookEventSchema = z.discriminatedUnion("type", [
