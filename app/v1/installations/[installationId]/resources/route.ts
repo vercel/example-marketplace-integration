@@ -14,7 +14,7 @@ export const GET = withAuth(async (claims, request) => {
 export const POST = withAuth(async (claims, request) => {
   const requestBody = await readRequestBodyWithSchema(
     request,
-    provisionResourceRequestSchema
+    provisionResourceRequestSchema,
   );
 
   if (!requestBody.success) {
@@ -38,7 +38,7 @@ export const POST = withAuth(async (claims, request) => {
       },
       {
         status: 400,
-      }
+      },
     );
   }
   if (requestBody.data.name === "conflict") {
@@ -51,13 +51,13 @@ export const POST = withAuth(async (claims, request) => {
       },
       {
         status: 409,
-      }
+      },
     );
   }
 
   const resource = await provisionResource(
     claims.installation_id,
-    requestBody.data
+    requestBody.data,
   );
 
   return Response.json(resource, {

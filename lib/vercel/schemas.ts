@@ -94,7 +94,7 @@ export const billingPlanSchema = z.object({
       z.object({
         label: z.string().min(1),
         value: z.string().min(1).optional(),
-      })
+      }),
     )
     .optional()
     .describe("Highlighted plan's details"),
@@ -111,7 +111,7 @@ export const billingPlanSchema = z.object({
       z.object({
         label: z.string().min(1),
         value: z.string().min(1).optional(),
-      })
+      }),
     )
     .optional(),
 
@@ -126,7 +126,7 @@ export const billingPlanSchema = z.object({
         id: z.string().min(1),
         name: z.string().min(1),
         url: z.string().min(1),
-      })
+      }),
     )
     .optional(),
 
@@ -238,14 +238,22 @@ export type ProvisionResourceRequest = z.infer<
   typeof provisionResourceRequestSchema
 >;
 
-const environmentOverrideTargets = z.enum(['production', 'preview', 'development']);
+const environmentOverrideTargets = z.enum([
+  "production",
+  "preview",
+  "development",
+]);
 
 export const provisionResourceResponseSchema = resourceSchema.extend({
-  secrets: z.array(z.object({
-    name: z.string(),
-    value: z.string(),
-    environmentOverrides: z.record(environmentOverrideTargets, z.string()).optional(),
-  })),
+  secrets: z.array(
+    z.object({
+      name: z.string(),
+      value: z.string(),
+      environmentOverrides: z
+        .record(environmentOverrideTargets, z.string())
+        .optional(),
+    }),
+  ),
 });
 
 export type ProvisionResourceResponse = z.infer<
@@ -293,7 +301,7 @@ export const importResourceRequestSchema = z.object({
       z.object({
         name: z.string(),
         value: z.string(),
-      })
+      }),
     )
     .optional(),
 });
@@ -453,7 +461,7 @@ export const invoiceSchema = z.object({
         details: z.string().optional(),
         start: datetimeSchema.optional(),
         end: datetimeSchema.optional(),
-      })
+      }),
     )
     .optional(),
   discounts: z
@@ -466,7 +474,7 @@ export const invoiceSchema = z.object({
         details: z.string().optional(),
         start: datetimeSchema.optional(),
         end: datetimeSchema.optional(),
-      })
+      }),
     )
     .optional(),
 });
@@ -569,7 +577,7 @@ export const deploymentActionResourceSecretsOutcomeSchema = z.object({
     z.object({
       name: z.string(),
       value: z.string(),
-    })
+    }),
   ),
 });
 
@@ -652,10 +660,11 @@ const deploymentIntegrationActionStartEventSchema =
     payload: deploymentWebhookPayloadEventSchema.extend({
       installationId: z.string(),
       action: z.string(),
-      resourceId: z.string(), configuration: z.object({
+      resourceId: z.string(),
+      configuration: z.object({
         id: z.string(),
       }),
-    })
+    }),
   });
 
 const deploymentEvent = <T extends string>(eventType: T) => {
@@ -663,7 +672,7 @@ const deploymentEvent = <T extends string>(eventType: T) => {
     type: z.literal(eventType),
     payload: deploymentWebhookPayloadEventSchema,
   });
-}
+};
 
 export type WebhookEvent = z.infer<typeof webhookEventSchema>;
 export const webhookEventSchema = z.discriminatedUnion("type", [

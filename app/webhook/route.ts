@@ -5,7 +5,11 @@ import {
   type WebhookEvent,
   webhookEventSchema,
 } from "@/lib/vercel/schemas";
-import { listInstallations, storeWebhookEvent, uninstallInstallation } from "@/lib/partner";
+import {
+  listInstallations,
+  storeWebhookEvent,
+  uninstallInstallation,
+} from "@/lib/partner";
 import { fetchVercelApi } from "@/lib/vercel/api";
 
 export const dynamic = "force-dynamic";
@@ -57,31 +61,34 @@ export async function POST(req: Request): Promise<Response> {
       break;
     }
     case "deployment.created": {
-      const deploymentId = payload.deployment.id
-      const installationId = await getInstallationId(payload.installationIds)
+      const deploymentId = payload.deployment.id;
+      const installationId = await getInstallationId(payload.installationIds);
       if (!installationId) {
-        console.error(`No installations found for deployment ${deploymentId}`, payload)
+        console.error(
+          `No installations found for deployment ${deploymentId}`,
+          payload,
+        );
         break;
       }
-      await fetchVercelApi(
-        `/v1/deployments/${deploymentId}/checks`,
-        {
-          data: {
-            blocking: true,
-            rerequestable: true,
-            name: "Test Check",
-          },
-          method: "POST",
-          installationId
+      await fetchVercelApi(`/v1/deployments/${deploymentId}/checks`, {
+        data: {
+          blocking: true,
+          rerequestable: true,
+          name: "Test Check",
         },
-      );
+        method: "POST",
+        installationId,
+      });
       break;
     }
     case "deployment.ready": {
-      const deploymentId = payload.deployment.id
-      const installationId = await getInstallationId(payload.installationIds)
+      const deploymentId = payload.deployment.id;
+      const installationId = await getInstallationId(payload.installationIds);
       if (!installationId) {
-        console.error(`No installations found for deployment ${deploymentId}`, payload)
+        console.error(
+          `No installations found for deployment ${deploymentId}`,
+          payload,
+        );
         break;
       }
 
@@ -89,16 +96,15 @@ export async function POST(req: Request): Promise<Response> {
         `/v1/deployments/${deploymentId}/checks`,
         {
           method: "get",
-          installationId
+          installationId,
         },
       )) as { checks: { id: string }[] };
 
       const checkId = data.checks[0]?.id;
 
       if (!checkId) {
-        console.error(`No Check found for deployment ${deploymentId}`, data)
+        console.error(`No Check found for deployment ${deploymentId}`, data);
       }
-
 
       await fetchVercelApi(
         `/v1/deployments/${deploymentId}/checks/${data.checks[0]?.id}`,
@@ -107,9 +113,9 @@ export async function POST(req: Request): Promise<Response> {
             status: "running",
           },
           method: "PATCH",
-          installationId
+          installationId,
         },
-      )
+      );
 
       await delay(8000); // Wait for 8 seconds
 
@@ -121,16 +127,19 @@ export async function POST(req: Request): Promise<Response> {
             status: "completed",
           },
           method: "PATCH",
-          installationId
+          installationId,
         },
-      )
+      );
       break;
     }
-    case 'deployment.check-rerequested': {
-      const deploymentId = payload.deployment.id
-      const installationId = await getInstallationId(payload.installationIds)
+    case "deployment.check-rerequested": {
+      const deploymentId = payload.deployment.id;
+      const installationId = await getInstallationId(payload.installationIds);
       if (!installationId) {
-        console.error(`No installations found for deployment ${deploymentId}`, payload)
+        console.error(
+          `No installations found for deployment ${deploymentId}`,
+          payload,
+        );
         break;
       }
 
@@ -138,16 +147,15 @@ export async function POST(req: Request): Promise<Response> {
         `/v1/deployments/${deploymentId}/checks`,
         {
           method: "get",
-          installationId
+          installationId,
         },
       )) as { checks: { id: string }[] };
 
       const checkId = data.checks[0]?.id;
 
       if (!checkId) {
-        console.error(`No Check found for deployment ${deploymentId}`, data)
+        console.error(`No Check found for deployment ${deploymentId}`, data);
       }
-
 
       await fetchVercelApi(
         `/v1/deployments/${deploymentId}/checks/${data.checks[0]?.id}`,
@@ -156,9 +164,9 @@ export async function POST(req: Request): Promise<Response> {
             status: "running",
           },
           method: "PATCH",
-          installationId
+          installationId,
         },
-      )
+      );
 
       await delay(8000); // Wait for 8 seconds
 
@@ -170,9 +178,9 @@ export async function POST(req: Request): Promise<Response> {
             status: "completed",
           },
           method: "PATCH",
-          installationId
+          installationId,
         },
-      )
+      );
       break;
     }
   }
@@ -187,10 +195,12 @@ function sha1(data: Buffer, secret: string): string {
     .digest("hex");
 }
 
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function getInstallationId(installationIds: string[] | undefined) {
-  const installations = await listInstallations()
-  const installationId = installationIds?.find((id) => installations.includes(id))
-  return installationId
+  const installations = await listInstallations();
+  const installationId = installationIds?.find((id) =>
+    installations.includes(id),
+  );
+  return installationId;
 }

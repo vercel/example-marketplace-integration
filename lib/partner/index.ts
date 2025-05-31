@@ -89,7 +89,7 @@ const billingPlanMap = new Map(billingPlans.map((plan) => [plan.id, plan]));
 
 export async function installIntegration(
   installationId: string,
-  request: InstallIntegrationRequest & { type: "marketplace" | "external" }
+  request: InstallIntegrationRequest & { type: "marketplace" | "external" },
 ): Promise<void> {
   const pipeline = kv.pipeline();
   await pipeline.set(installationId, request);
@@ -100,7 +100,7 @@ export async function installIntegration(
 
 export async function updateInstallation(
   installationId: string,
-  billingPlanId: string
+  billingPlanId: string,
 ): Promise<void> {
   const installation = await getInstallation(installationId);
   const pipeline = kv.pipeline();
@@ -109,7 +109,7 @@ export async function updateInstallation(
 }
 
 export async function uninstallInstallation(
-  installationId: string
+  installationId: string,
 ): Promise<{ finalized: boolean } | undefined> {
   const installation = await getInstallation(installationId);
   if (!installation || installation.deletedAt) {
@@ -135,7 +135,7 @@ export async function listInstallations(): Promise<string[]> {
 
 export async function provisionResource(
   installationId: string,
-  request: ProvisionResourceRequest
+  request: ProvisionResourceRequest,
 ): Promise<ProvisionResourceResponse> {
   const billingPlan = billingPlanMap.get(request.billingPlanId);
   if (!billingPlan) {
@@ -152,7 +152,7 @@ export async function provisionResource(
 
   await kv.set(
     `${installationId}:resource:${resource.id}`,
-    serializeResource(resource)
+    serializeResource(resource),
   );
   await kv.lpush(`${installationId}:resources`, resource.id);
   await updateInstallation(installationId, request.billingPlanId);
@@ -166,10 +166,13 @@ export async function provisionResource(
       {
         name: "TOP_SECRET",
         value: `birds aren't real (${currentDate})`,
-        environmentOverrides: resource.productId === 'with-env-override' ? {
-            'production': `birds ARE real (${currentDate})`,
-            'preview': `birds ARE real (${currentDate})`,
-        } : undefined,
+        environmentOverrides:
+          resource.productId === "with-env-override"
+            ? {
+                production: `birds ARE real (${currentDate})`,
+                preview: `birds ARE real (${currentDate})`,
+              }
+            : undefined,
       },
     ],
   };
@@ -178,7 +181,7 @@ export async function provisionResource(
 export async function updateResource(
   installationId: string,
   resourceId: string,
-  request: UpdateResourceRequest
+  request: UpdateResourceRequest,
 ): Promise<UpdateResourceResponse> {
   const resource = await getResource(installationId, resourceId);
 
@@ -192,13 +195,13 @@ export async function updateResource(
     ...resource,
     ...updatedFields,
     billingPlan: billingPlanId
-      ? billingPlanMap.get(billingPlanId) ?? resource.billingPlan
+      ? (billingPlanMap.get(billingPlanId) ?? resource.billingPlan)
       : resource.billingPlan,
   };
 
   await kv.set(
     `${installationId}:resource:${resourceId}`,
-    serializeResource(nextResource)
+    serializeResource(nextResource),
   );
 
   return nextResource;
@@ -207,7 +210,7 @@ export async function updateResource(
 export async function updateResourceNotification(
   installationId: string,
   resourceId: string,
-  notification?: Notification
+  notification?: Notification,
 ): Promise<void> {
   const resource = await getResource(installationId, resourceId);
 
@@ -220,20 +223,20 @@ export async function updateResourceNotification(
     serializeResource({
       ...resource,
       notification,
-    })
+    }),
   );
 }
 
 export async function clearResourceNotification(
   installationId: string,
-  resourceId: string
+  resourceId: string,
 ): Promise<void> {
   await updateResourceNotification(installationId, resourceId);
 }
 
 export async function deleteResource(
   installationId: string,
-  resourceId: string
+  resourceId: string,
 ): Promise<void> {
   const pipeline = kv.pipeline();
   pipeline.del(`${installationId}:resource:${resourceId}`);
@@ -243,7 +246,7 @@ export async function deleteResource(
 
 export async function listResources(
   installationId: string,
-  targetResourceIds?: string[]
+  targetResourceIds?: string[],
 ): Promise<ListResourcesResponse> {
   const resourceIds = targetResourceIds?.length
     ? targetResourceIds
@@ -268,10 +271,10 @@ export async function listResources(
 
 export async function getResource(
   installationId: string,
-  resourceId: string
+  resourceId: string,
 ): Promise<GetResourceResponse | null> {
   const resource = await kv.get<SerializedResource>(
-    `${installationId}:resource:${resourceId}`
+    `${installationId}:resource:${resourceId}`,
   );
 
   if (resource) {
@@ -283,7 +286,7 @@ export async function getResource(
 
 export async function cloneResource(
   installationId: string,
-  resourceId: string
+  resourceId: string,
 ) {
   const resource = await getResource(installationId, resourceId);
 
@@ -304,7 +307,7 @@ export async function cloneResource(
 
 export async function importResourceToVercel(
   installationId: string,
-  resourceId: string
+  resourceId: string,
 ): Promise<void> {
   const resource = await getResource(installationId, resourceId);
 
@@ -332,13 +335,13 @@ export async function importResourceToVercel(
           value: `birds aren't real (${new Date().toISOString()})`,
         },
       ],
-    }
+    },
   );
 }
 
 export async function provisionPurchase(
   installationId: string,
-  request: ProvisionPurchaseRequest
+  request: ProvisionPurchaseRequest,
 ): Promise<ProvisionPurchaseResponse> {
   const invoice = await getInvoice(installationId, request.invoiceId);
   if (invoice.state !== "paid") {
@@ -353,13 +356,13 @@ export async function provisionPurchase(
       const balance = await addResourceBalanceInternal(
         installationId,
         item.resourceId,
-        amountInCents
+        amountInCents,
       );
       balances[item.resourceId] = balance;
     } else {
       const balance = await addInstallationBalanceInternal(
         installationId,
-        amountInCents
+        amountInCents,
       );
       balances[""] = balance;
     }
@@ -373,11 +376,11 @@ export async function provisionPurchase(
 
 export async function addInstallationBalanceInternal(
   installationId: string,
-  currencyValueInCents: number
+  currencyValueInCents: number,
 ): Promise<Balance> {
   const result = await kv.incrby(
     `${installationId}:balance`,
-    currencyValueInCents
+    currencyValueInCents,
   );
   return {
     currencyValueInCents: result,
@@ -387,7 +390,7 @@ export async function addInstallationBalanceInternal(
 }
 
 export async function getInstallationBalance(
-  installationId: string
+  installationId: string,
 ): Promise<Balance | null> {
   const result = await kv.get<number>(`${installationId}:balance`);
   if (result === null) {
@@ -403,11 +406,11 @@ export async function getInstallationBalance(
 export async function addResourceBalanceInternal(
   installationId: string,
   resourceId: string,
-  currencyValueInCents: number
+  currencyValueInCents: number,
 ): Promise<Balance> {
   const result = await kv.incrby(
     `${installationId}:${resourceId}:balance`,
-    currencyValueInCents
+    currencyValueInCents,
   );
   return {
     currencyValueInCents: result,
@@ -419,10 +422,10 @@ export async function addResourceBalanceInternal(
 
 export async function getResourceBalance(
   installationId: string,
-  resourceId: string
+  resourceId: string,
 ): Promise<Balance | null> {
   const result = await kv.get<number>(
-    `${installationId}:${resourceId}:balance`
+    `${installationId}:${resourceId}:balance`,
   );
   if (result === null) {
     return null;
@@ -457,7 +460,7 @@ function deserializeResource(serializedResource: SerializedResource): Resource {
 
 export async function getAllBillingPlans(
   _installationId: string,
-  _experimental_metadata?: Record<string, unknown>
+  _experimental_metadata?: Record<string, unknown>,
 ): Promise<GetBillingPlansResponse> {
   return {
     plans: billingPlans,
@@ -466,7 +469,7 @@ export async function getAllBillingPlans(
 
 export async function getInstallationtBillingPlans(
   installationId: string,
-  _experimental_metadata?: Record<string, unknown>
+  _experimental_metadata?: Record<string, unknown>,
 ): Promise<GetBillingPlansResponse> {
   const resources = await listResources(installationId);
   return {
@@ -480,7 +483,7 @@ export async function getInstallationtBillingPlans(
 export async function getProductBillingPlans(
   _productId: string,
   installationId: string,
-  _experimental_metadata?: Record<string, unknown>
+  _experimental_metadata?: Record<string, unknown>,
 ): Promise<GetBillingPlansResponse> {
   const resources = await listResources(installationId);
   return {
@@ -493,7 +496,7 @@ export async function getProductBillingPlans(
 
 export async function getResourceBillingPlans(
   _installationId: string,
-  _resourceId: string
+  _resourceId: string,
 ): Promise<GetBillingPlansResponse> {
   return { plans: billingPlans };
 }
@@ -521,7 +524,7 @@ export async function getInstallation(installationId: string): Promise<
 }
 
 export async function storeWebhookEvent(
-  event: WebhookEvent | UnknownWebhookEvent
+  event: WebhookEvent | UnknownWebhookEvent,
 ): Promise<void> {
   const pipeline = kv.pipeline();
   await pipeline.lpush("webhook_events", event);
@@ -531,6 +534,6 @@ export async function storeWebhookEvent(
 
 export async function getWebhookEvents(limit = 100): Promise<WebhookEvent[]> {
   return (await kv.lrange<WebhookEvent>("webhook_events", 0, limit)).sort(
-    (a, b) => b.createdAt - a.createdAt
+    (a, b) => b.createdAt - a.createdAt,
   );
 }

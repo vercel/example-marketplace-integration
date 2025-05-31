@@ -4,7 +4,7 @@ import { env } from "../env";
 import { JWTExpired, JWTInvalid } from "jose/errors";
 
 const JWKS = createRemoteJWKSet(
-  new URL(`https://marketplace.vercel.com/.well-known/jwks`)
+  new URL(`https://marketplace.vercel.com/.well-known/jwks`),
 );
 
 export interface OidcClaims {
@@ -26,7 +26,7 @@ export function withAuth(
     claims: OidcClaims,
     req: NextRequest,
     ...rest: any[]
-  ) => Promise<Response>
+  ) => Promise<Response>,
 ): (req: NextRequest, ...rest: any[]) => Promise<Response> {
   return async (req: NextRequest, ...rest: any[]): Promise<Response> => {
     try {

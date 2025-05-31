@@ -20,7 +20,7 @@ export async function addInstallationBalance(formData: FormData) {
 
   await addInstallationBalanceInternal(
     session.installation_id,
-    Number(formData.get("currencyValueInCents") as string)
+    Number(formData.get("currencyValueInCents") as string),
   );
 
   revalidatePath("/dashboard");
@@ -38,9 +38,9 @@ export async function sendBillingDataAction() {
       [
         getInstallationBalance(installationId),
         ...resources.map((resource) =>
-          getResourceBalance(installationId, resource.id)
+          getResourceBalance(installationId, resource.id),
         ),
-      ].filter((x) => x !== null)
+      ].filter((x) => x !== null),
     )
   ).filter((x) => x !== null) as Balance[];
 

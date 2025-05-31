@@ -25,9 +25,9 @@ export const GET = cronJob(async (request: Request) => {
         [
           getInstallationBalance(installationId),
           ...resources.map((resource) =>
-            getResourceBalance(installationId, resource.id)
+            getResourceBalance(installationId, resource.id),
           ),
-        ].filter((x) => x !== null)
+        ].filter((x) => x !== null),
       )
     ).filter((x) => x !== null) as Balance[];
     console.log("Sending billing data: ", installationId, data);

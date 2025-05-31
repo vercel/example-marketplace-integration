@@ -8,7 +8,7 @@ import {
 } from "@/lib/vercel/marketplace-api";
 
 export async function succeedAction(
-  event: DeploymentIntegrationActionStartEvent
+  event: DeploymentIntegrationActionStartEvent,
 ): Promise<void> {
   await getSession();
 
@@ -16,7 +16,7 @@ export async function succeedAction(
 
   const deployment = await getDeployment(
     event.payload.installationId,
-    event.payload.deployment.id
+    event.payload.deployment.id,
   );
 
   const newSecret = `Value set in action for ${deployment.id}, branch ${deployment.gitSource?.ref}, sha ${deployment.gitSource?.sha}`;
@@ -42,7 +42,7 @@ export async function succeedAction(
 }
 
 export async function failAction(
-  event: DeploymentIntegrationActionStartEvent
+  event: DeploymentIntegrationActionStartEvent,
 ): Promise<void> {
   await getSession();
 
