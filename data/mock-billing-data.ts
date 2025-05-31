@@ -7,7 +7,7 @@ import type {
 } from "@/lib/vercel/schemas";
 
 export async function mockBillingData(
-  installationId: string
+  installationId: string,
 ): Promise<BillingData> {
   const timestamp = new Date();
   const year = timestamp.getUTCFullYear();
@@ -48,34 +48,37 @@ export async function mockBillingData(
     .flat();
 
   const installationUsage = Object.values(
-    resourceUsage.reduce((acc, resourceUsage) => {
-      let usage: ResourceUsage = acc[resourceUsage.name];
-      if (!acc[resourceUsage.name]) {
-        usage = {
-          ...resourceUsage,
-          resourceId: undefined,
-          dayValue: 0,
-          periodValue: 0,
-          planValue: undefined,
-        };
-        acc[resourceUsage.name] = usage;
-      }
-      switch (usage.type) {
-        case "total":
-        case "interval":
-          usage.dayValue += resourceUsage.dayValue;
-          usage.periodValue += resourceUsage.periodValue;
-          break;
-        case "rate":
-          usage.dayValue = Math.max(usage.dayValue, resourceUsage.dayValue);
-          usage.periodValue = Math.max(
-            usage.periodValue,
-            resourceUsage.periodValue
-          );
-          break;
-      }
-      return acc;
-    }, {} as Record<string, ResourceUsage>)
+    resourceUsage.reduce(
+      (acc, resourceUsage) => {
+        let usage: ResourceUsage = acc[resourceUsage.name];
+        if (!acc[resourceUsage.name]) {
+          usage = {
+            ...resourceUsage,
+            resourceId: undefined,
+            dayValue: 0,
+            periodValue: 0,
+            planValue: undefined,
+          };
+          acc[resourceUsage.name] = usage;
+        }
+        switch (usage.type) {
+          case "total":
+          case "interval":
+            usage.dayValue += resourceUsage.dayValue;
+            usage.periodValue += resourceUsage.periodValue;
+            break;
+          case "rate":
+            usage.dayValue = Math.max(usage.dayValue, resourceUsage.dayValue);
+            usage.periodValue = Math.max(
+              usage.periodValue,
+              resourceUsage.periodValue,
+            );
+            break;
+        }
+        return acc;
+      },
+      {} as Record<string, ResourceUsage>,
+    ),
   );
   const usage = [...installationUsage, ...resourceUsage];
 
@@ -121,7 +124,7 @@ function mockUsageData(
   },
   timestamp: Date,
   periodStart: Date,
-  dayStart: Date
+  dayStart: Date,
 ): ResourceUsage[] {
   // May 1, 2024
   const baseTimestamp = Date.UTC(2024, 4, 1);

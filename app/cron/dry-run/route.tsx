@@ -19,9 +19,9 @@ export const GET = async () => {
       [
         getInstallationBalance(installationId),
         ...resources.map((resource) =>
-          getResourceBalance(installationId, resource.id)
+          getResourceBalance(installationId, resource.id),
         ),
-      ].filter((x) => x !== null)
+      ].filter((x) => x !== null),
     )
   ).filter((x) => x !== null) as Balance[];
   return Response.json({ billingData, balances });
