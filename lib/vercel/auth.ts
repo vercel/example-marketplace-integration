@@ -81,4 +81,4 @@ function getAuthorizationToken(req: Request): string {
   return match[1];
 }
 
-class AuthError extends Error {}
+export class AuthError extends Error {}
