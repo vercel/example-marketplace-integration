@@ -10,7 +10,7 @@ import {
 import { z } from "zod";
 import { listResources } from "@/lib/partner";
 
-export const maxDuration = 800;
+export const maxDuration = 300;
 
 const _handler = createMcpHandler(
   (server) => {
