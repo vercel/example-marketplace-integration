@@ -40,18 +40,16 @@ async function main() {
   const { tools } = await client.listTools();
   console.log(tools);
 
-  const greet = tools.find((tool) => tool.name === "greet");
-  if (!greet) {
+  const tool = tools.find((tool) => tool.name === "getResourceById");
+  if (!tool) {
     throw new Error("Echo tool not found");
   }
-  console.log("Using tool:", greet, greet.inputSchema.properties);
+  console.log("Using tool:", tool, tool.inputSchema.properties);
 
   const result = await client.callTool(
     {
-      name: greet.name,
-      arguments: {
-        name: "Mr",
-      },
+      name: tool.name,
+      arguments: { id: "AHVQYARXn6vJQKd4859Sf" },
     },
     undefined,
     {}
