@@ -88,7 +88,6 @@ export async function addCheck(
     {
       installationId,
       method: "PUT",
-      data: { secrets },
     },
   );
 }
