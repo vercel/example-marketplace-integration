@@ -76,6 +76,7 @@ export type Check = {
     | "deployment-alias"
     | "deployment-promotion"
     | "none";
+  // TODO: Fix this, source is not passed to the client
   source: {
     kind: "integration";
     integrationId: string;
