@@ -1,7 +1,6 @@
 "use server";
 
 import { getSession } from "@/app/dashboard/auth";
-import { fetchVercelApi } from "@/lib/vercel/api";
 import { createCheck } from "@/lib/vercel/marketplace-api";
 
 export async function createCheckFormSubmit(formData: FormData): Promise<void> {
