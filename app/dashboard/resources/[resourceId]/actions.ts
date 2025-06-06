@@ -19,7 +19,7 @@ export async function updateResourceAction(formData: FormData): Promise<void> {
   const session = await getSession();
   const resource = await getResource(
     session.installation_id,
-    formData.get("resourceId") as string
+    formData.get("resourceId") as string,
   );
 
   if (!resource) {
@@ -42,12 +42,12 @@ export async function updateResourceAction(formData: FormData): Promise<void> {
 }
 
 export async function rotateCredentialsAction(
-  formData: FormData
+  formData: FormData,
 ): Promise<void> {
   const session = await getSession();
   const resource = await getResource(
     session.installation_id,
-    formData.get("resourceId") as string
+    formData.get("resourceId") as string,
   );
 
   if (!resource) {
@@ -60,22 +60,25 @@ export async function rotateCredentialsAction(
     {
       name: "TOP_SECRET",
       value: `birds aren't real (${currentDate})`,
-      environmentOverrides: resource.productId === 'with-env-override' ? {
-          'production': `birds ARE real (${currentDate})`,
-          'preview': `birds might be real (${currentDate})`,
-      } : undefined,
+      environmentOverrides:
+        resource.productId === "with-env-override"
+          ? {
+              production: `birds ARE real (${currentDate})`,
+              preview: `birds might be real (${currentDate})`,
+            }
+          : undefined,
     },
   ]);
 }
 
 export async function clearResourceNotificationAction(
-  formData: FormData
+  formData: FormData,
 ): Promise<void> {
   const session = await getSession();
 
   await clearResourceNotification(
     session.installation_id,
-    formData.get("resourceId") as string
+    formData.get("resourceId") as string,
   );
 
   revalidatePath("/dashboard");
@@ -93,7 +96,7 @@ export async function updateResourceNotificationAction(formData: FormData) {
       title: formData.get("title") as string,
       message: formData.get("message") as string,
       href: formData.get("href") as string,
-    }
+    },
   );
 
   revalidatePath("/dashboard");
@@ -112,7 +115,7 @@ export async function setExampleNotificationAction(formData: FormData) {
       message:
         "Your resource failed to provision because of complicated technical reasons. Please reach out to help@acmecorp.com",
       href: "https://acmecorp.com/help",
-    }
+    },
   );
 
   revalidatePath("/dashboard");
@@ -124,7 +127,7 @@ export async function cloneResourceAction(formData: FormData) {
   const resourceId = formData.get("resourceId") as string;
   const clonedResource = await cloneResource(
     session.installation_id,
-    resourceId
+    resourceId,
   );
   revalidatePath("/dashboard");
   redirect(`/dashboard/resources/${clonedResource.id}`);
@@ -142,7 +145,7 @@ export async function addResourceBalance(formData: FormData) {
   await addResourceBalanceInternal(
     session.installation_id,
     formData.get("resourceId") as string,
-    Number(formData.get("currencyValueInCents") as string)
+    Number(formData.get("currencyValueInCents") as string),
   );
 
   revalidatePath("/dashboard");

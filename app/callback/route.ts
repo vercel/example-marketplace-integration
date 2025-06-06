@@ -19,23 +19,26 @@ export async function GET(request: NextRequest) {
   createSession(token);
 
   const resourceId = request.nextUrl.searchParams.get("resource_id");
+  const projectId = request.nextUrl.searchParams.get("project_id");
   const invoiceId = request.nextUrl.searchParams.get("invoice_id");
 
   if (invoiceId) {
-    redirect(`/dashboard/invoices?id=${invoiceId}`);
-    return;
+    return redirect(`/dashboard/invoices?id=${invoiceId}`);
   }
 
   if (request.nextUrl.searchParams.get("support")) {
-    redirect(
-      `/dashboard/support${resourceId ? "?resource_id=" + resourceId : ""}`
+    return redirect(
+      `/dashboard/support${resourceId ? "?resource_id=" + resourceId : ""}`,
     );
-    return;
   }
 
   if (resourceId) {
-    redirect(`/dashboard/resources/${resourceId}`);
-    return;
+    if (projectId) {
+      return redirect(
+        `/dashboard/resources/${resourceId}/projects/${projectId}`,
+      );
+    }
+    return redirect(`/dashboard/resources/${resourceId}`);
   }
 
   redirect("/dashboard");
@@ -44,7 +47,7 @@ export async function GET(request: NextRequest) {
 function getHost(request: NextRequest): string {
   return request.headers.get("x-forwarded-host")
     ? `${request.headers.get("x-forwarded-proto")}://${request.headers.get(
-        "x-forwarded-host"
+        "x-forwarded-host",
       )}`
     : request.nextUrl.host;
 }
