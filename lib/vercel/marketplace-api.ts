@@ -52,6 +52,20 @@ export async function getAccountInfo(
   })) as AccountInfo;
 }
 
+export type Project = {
+  id: string;
+  name: string;
+};
+
+export async function getProject(
+  installationId: string,
+  projectId: string,
+): Promise<Project> {
+  return (await fetchVercelApi(`/v9/projects/${projectId}`, {
+    installationId,
+  })) as Project;
+}
+
 export type Check = {
   isRerequestable: boolean;
   requires: "build-ready" | "deployment-url" | "none";

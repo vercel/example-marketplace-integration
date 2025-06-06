@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
   if (resourceId) {
     if (projectId) {
       return redirect(
-        `/dashboard/resources/${resourceId}/project/${projectId}`,
+        `/dashboard/resources/${resourceId}/projects/${projectId}`,
       );
     }
     return redirect(`/dashboard/resources/${resourceId}`);
