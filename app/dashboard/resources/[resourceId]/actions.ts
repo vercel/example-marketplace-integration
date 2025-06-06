@@ -71,34 +71,6 @@ export async function rotateCredentialsAction(
   ]);
 }
 
-export async function addCheck(formData: FormData): Promise<void> {
-  const session = await getSession();
-  const resource = await getResource(
-    session.installation_id,
-    formData.get("resourceId") as string,
-  );
-
-  if (!resource) {
-    throw new Error(`Unknown resource '${formData.get("resourceId")}`);
-  }
-
-  const currentDate = new Date().toISOString();
-
-  await updateSecrets(session.installation_id, resource.id, [
-    {
-      name: "TOP_SECRET",
-      value: `birds aren't real (${currentDate})`,
-      environmentOverrides:
-        resource.productId === "with-env-override"
-          ? {
-              production: `birds ARE real (${currentDate})`,
-              preview: `birds might be real (${currentDate})`,
-            }
-          : undefined,
-    },
-  ]);
-}
-
 export async function clearResourceNotificationAction(
   formData: FormData,
 ): Promise<void> {
