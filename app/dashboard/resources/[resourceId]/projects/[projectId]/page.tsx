@@ -5,7 +5,7 @@ import { getAccountInfo, getProject } from "@/lib/vercel/marketplace-api";
 import { FormButton } from "@/app/dashboard/components/form-button";
 import { Resource } from "@/lib/vercel/schemas";
 import { Section } from "@/app/dashboard/components/section";
-import { createCheck } from "./actions";
+import { createCheckFormSubmit } from "./actions";
 
 export default async function ResourcePage({
   params: { resourceId, projectId },
@@ -36,7 +36,7 @@ export default async function ResourcePage({
       <ResourceCard resource={resource} />
 
       <Section title="Create check">
-        <form action={createCheck}>
+        <form action={createCheckFormSubmit}>
           <input type="hidden" name="resourceId" value={resource.id} />
           <input type="hidden" name="projectId" value={project.id} />
           <div className="space-y-4">
