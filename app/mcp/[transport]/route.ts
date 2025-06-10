@@ -111,6 +111,7 @@ const _handler = createMcpHandler(
     },
   },
   {
+    // redis://redis:6379
     redisUrl: process.env.KV_URL,
     basePath: "/mcp",
     verboseLogs: true,
