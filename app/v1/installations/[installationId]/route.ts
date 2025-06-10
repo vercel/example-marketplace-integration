@@ -9,6 +9,7 @@ import {
 import { readRequestBodyWithSchema } from "@/lib/utils";
 import { withAuth } from "@/lib/vercel/auth";
 import {
+  InstallationResponse,
   installIntegrationRequestSchema,
   updateInstallationRequestSchema,
 } from "@/lib/vercel/schemas";
@@ -55,11 +56,12 @@ export const GET = withAuth(async (claims) => {
     (plan) => plan.id === installation.billingPlanId,
   );
   return Response.json({
-    billingPlan: {
+    billingPlan: billingPlan ? {
       ...billingPlan,
       scope: "installation",
-    },
-  });
+    } : undefined,
+    notification: installation.notification,
+  } satisfies InstallationResponse);
 });
 
 export const PATCH = withAuth(async (claims, request) => {

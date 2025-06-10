@@ -76,21 +76,44 @@ export async function clearResourceNotificationAction(
 ): Promise<void> {
   const session = await getSession();
 
+  const resourceId = formData.get("resourceId") as string;
+  const resource = await getResource(
+    session.installation_id,
+    resourceId,
+  );
+  if (!resource) {
+    throw new Error(`Unknown resource '${resourceId}'`);
+  }
+
   await clearResourceNotification(
     session.installation_id,
-    formData.get("resourceId") as string,
+    resource.id,
   );
+  await dispatchEvent(session.installation_id, {
+    type: "resource.updated",
+    resourceId: resource.id,
+    productId: resource.productId,
+  });
 
   revalidatePath("/dashboard");
-  revalidatePath(`/dashboard/resources/${formData.get("resourceId")}`);
+  revalidatePath(`/dashboard/resources/${resource.id}`);
 }
 
 export async function updateResourceNotificationAction(formData: FormData) {
   const session = await getSession();
 
+  const resourceId = formData.get("resourceId") as string;
+  const resource = await getResource(
+    session.installation_id,
+    resourceId,
+  );
+  if (!resource) {
+    throw new Error(`Unknown resource '${resourceId}'`);
+  }
+
   await updateResourceNotification(
     session.installation_id,
-    formData.get("resourceId") as string,
+    resource.id,
     {
       level: formData.get("level") as Notification["level"],
       title: formData.get("title") as string,
@@ -98,17 +121,31 @@ export async function updateResourceNotificationAction(formData: FormData) {
       href: formData.get("href") as string,
     },
   );
+  await dispatchEvent(session.installation_id, {
+    type: "resource.updated",
+    resourceId: resource.id,
+    productId: resource.productId,
+  });
 
   revalidatePath("/dashboard");
-  revalidatePath(`/dashboard/resources/${formData.get("resourceId")}`);
+  revalidatePath(`/dashboard/resources/${resource.id}`);
 }
 
 export async function setExampleNotificationAction(formData: FormData) {
   const session = await getSession();
 
+  const resourceId = formData.get("resourceId") as string;
+  const resource = await getResource(
+    session.installation_id,
+    resourceId,
+  );
+  if (!resource) {
+    throw new Error(`Unknown resource '${resourceId}'`);
+  }
+
   await updateResourceNotification(
     session.installation_id,
-    formData.get("resourceId") as string,
+    resource.id,
     {
       level: "error",
       title: "Resource failed to provision",
@@ -117,9 +154,14 @@ export async function setExampleNotificationAction(formData: FormData) {
       href: "https://acmecorp.com/help",
     },
   );
+  await dispatchEvent(session.installation_id, {
+    type: "resource.updated",
+    resourceId: resource.id,
+    productId: resource.productId,
+  });
 
   revalidatePath("/dashboard");
-  revalidatePath(`/dashboard/resources/${formData.get("resourceId")}`);
+  revalidatePath(`/dashboard/resources/${resource.id}`);
 }
 
 export async function cloneResourceAction(formData: FormData) {

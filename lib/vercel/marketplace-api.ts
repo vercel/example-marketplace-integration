@@ -17,13 +17,18 @@ import {
 import { mockBillingData } from "@/data/mock-billing-data";
 import { fetchVercelApi } from "./api";
 
+interface InstallationUpdatedEvent {
+  type: "installation.updated";
+  billingPlanId?: string;
+}
+
 interface ResourceUpdatedEvent {
   type: "resource.updated";
   productId: string;
   resourceId: string;
 }
 
-type IntegrationEvent = ResourceUpdatedEvent;
+type IntegrationEvent = InstallationUpdatedEvent | ResourceUpdatedEvent;
 
 export async function dispatchEvent(
   installationId: string,

@@ -21,26 +21,16 @@ export const usageTypeSchema = z.enum(["total", "interval", "rate"]);
 
 export type UsageType = z.infer<typeof usageTypeSchema>;
 
-// Account and Installation
+const metadataSchema = z.record(z.unknown());
 
-export const installIntegrationRequestSchema = z.object({
-  scopes: z.array(z.string()),
-  acceptedPolicies: z.record(datetimeSchema),
-  credentials: z.object({
-    access_token: z.string().min(1),
-    token_type: z.string().min(1),
-  }),
+const notificationSchema = z.object({
+  level: z.enum(["info", "warn", "error"]),
+  title: z.string().max(100),
+  message: z.string().optional(),
+  href: z.string().url().optional(),
 });
 
-export const updateInstallationRequestSchema = z.object({
-  billingPlanId: z.string(),
-});
-
-export type InstallIntegrationRequest = z.infer<
-  typeof installIntegrationRequestSchema
->;
-
-// Billing
+export type Notification = z.infer<typeof notificationSchema>;
 
 export const billingPlanSchema = z.object({
   // Partner-defined ID.
@@ -139,6 +129,37 @@ export const billingPlanSchema = z.object({
 
 export type BillingPlan = z.infer<typeof billingPlanSchema>;
 
+// Account and Installation
+
+export const installIntegrationRequestSchema = z.object({
+  scopes: z.array(z.string()),
+  acceptedPolicies: z.record(datetimeSchema),
+  credentials: z.object({
+    access_token: z.string().min(1),
+    token_type: z.string().min(1),
+  }),
+});
+
+export const updateInstallationRequestSchema = z.object({
+  billingPlanId: z.string(),
+});
+
+export type InstallIntegrationRequest = z.infer<
+  typeof installIntegrationRequestSchema
+>;
+
+export const installationResponseSchema = z.object({
+  // For installation-level billing only.
+  billingPlan: billingPlanSchema.optional(),
+  notification: notificationSchema.optional(),
+});
+
+export type InstallationResponse = z.infer<
+  typeof installationResponseSchema
+>;
+
+// Billing
+
 export const getBillingPlansResponseSchema = z.object({
   plans: z.array(billingPlanSchema),
 });
@@ -185,17 +206,6 @@ export type ProvisionPurchaseResponse = z.infer<
 >;
 
 // Product
-
-const metadataSchema = z.record(z.unknown());
-
-const notificationSchema = z.object({
-  level: z.enum(["info", "warn", "error"]),
-  title: z.string().max(100),
-  message: z.string().optional(),
-  href: z.string().url().optional(),
-});
-
-export type Notification = z.infer<typeof notificationSchema>;
 
 export const resourceSchema = z.object({
   // Partner's resource ID.
