@@ -1,10 +1,10 @@
-import { getResource, getResourceBalance } from "@/lib/partner";
-import Link from "next/link";
 import { getSession } from "@/app/dashboard/auth";
-import { getAccountInfo, getProject } from "@/lib/vercel/marketplace-api";
 import { FormButton } from "@/app/dashboard/components/form-button";
-import { Resource } from "@/lib/vercel/schemas";
 import { Section } from "@/app/dashboard/components/section";
+import { getResource, getResourceBalance } from "@/lib/partner";
+import { getAccountInfo, getProject } from "@/lib/vercel/marketplace-api";
+import { Resource } from "@/lib/vercel/schemas";
+import Link from "next/link";
 import { createCheckFormSubmit } from "./actions";
 
 export default async function ResourcePage({
@@ -39,6 +39,7 @@ export default async function ResourcePage({
         <form action={createCheckFormSubmit}>
           <input type="hidden" name="resourceId" value={resource.id} />
           <input type="hidden" name="projectId" value={project.id} />
+          <input type="hidden" name="teamId" value={project.accountId} />
           <div className="space-y-4">
             <div className="flex flex-col">
               <label>Name</label>
@@ -64,14 +65,8 @@ export default async function ResourcePage({
             <div className="flex flex-row gap-2">
               <label>Blocks</label>
               <select name="blocks">
-                <option selected value="build-start">
-                  Build start
-                </option>
-                <option value="deployment-start">Deployment start</option>
+                <option value="none">None</option>
                 <option value="deployment-alias">Deployment alias</option>
-                <option value="deployment-promotion">
-                  Deployment promotion
-                </option>
               </select>
             </div>
             <div className="flex flex-col">
