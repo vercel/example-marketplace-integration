@@ -6,7 +6,6 @@ import { createCheck } from "@/lib/vercel/marketplace-api";
 export async function createCheckFormSubmit(formData: FormData): Promise<void> {
   const session = await getSession();
   const projectId = formData.get("projectId") as string;
-  const teamId = formData.get("teamId") as string;
 
   const name = formData.get("name") as string;
   const isRerequestable = formData.get("is-rerequestable") as string;
@@ -18,7 +17,6 @@ export async function createCheckFormSubmit(formData: FormData): Promise<void> {
   createCheck(
     session.installation_id,
     projectId,
-    teamId,
     name,
     isRerequestable,
     requires,
