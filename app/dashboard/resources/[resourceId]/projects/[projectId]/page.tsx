@@ -39,7 +39,6 @@ export default async function ResourcePage({
         <form action={createCheckFormSubmit}>
           <input type="hidden" name="resourceId" value={resource.id} />
           <input type="hidden" name="projectId" value={project.id} />
-          <input type="hidden" name="teamId" value={project.accountId} />
           <div className="space-y-4">
             <div className="flex flex-col">
               <label>Name</label>

@@ -111,7 +111,6 @@ export async function addCheck(
 export async function createCheck(
   installation_id: string,
   projectId: string,
-  teamId: string,
   name: string,
   isRerequestable: string,
   requires: string,
@@ -119,7 +118,7 @@ export async function createCheck(
   targets: string,
   timeout: number,
 ) {
-  await fetchVercelApi(`/v2/projects/${projectId}/checks?teamId=${encodeURIComponent(teamId)}`, {
+  await fetchVercelApi(`/v2/projects/${projectId}/checks`, {
     method: "POST",
     installationId: installation_id,
     data: {
