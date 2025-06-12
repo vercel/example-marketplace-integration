@@ -70,12 +70,13 @@ export default async function ResourcePage({
               </select>
             </div>
             <div className="flex flex-col">
-              <label>Target</label>
+              <label>Targets</label>
               <input
                 type="text"
                 name="target"
                 className="border border-1 border-slate-400"
-                placeholder="production"
+                placeholder="Comma-separated list of targets, e.g. preview, production"
+                value="preview,production"
               />
             </div>
             <div className="flex flex-col">

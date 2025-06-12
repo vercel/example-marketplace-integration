@@ -127,7 +127,7 @@ export async function createCheck(
       isRerequestable: isRerequestable === "on",
       requires,
       blocks,
-      targets,
+      targets: targets.split(',').map((target) => target.trim()),
       timeout,
     },
   });
