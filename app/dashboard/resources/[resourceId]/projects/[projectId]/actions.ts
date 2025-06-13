@@ -14,7 +14,7 @@ export async function createCheckFormSubmit(formData: FormData): Promise<void> {
   const target = formData.get("target") as string;
   const timeout = formData.get("timeout") as string;
 
-  createCheck(
+  await createCheck(
     session.installation_id,
     projectId,
     name,
