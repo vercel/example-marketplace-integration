@@ -2,7 +2,7 @@ import { getInstallation, getInstallationBalance } from "@/lib/partner";
 import { getSession } from "../auth";
 import { getAccountInfo } from "@/lib/vercel/marketplace-api";
 import { Section } from "../components/section";
-import { addInstallationBalance, sendBillingDataAction } from "./actions";
+import { addInstallationBalance, clearResourceNotificationAction, sendBillingDataAction, setExampleNotificationAction, updateNotificationAction } from "./actions";
 import { FormButton } from "../components/form-button";
 
 export const dynamic = "force-dynamic";
@@ -72,6 +72,74 @@ export default async function IntallationPage() {
           <FormButton className="rounded bg-blue-500 text-white px-2 py-1 disabled:opacity-50">
             Submit
           </FormButton>
+        </form>
+      </Section>
+
+      <Section title="Notification">
+        <div>
+          <div className="flex gap-2">
+            <form action={setExampleNotificationAction}>
+              <FormButton className="rounded bg-blue-500 text-white px-2 py-1 disabled:opacity-50">
+                Example
+              </FormButton>
+            </form>
+            <form action={clearResourceNotificationAction}>
+              <FormButton
+                className="rounded bg-red-500 text-white px-2 py-1 disabled:opacity-50"
+                disabled={!installation.notification}
+              >
+                Clear
+              </FormButton>
+            </form>
+          </div>
+        </div>
+
+        <form action={updateNotificationAction}>
+          <div className="space-y-4">
+            <div className="flex flex-col">
+              <label>Title</label>
+              <input
+                type="text"
+                name="title"
+                className="border border-1 border-slate-400"
+                defaultValue={installation.notification?.title}
+                required
+              />
+            </div>
+            <div className="flex flex-col">
+              <label>Message</label>
+              <input
+                type="text"
+                name="message"
+                className="border border-1 border-slate-400"
+                defaultValue={installation.notification?.message}
+              />
+            </div>
+            <div className="flex flex-col">
+              <label>
+                URL (<code>href</code>)
+              </label>
+              <input
+                type="text"
+                name="href"
+                className="border border-1 border-slate-400"
+                defaultValue={installation.notification?.href}
+              />
+            </div>
+            <div>
+              <label>Level:</label>
+              <select name="level" defaultValue={installation.notification?.level}>
+                <option value="info">info</option>
+                <option value="warn">warn</option>
+                <option value="error">error</option>
+              </select>
+            </div>
+            <div className="flex justify-end">
+              <FormButton className="rounded bg-blue-500 text-white px-2 py-1 disabled:opacity-50">
+                Save
+              </FormButton>
+            </div>
+          </div>
         </form>
       </Section>
     </main>
