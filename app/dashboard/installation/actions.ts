@@ -9,8 +9,9 @@ import {
   getResourceBalance,
   listResources,
 } from "@/lib/partner";
-import { Balance } from "@/lib/vercel/schemas";
+import type { Balance } from "@/lib/vercel/schemas";
 import {
+  requestTransferFromMarketplace,
   sendBillingData,
   submitPrepaymentBalances,
 } from "@/lib/vercel/marketplace-api";
@@ -48,4 +49,16 @@ export async function sendBillingDataAction() {
 
   await sendBillingData(installationId, billingData);
   await submitPrepaymentBalances(installationId, balances);
+}
+
+export async function requestTransferFromVercelAction(formData: FormData) {
+  const installationId = formData.get("installationId") as string;
+  const transferId = Math.random().toString(36).substring(2);
+  const requester = "Vanessa";
+  const result = await requestTransferFromMarketplace(
+    installationId,
+    transferId,
+    requester
+  );
+  return result;
 }
