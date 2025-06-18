@@ -97,7 +97,7 @@ export async function createCheck(
     method: "POST",
     installationId: installation_id,
     data: {
-      source: { externalResourceId: resource_id },
+      source: { kind: 'integration', externalResourceId: resource_id },
       name,
       isRerequestable: isRerequestable === "on",
       requires,
