@@ -1,23 +1,31 @@
 import { getSession } from "@/app/dashboard/auth";
 import { FormButton } from "@/app/dashboard/components/form-button";
 import { Section } from "@/app/dashboard/components/section";
-import { getResource, getResourceBalance } from "@/lib/partner";
-import { getAccountInfo, getProject } from "@/lib/vercel/marketplace-api";
-import { Resource } from "@/lib/vercel/schemas";
+import { getResource } from "@/lib/partner";
+import {
+  type Check,
+  getAccountInfo,
+  getProject,
+  getProjectChecks,
+} from "@/lib/vercel/marketplace-api";
+import type { Resource } from "@/lib/vercel/schemas";
 import Link from "next/link";
 import { createCheckFormSubmit } from "./actions";
 
 export default async function ResourcePage({
   params: { resourceId, projectId },
+  searchParams: { checkId },
 }: {
   params: { resourceId: string; projectId: string };
+  searchParams: { checkId: string };
 }) {
   const session = await getSession();
   const installationId = session.installation_id;
-  const [resource, account, project] = await Promise.all([
+  const [resource, account, project, checks] = await Promise.all([
     await getResource(installationId, resourceId),
     await getAccountInfo(installationId),
     await getProject(installationId, projectId),
+    await getProjectChecks(installationId, projectId),
   ]);
 
   if (!resource) {
@@ -35,6 +43,18 @@ export default async function ResourcePage({
 
       <ResourceCard resource={resource} />
 
+      {checks && (
+        <div>
+          <h2 className="text-l font-bold">Checks</h2>
+          {checks?.map((check) => (
+            <CheckCard
+              key={check.id}
+              check={check}
+              selected={check.id === checkId}
+            />
+          ))}
+        </div>
+      )}
       <Section title="Create check">
         <form action={createCheckFormSubmit}>
           <input type="hidden" name="resourceId" value={resource.id} />
@@ -124,6 +144,23 @@ function ResourceCard({ resource }: { resource: Resource }) {
         <summary>JSON</summary>
         <pre className="overflow-scroll">
           <code>{JSON.stringify(resource, null, 2)}</code>
+        </pre>
+      </details>
+    </div>
+  );
+}
+
+function CheckCard({ check, selected }: { check: Check; selected: boolean }) {
+  return (
+    <div
+      className={`${selected ? "bg-green-100" : "bg-white"} rounded-lg shadow-md p-4`}
+    >
+      <span className="text-gray-600 text-sm">ID: {check.id}</span>
+      <div className="text-lg font-medium mb-2">{check.name}</div>
+      <details className="mt-4">
+        <summary>JSON</summary>
+        <pre className="overflow-scroll">
+          <code>{JSON.stringify(check, null, 2)}</code>
         </pre>
       </details>
     </div>

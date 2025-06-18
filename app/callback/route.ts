@@ -1,6 +1,6 @@
-import { NextRequest } from "next/server";
-import { redirect } from "next/navigation";
 import { exchangeCodeForToken } from "@/lib/vercel/marketplace-api";
+import { redirect } from "next/navigation";
+import { NextRequest } from "next/server";
 import { createSession } from "../dashboard/auth";
 
 export async function GET(request: NextRequest) {
@@ -21,6 +21,7 @@ export async function GET(request: NextRequest) {
   const resourceId = request.nextUrl.searchParams.get("resource_id");
   const projectId = request.nextUrl.searchParams.get("project_id");
   const invoiceId = request.nextUrl.searchParams.get("invoice_id");
+  const checkId = request.nextUrl.searchParams.get("check_id");
 
   if (invoiceId) {
     return redirect(`/dashboard/invoices?id=${invoiceId}`);
@@ -28,16 +29,23 @@ export async function GET(request: NextRequest) {
 
   if (request.nextUrl.searchParams.get("support")) {
     return redirect(
-      `/dashboard/support${resourceId ? "?resource_id=" + resourceId : ""}`,
+      `/dashboard/support${resourceId ? "?resource_id=" + resourceId : ""}`
     );
   }
 
   if (resourceId) {
     if (projectId) {
+      if (checkId) {
+        return redirect(
+          `/dashboard/resources/${resourceId}/projects/${projectId}?checkId=${encodeURIComponent(checkId)}`
+        );
+      }
+
       return redirect(
-        `/dashboard/resources/${resourceId}/projects/${projectId}`,
+        `/dashboard/resources/${resourceId}/projects/${projectId}`
       );
     }
+
     return redirect(`/dashboard/resources/${resourceId}`);
   }
 
@@ -47,7 +55,7 @@ export async function GET(request: NextRequest) {
 function getHost(request: NextRequest): string {
   return request.headers.get("x-forwarded-host")
     ? `${request.headers.get("x-forwarded-proto")}://${request.headers.get(
-        "x-forwarded-host",
+        "x-forwarded-host"
       )}`
     : request.nextUrl.host;
 }
