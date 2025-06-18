@@ -84,6 +84,7 @@ export type Check = {
 
 export async function createCheck(
   installation_id: string,
+  resource_id: string,
   projectId: string,
   name: string,
   isRerequestable: string,
@@ -96,6 +97,7 @@ export async function createCheck(
     method: "POST",
     installationId: installation_id,
     data: {
+      source: { externalResourceId: resource_id },
       name,
       isRerequestable: isRerequestable === "on",
       requires,
