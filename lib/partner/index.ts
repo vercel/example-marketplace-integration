@@ -506,6 +506,7 @@ export async function getInstallation(installationId: string): Promise<
     type: "marketplace" | "external";
     billingPlanId: string;
     deletedAt?: number;
+    notification?: Notification;
   }
 > {
   const installation = await kv.get<
@@ -513,6 +514,7 @@ export async function getInstallation(installationId: string): Promise<
       type: "marketplace" | "external";
       billingPlanId: string;
       deletedAt?: number;
+      notification?: Notification;
     }
   >(installationId);
 
@@ -521,6 +523,19 @@ export async function getInstallation(installationId: string): Promise<
   }
 
   return installation;
+}
+
+export async function setInstallationNotification(
+  installationId: string,
+  notification: Notification | undefined | null,
+): Promise<void> {
+  const installation = await getInstallation(installationId);
+  const pipeline = kv.pipeline();
+  await pipeline.set(installationId, {
+    ...installation,
+    notification: notification ?? undefined,
+  });
+  await pipeline.exec();
 }
 
 export async function storeWebhookEvent(

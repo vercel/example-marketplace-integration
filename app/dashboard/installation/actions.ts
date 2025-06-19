@@ -1,6 +1,6 @@
 "use server";
 
-import { addInstallationBalanceInternal } from "@/lib/partner";
+import { addInstallationBalanceInternal, setInstallationNotification } from "@/lib/partner";
 import { getSession } from "../auth";
 import { revalidatePath } from "next/cache";
 import { mockBillingData } from "@/data/mock-billing-data";
@@ -9,8 +9,9 @@ import {
   getResourceBalance,
   listResources,
 } from "@/lib/partner";
-import { Balance } from "@/lib/vercel/schemas";
+import { Balance, Notification } from "@/lib/vercel/schemas";
 import {
+  dispatchEvent,
   sendBillingData,
   submitPrepaymentBalances,
 } from "@/lib/vercel/marketplace-api";
@@ -48,4 +49,62 @@ export async function sendBillingDataAction() {
 
   await sendBillingData(installationId, billingData);
   await submitPrepaymentBalances(installationId, balances);
+}
+
+export async function setExampleNotificationAction(formData: FormData) {
+  const session = await getSession();
+
+  await setInstallationNotification(
+    session.installation_id,
+    {
+      level: "error",
+      title: "Installation is broken",
+      message:
+        "Your installation is in a broken state because of complicated technical reasons. Please reach out to help@acmecorp.com",
+      href: "https://acmecorp.com/help",
+    },
+  );
+  await dispatchEvent(session.installation_id, {
+    type: "installation.updated",
+  });
+
+  revalidatePath("/dashboard");
+  revalidatePath(`/dashboard/installation`);
+}
+
+export async function clearResourceNotificationAction(
+  formData: FormData,
+): Promise<void> {
+  const session = await getSession();
+
+  await setInstallationNotification(
+    session.installation_id,
+    undefined,
+  );
+  await dispatchEvent(session.installation_id, {
+    type: "installation.updated",
+  });
+
+  revalidatePath("/dashboard");
+  revalidatePath(`/dashboard/installation`);
+}
+
+export async function updateNotificationAction(formData: FormData) {
+  const session = await getSession();
+
+  await setInstallationNotification(
+    session.installation_id,
+    {
+      level: formData.get("level") as Notification["level"],
+      title: formData.get("title") as string,
+      message: formData.get("message") as string,
+      href: formData.get("href") as string,
+    },
+  );
+  await dispatchEvent(session.installation_id, {
+    type: "installation.updated",
+  });
+
+  revalidatePath("/dashboard");
+  revalidatePath(`/dashboard/installation`);
 }
