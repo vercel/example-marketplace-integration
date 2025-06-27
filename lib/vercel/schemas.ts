@@ -605,7 +605,36 @@ const webhookEventBaseSchema = z.object({
   unknown: z.boolean().optional(),
 });
 
-const invoiceWebhookPayloadSchema = z.object({
+const webhookEventBasePayloadSchema = z.object({
+  user: z
+    .object({
+      id: z.string(),
+    })
+    .passthrough()
+    .optional(),
+  team: z
+    .object({
+      id: z.string(),
+    })
+    .passthrough()
+    .optional(),
+  // Deprecated, use `integrations` instead.
+  installationIds: z.string().array().optional().describe("@deprecated"),
+  integrations: z
+    .object({
+      installationId: z.string(),
+      resources: z
+        .object({
+          externalResourceId: z.string(),
+        })
+        .array()
+        .optional(),
+    })
+    .array()
+    .optional(),
+});
+
+const invoiceWebhookPayloadSchema = webhookEventBasePayloadSchema.extend({
   installationId: z.string().min(1),
   period: z.object({
     start: datetimeSchema,
@@ -634,7 +663,7 @@ const invoiceNotPaidWebhookEventSchema = webhookEventBaseSchema.extend({
 const integrationConfigurationRemovedWebhookEventSchema =
   webhookEventBaseSchema.extend({
     type: z.literal("integration-configuration.removed"),
-    payload: z.object({
+    payload: webhookEventBasePayloadSchema.extend({
       configuration: z.object({
         id: z.string(),
       }),
@@ -645,31 +674,7 @@ export type DeploymentIntegrationActionStartEvent = z.infer<
   typeof deploymentIntegrationActionStartEventSchema
 >;
 
-const deploymentWebhookPayloadEventSchema = z.object({
-  user: z
-    .object({
-      id: z.string(),
-    })
-    .passthrough(),
-  team: z
-    .object({
-      id: z.string(),
-    })
-    .passthrough(),
-  // Deprecated, use `integrations` instead.
-  installationIds: z.string().array().optional().describe("@deprecated"),
-  integrations: z
-    .object({
-      installationId: z.string(),
-      resources: z
-        .object({
-          externalResourceId: z.string(),
-        })
-        .array()
-        .optional(),
-    })
-    .array()
-    .optional(),
+const deploymentWebhookPayloadEventSchema = webhookEventBasePayloadSchema.extend({
   deployment: z
     .object({
       id: z.string(),
@@ -697,6 +702,31 @@ const deploymentEvent = <T extends string>(eventType: T) => {
   });
 };
 
+const deploymentCheckrunStartEventSchema =
+  webhookEventBaseSchema.extend({
+    type: z.literal("deployment.checkrun.start"),
+    payload: webhookEventBasePayloadSchema.extend({
+      checkRun: z.object({
+        id: z.string(),
+        checkId: z.string(),
+        source: z.object({
+          kind: z.literal("integration"),
+          integrationConfigurationId: z.string(),
+          externalResourceId: z.string().optional(),
+        }).passthrough(),
+        deploymentId: z.string(),
+        timeout: z.number().optional(),
+      }).passthrough(),
+      deployment: z.object({
+        id: z.string(),
+      }).passthrough(),
+    }),
+  });
+
+export type DeploymentCheckrunStartEventSchema = z.infer<
+  typeof deploymentCheckrunStartEventSchema
+>;
+
 export type WebhookEvent = z.infer<typeof webhookEventSchema>;
 export const webhookEventSchema = z.discriminatedUnion("type", [
   invoiceCreatedWebhookEventSchema,
@@ -704,6 +734,7 @@ export const webhookEventSchema = z.discriminatedUnion("type", [
   invoiceNotPaidWebhookEventSchema,
   integrationConfigurationRemovedWebhookEventSchema,
   deploymentIntegrationActionStartEventSchema,
+  deploymentCheckrunStartEventSchema,
   deploymentEvent("deployment.created"),
   deploymentEvent("deployment.ready"),
   deploymentEvent("deployment.promoted"),
