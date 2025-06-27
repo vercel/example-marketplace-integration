@@ -1,10 +1,11 @@
 "use server";
 
-import { DeploymentIntegrationActionStartEvent } from "@/lib/vercel/schemas";
+import { DeploymentCheckrunStartEventSchema, DeploymentIntegrationActionStartEvent } from "@/lib/vercel/schemas";
 import { getSession } from "../auth";
 import {
   updateDeploymentAction,
   getDeployment,
+  updateCheckRun,
 } from "@/lib/vercel/marketplace-api";
 
 export async function succeedAction(
@@ -55,4 +56,51 @@ export async function failAction(
     status: "failed",
     statusText: "Failed somehow",
   });
+}
+
+export async function succeedCheck(
+  event: DeploymentCheckrunStartEventSchema,
+): Promise<void> {
+  await getSession();
+
+  const { payload } = event;
+  const { checkRun } = payload;
+  const installationId = checkRun.source.integrationConfigurationId;
+
+  const deployment = await getDeployment(
+    installationId,
+    payload.deployment.id,
+  );
+
+  await updateCheckRun(
+    installationId,
+    checkRun.id,
+    payload.deployment.id,
+    {
+      status: "completed",
+      conclusion: "succeeded",
+      externalUrl: `sso:/checks/${checkRun.id}`,
+    },
+  );
+}
+
+export async function failCheck(
+  event: DeploymentCheckrunStartEventSchema,
+): Promise<void> {
+  await getSession();
+
+  const { payload } = event;
+  const { checkRun } = payload;
+  const installationId = checkRun.source.integrationConfigurationId;
+
+  await updateCheckRun(
+    installationId,
+    checkRun.id,
+    payload.deployment.id,
+    {
+      status: "completed",
+      conclusion: "failed",
+      externalUrl: `sso:/checks/${checkRun.id}`,
+    },
+  );
 }

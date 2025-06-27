@@ -113,6 +113,25 @@ export async function createCheck(
   });
 }
 
+export async function updateCheckRun(
+  installation_id: string,
+  checkRunId: string,
+  deploymentId: string,
+  updates: {
+    status: "queued" | "running" | "completed";
+    conclusion?: "canceled" | "skipped" | "timeout" | "failed" | "neutral" | "succeeded";
+    externalId?: string;
+    externalUrl?: string;
+    output?: unknown;
+  }
+) {
+  await fetchVercelApi(`/v2/deployments/${deploymentId}/check-runs/${checkRunId}`, {
+    method: "PATCH",
+    installationId: installation_id,
+    data: updates,
+  });
+}
+
 export async function getProjectChecks(
   installationId: string,
   projectId: string

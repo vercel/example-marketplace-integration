@@ -1,7 +1,7 @@
 "use client";
 
 import { WebhookEvent } from "@/lib/vercel/schemas";
-import { failAction, succeedAction } from "./actions";
+import { failAction, failCheck, succeedAction, succeedCheck } from "./actions";
 
 export function EventActions({ event }: { event: WebhookEvent }) {
   if (event.type === "deployment.integration.action.start") {
@@ -12,6 +12,18 @@ export function EventActions({ event }: { event: WebhookEvent }) {
         </button>
         <button className="border p-1" onClick={() => failAction(event)}>
           Fail action
+        </button>
+      </div>
+    );
+  }
+  if (event.type === "deployment.checkrun.start") {
+    return (
+      <div className="mt-4 flex gap-2">
+        <button className="border p-1" onClick={() => succeedCheck(event)}>
+          Succeed check
+        </button>
+        <button className="border p-1" onClick={() => failCheck(event)}>
+          Fail check
         </button>
       </div>
     );
