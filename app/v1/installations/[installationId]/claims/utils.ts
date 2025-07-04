@@ -20,13 +20,13 @@ export function generateId(prefix: string, length: number): string {
 }
 
 export function validateInstallationId(installationId: string): boolean {
-    if (installationId.length < 10) return false;
+    if (installationId.length < 8) return false;
     return installationId.startsWith('ifcg_');
 }
 
 export function validateClaimId(installationId: string): boolean {
-    if (installationId.length < 10) return false;
-    return installationId.startsWith('claim_');
+    if (installationId.length < 3) return false;
+    return true;
 }
 
 function validateResourceId(installationId: string): boolean {

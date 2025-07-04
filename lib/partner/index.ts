@@ -571,3 +571,11 @@ export async function setClaim(
     claim,
   );
 }
+
+export async function deleteClaim(
+  claim: Claim,
+): Promise<number> {
+  return kv.del(
+    `${claim.installationId}:claim:${claim.claimId}`,
+  );
+}
