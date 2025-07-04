@@ -750,3 +750,12 @@ export const unknownWebhookEventSchema = webhookEventBaseSchema.extend({
   payload: z.unknown(),
   unknown: z.boolean().optional().default(true),
 });
+
+export interface Claim {
+    claimId: string,
+    installationId: string,
+    status: 'unclaimed' | 'verified' | 'complete',
+    sourceInstallationId: string,
+    resourceIds: string[],
+    expiration: number,
+}

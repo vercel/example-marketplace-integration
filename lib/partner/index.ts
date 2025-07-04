@@ -16,6 +16,7 @@ import type {
   ProvisionPurchaseRequest,
   ProvisionPurchaseResponse,
   Balance,
+  Claim,
 } from "@/lib/vercel/schemas";
 import { kv } from "@vercel/kv";
 import { compact } from "lodash";
@@ -550,5 +551,23 @@ export async function storeWebhookEvent(
 export async function getWebhookEvents(limit = 100): Promise<WebhookEvent[]> {
   return (await kv.lrange<WebhookEvent>("webhook_events", 0, limit)).sort(
     (a, b) => b.createdAt - a.createdAt,
+  );
+}
+
+export async function getClaim(
+  installationId: string,
+  claimId: string,
+): Promise<Claim | null> {
+  return await kv.get<Claim>(
+    `${installationId}:claim:${claimId}`,
+  );
+}
+
+export async function setClaim(
+  claim: Claim,
+): Promise<'OK' | Claim | null> {
+  return kv.set<Claim>(
+    `${claim.installationId}:claim:${claim.claimId}`,
+    claim,
   );
 }
