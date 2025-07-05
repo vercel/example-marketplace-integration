@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { deleteClaim, getClaim, setClaim } from '@/lib/partner';
-import { Claim } from '@/lib/vercel/schemas';
-import { Params, validateNewClaimBodyId } from '../utils';
+import { Claim, createClaimRequestSchema } from '@/lib/vercel/schemas';
+import { Params } from '../utils';
 import { withAuth } from '@/lib/vercel/auth';
+import { readRequestBodyWithSchema } from '@/lib/utils';
 
 // NOTE - overload #2 to create a claim - this route gets the claimID from the path
 export const POST = withAuth(
@@ -16,8 +17,13 @@ export const POST = withAuth(
             return NextResponse.json({ description: 'Operation failed because of a conflict with the current state of the resource' }, { status: 409 });
         }
         
-        const data = await request.json();
-        if (!validateNewClaimBodyId(data)) { // TODO: should use the readRequestBodyWithSchema() helper
+        const requestBody = await readRequestBodyWithSchema(
+            request,
+            createClaimRequestSchema,
+        );
+
+        const {data} = requestBody;
+        if (!requestBody.success || !data) {
             return NextResponse.json({ description: 'Input has failed validation' }, { status: 400 });
         }
 

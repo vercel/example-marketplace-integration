@@ -1,14 +1,19 @@
 import { withAuth } from "@/lib/vercel/auth";
 import { getClaim, setClaim } from '@/lib/partner';
-import { Claim } from "@/lib/vercel/schemas";
+import { Claim, createClaimRequestSchema } from "@/lib/vercel/schemas";
 import { NextResponse } from "next/server";
-import { validateNewClaimBodyId, validateClaimId } from "./utils";
+import { readRequestBodyWithSchema } from "@/lib/utils";
 
 // NOTE - overload #1 to create a claim - this route doesn't have a claimID in the path and gets it from the request body
 export const POST = withAuth(
     async (oidcClaims, request) => {        
-        const data = await request.json();
-        if (!validateNewClaimBodyId(data) || !validateClaimIdInBody(data)) { // TODO: should use the readRequestBodyWithSchema() helper
+        const requestBody = await readRequestBodyWithSchema(
+            request,
+            createClaimRequestSchema,
+        );
+
+        const {data} = requestBody;
+        if (!requestBody.success || !data || !data.claimId) {
             return NextResponse.json({ description: 'Input has failed validation' }, { status: 400 });
         }
 
@@ -36,14 +41,3 @@ export const POST = withAuth(
         return NextResponse.json({ description: 'Claim created successfully' });
     },
 );
-
-function validateClaimIdInBody(data: any): boolean {
-    if (!Object.hasOwn(data, 'claimId')) return false;
-    if (!validateClaimId(data.claimId)) return false;
-
-    return true;
-}
-
-interface Params {
-  installationId: string;
-}

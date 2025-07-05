@@ -751,6 +751,15 @@ export const unknownWebhookEventSchema = webhookEventBaseSchema.extend({
   unknown: z.boolean().optional().default(true),
 });
 
+// Claims
+
+export const createClaimRequestSchema = z.object({
+  claimId: z.string().optional(),
+  resourceIds: z.array(z.string()),
+  sourceInstallationId: z.string().min(1),
+  expiration: z.number().min(1),
+});
+
 export interface Claim {
     claimId: string,
     installationId: string,
