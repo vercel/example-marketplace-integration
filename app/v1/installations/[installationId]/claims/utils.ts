@@ -1,14 +1,3 @@
-// export const inMemoryClaims: Claim[] = [];
-
-// export interface Claim {
-//     claimId: string,
-//     installationId: string,
-//     status: 'unclaimed' | 'verified' | 'complete',
-//     sourceInstallationId: string,
-//     resourceIds: string[],
-//     expiration: number,
-// }
-
 export interface Params {
   installationId: string;
   claimId: string;
