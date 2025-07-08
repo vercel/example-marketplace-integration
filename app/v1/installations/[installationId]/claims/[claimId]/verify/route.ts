@@ -2,11 +2,23 @@ import { getClaim, setClaim } from '@/lib/partner';
 import { NextResponse } from 'next/server';
 import { Params, validateClaimId } from '../../utils';
 import { withAuth } from '@/lib/vercel/auth';
+import { readRequestBodyWithSchema } from '@/lib/utils';
+import { verifyClaimRequestSchema } from '@/lib/vercel/schemas';
 
 export const POST = withAuth(
-    async (oidcClaims, _request, { params }: { params: Params }) => {
+    async (oidcClaims, request, { params }: { params: Params }) => {
         if (!validateClaimId(params.claimId)) {
             return NextResponse.json({ description: 'Bad request - invalid ID' }, { status: 400 });
+        }
+
+        const requestBody = await readRequestBodyWithSchema(
+            request,
+            verifyClaimRequestSchema,
+        );
+
+        const {data} = requestBody;
+        if (!requestBody.success || !data) {
+            return NextResponse.json({ description: 'Input has failed validation' }, { status: 400 });
         }
 
         const matchingClaim = await getClaim(
@@ -33,6 +45,7 @@ export const POST = withAuth(
         await setClaim({
             ...matchingClaim,
             status: 'verified',
+            targetInstallationId: data.targetInstallationId,
         })
 
         return NextResponse.json({ description: 'Claim verified successfully' });

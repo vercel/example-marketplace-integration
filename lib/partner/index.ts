@@ -567,7 +567,7 @@ export async function setClaim(
   claim: Claim,
 ): Promise<'OK' | Claim | null> {
   return kv.set<Claim>(
-    `${claim.installationId}:claim:${claim.claimId}`,
+    `${claim.targetInstallationId}:claim:${claim.claimId}`,
     claim,
   );
 }
@@ -576,6 +576,6 @@ export async function deleteClaim(
   claim: Claim,
 ): Promise<number> {
   return kv.del(
-    `${claim.installationId}:claim:${claim.claimId}`,
+    `${claim.targetInstallationId}:claim:${claim.claimId}`,
   );
 }

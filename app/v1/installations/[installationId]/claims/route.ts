@@ -30,9 +30,8 @@ export const POST = withAuth(
         expirationDate.setDate(expirationDate.getDate() + 7);
         const newClaim: Claim = {
             claimId: data.claimId,
-            installationId: oidcClaims.installation_id, 
             status: 'unclaimed',
-            sourceInstallationId: data.sourceInstallationId,
+            sourceInstallationId: oidcClaims.installation_id, 
             expiration: data.expiration,
             resourceIds: data.resourceIds,
         }

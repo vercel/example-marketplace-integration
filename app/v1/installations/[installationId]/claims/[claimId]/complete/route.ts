@@ -2,11 +2,23 @@ import { NextResponse } from 'next/server';
 import { getClaim, setClaim } from '@/lib/partner';
 import { Params, validateClaimId } from '../../utils';
 import { withAuth } from '@/lib/vercel/auth';
+import { readRequestBodyWithSchema } from '@/lib/utils';
+import { completeClaimRequestSchema } from '@/lib/vercel/schemas';
 
 export const POST = withAuth(
-    async (oidcClaims, _request, { params }: { params: Params }) => {
+    async (oidcClaims, request, { params }: { params: Params }) => {
         if (!validateClaimId(params.claimId)) {
-            return NextResponse.json({ description: 'Bad request - invalid ID' }, { status: 400 });
+            return NextResponse.json({ description: 'Invalid ID' }, { status: 400 });
+        }
+
+        const requestBody = await readRequestBodyWithSchema(
+            request,
+            completeClaimRequestSchema,
+        );
+
+        const {data} = requestBody;
+        if (!requestBody.success || !data) {
+            return NextResponse.json({ description: 'Input has failed validation' }, { status: 400 });
         }
 
         const matchingClaim = await getClaim(
@@ -19,6 +31,11 @@ export const POST = withAuth(
             return NextResponse.json({ description: 'Claim not found' }, { status: 404 });
         }
     
+        // does the target installation ID match?
+        if (matchingClaim.targetInstallationId !== data.targetInstallationId) {
+            return NextResponse.json({ description: 'Invalid target installation ID' }, { status: 400 });
+        }
+
         // idemoptentcy - no need to re-complete
         if (matchingClaim.status === 'complete') {
             return NextResponse.json({ description: 'Claim verified successfully' });
