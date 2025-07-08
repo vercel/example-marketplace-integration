@@ -756,20 +756,15 @@ export const unknownWebhookEventSchema = webhookEventBaseSchema.extend({
 export const createClaimRequestSchema = z.object({
   claimId: z.string().optional(),
   resourceIds: z.array(z.string()),
-  // sourceInstallationId: z.string().min(1),
   expiration: z.number().min(1),
 });
 
 export const verifyClaimRequestSchema = z.object({
-  // claimId: z.string().min(1),
   targetInstallationId: z.string().min(1),
-  // sourceInstallationId: z.string().min(1),
 });
 
 export const completeClaimRequestSchema = z.object({
-  // claimId: z.string().min(1),
   targetInstallationId: z.string().min(1),
-  // sourceInstallationId: z.string().min(1),
 });
 
 export interface Claim {
