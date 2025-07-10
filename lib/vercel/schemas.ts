@@ -768,7 +768,7 @@ export const completeClaimRequestSchema = z.object({
 });
 
 export interface Claim {
-    claimId: string,
+    transferId: string,
     targetInstallationId?: string,
     status: 'unclaimed' | 'verified' | 'complete',
     sourceInstallationId: string,

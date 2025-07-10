@@ -16,7 +16,7 @@ import type {
   ProvisionPurchaseRequest,
   ProvisionPurchaseResponse,
   Balance,
-  Claim,
+  Claim as TransferRequest,
 } from "@/lib/vercel/schemas";
 import { kv } from "@vercel/kv";
 import { compact } from "lodash";
@@ -554,28 +554,27 @@ export async function getWebhookEvents(limit = 100): Promise<WebhookEvent[]> {
   );
 }
 
-export async function getClaim(
-  installationId: string,
-  claimId: string,
-): Promise<Claim | null> {
-  return await kv.get<Claim>(
-    `${installationId}:claim:${claimId}`,
+export async function getTransferRequest(
+  transferId: string,
+): Promise<TransferRequest | null> {
+  return await kv.get<TransferRequest>(
+    `transfer-request:${transferId}`,
   );
 }
 
-export async function setClaim(
-  claim: Claim,
-): Promise<'OK' | Claim | null> {
-  return kv.set<Claim>(
-    `${claim.targetInstallationId}:claim:${claim.claimId}`,
-    claim,
+export async function setTransferRequest(
+  transferRequest: TransferRequest,
+): Promise<'OK' | TransferRequest | null> {
+  return kv.set<TransferRequest>(
+    `transfer-request:${transferRequest.transferId}`,
+    transferRequest,
   );
 }
 
-export async function deleteClaim(
-  claim: Claim,
+export async function daleteTransferRequest(
+  transferRequest: TransferRequest,
 ): Promise<number> {
   return kv.del(
-    `${claim.targetInstallationId}:claim:${claim.claimId}`,
+    `transfer-request:${transferRequest.transferId}`,
   );
 }

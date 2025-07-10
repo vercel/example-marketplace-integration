@@ -1,16 +1,14 @@
 import { NextResponse } from 'next/server';
-import { deleteClaim, getClaim, setClaim } from '@/lib/partner';
+import { daleteTransferRequest, getTransferRequest, setTransferRequest } from '@/lib/partner';
 import { Claim, createClaimRequestSchema } from '@/lib/vercel/schemas';
 import { Params } from '../utils';
 import { withAuth } from '@/lib/vercel/auth';
 import { readRequestBodyWithSchema } from '@/lib/utils';
 
-// NOTE - overload #2 to create a claim - this route gets the claimID from the path
-export const POST = withAuth(
+export const PUT = withAuth(
     async (oidcClaims, request, { params }: { params: Params }) => {
-        const matchingClaim = await getClaim(
-            oidcClaims.installation_id,
-            params.claimId,
+        const matchingClaim = await getTransferRequest(
+            params.transferId,
         );
         
         if (matchingClaim) {
@@ -30,13 +28,13 @@ export const POST = withAuth(
         var expirationDate = new Date();
         expirationDate.setDate(expirationDate.getDate() + 7);
         const newClaim: Claim = {
-            claimId: params.claimId,
+            transferId: params.transferId,
             status: 'unclaimed',
             sourceInstallationId: oidcClaims.installation_id, 
             expiration: data.expiration,
             resourceIds: data.resourceIds,
         }
-        await setClaim(newClaim);
+        await setTransferRequest(newClaim);
 
         return NextResponse.json({ description: 'Claim created successfully' });
     },
@@ -44,33 +42,31 @@ export const POST = withAuth(
 
 // NOTE - this GET is not part of the spec but makes it much easier to test
 export const GET = withAuth(
-    async (oidcClaims, _request, { params }: { params: Params }) => {
-        const matchingClaim = await getClaim(
-            oidcClaims.installation_id,
-            params.claimId,
+    async (_oidcClaims, _request, { params }: { params: Params }) => {
+        const matchingClaim = await getTransferRequest(
+            params.transferId,
         );
 
         if (matchingClaim) {
             return NextResponse.json(matchingClaim);
         }
 
-        return NextResponse.json({ description: 'Claim not found' }, { status: 404 });
+        return NextResponse.json({ description: 'Transfer request not found' }, { status: 404 });
     },
 );
 
 // NOTE - this DELETE is not part of the spec, it exists to allow us to clean up test data
 export const DELETE = withAuth(
-    async (oidcClaims, _request, { params }: { params: Params }) => {
-        const matchingClaim = await getClaim(
-            oidcClaims.installation_id,
-            params.claimId,
+    async (_oidcClaims, _request, { params }: { params: Params }) => {
+        const matchingClaim = await getTransferRequest(
+            params.transferId,
         );
 
         if (!matchingClaim) {
-            return NextResponse.json({ description: 'Claim not found' }, { status: 404 });
+            return NextResponse.json({ description: 'Transfer request not found' }, { status: 404 });
         }
 
-        await deleteClaim(matchingClaim);
+        await daleteTransferRequest(matchingClaim);
 
         return NextResponse.json({ description: 'Claim deleted successfully' });
     },
