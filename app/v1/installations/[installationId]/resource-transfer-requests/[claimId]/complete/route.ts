@@ -40,7 +40,7 @@ export const POST = withAuth(
         const getPipeline = kv.pipeline();
 
         for (const resourceId of matchingClaim.resourceIds) {
-        getPipeline.get(`${matchingClaim.sourceInstallationId}:resource:${resourceId}`);
+            getPipeline.get(`${matchingClaim.sourceInstallationId}:resource:${resourceId}`);
         }
 
         const resources = await getPipeline.exec<Resource[]>();
