@@ -11,3 +11,13 @@ export async function readRequestBodyWithSchema<
   const requestBodyRaw = await request.json();
   return requestBodySchema.safeParse(requestBodyRaw);
 }
+
+export function buildError(code: string, message: string, user?: { message: string, url?: string}) {
+  return {
+    error: {
+      code,
+      message,
+      user,
+    },
+  };
+}

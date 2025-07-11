@@ -1,0 +1,40 @@
+import { getTransferRequest, setTransferRequest } from '@/lib/partner';
+import { NextResponse } from 'next/server';
+import { Params, validateTransferId } from '../../utils';
+import { withAuth } from '@/lib/vercel/auth';
+import { buildError } from '@/lib/utils';
+
+export const POST = withAuth(
+    async (_oidcClaims, _request, { params }: { params: Params }) => {
+        if (!validateTransferId(params.transferId)) {
+            return NextResponse.json(buildError('bad_request', 'Input has failed validation'), { status: 400 });
+        }
+
+        const matchingClaim = await getTransferRequest(
+            params.transferId,
+        );
+
+        // does claim exist?
+        if (!matchingClaim) {
+            return NextResponse.json(buildError('not_found', 'Transfer request not found'), { status: 404 });
+        }
+
+
+        // is the claim in a state that can be verified?
+        const now = new Date().getTime();
+        if (matchingClaim.status === 'complete' || matchingClaim.expiration > now) {
+            return NextResponse.json(buildError('conflict', 'Operation failed because of a conflict with the current state of the resource'), { status: 409 });
+        }
+
+        const targetInstallations = new Set(matchingClaim.targetInstallationIds);
+        targetInstallations.add(params.installationId);
+
+        await setTransferRequest({
+            ...matchingClaim,
+            status: 'verified',
+            targetInstallationIds: [...(Array.from(targetInstallations))],
+        })
+
+        return NextResponse.json({});
+    },
+);

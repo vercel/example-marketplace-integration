@@ -750,3 +750,29 @@ export const unknownWebhookEventSchema = webhookEventBaseSchema.extend({
   payload: z.unknown(),
   unknown: z.boolean().optional().default(true),
 });
+
+// Claims
+
+export const createClaimRequestSchema = z.object({
+  claimId: z.string().optional(),
+  resourceIds: z.array(z.string()),
+  expiration: z.number().min(1),
+});
+
+export const verifyClaimRequestSchema = z.object({
+  targetInstallationId: z.string().min(1),
+});
+
+export const completeClaimRequestSchema = z.object({
+  targetInstallationId: z.string().min(1),
+});
+
+export interface Claim {
+    transferId: string,
+    claimedByInstallationId?: string,
+    targetInstallationIds: string[],
+    status: 'unclaimed' | 'verified' | 'complete',
+    sourceInstallationId: string,
+    resourceIds: string[],
+    expiration: number,
+}
