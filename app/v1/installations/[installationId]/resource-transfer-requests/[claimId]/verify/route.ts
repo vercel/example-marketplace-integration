@@ -2,11 +2,12 @@ import { getTransferRequest, setTransferRequest } from '@/lib/partner';
 import { NextResponse } from 'next/server';
 import { Params, validateTransferId } from '../../utils';
 import { withAuth } from '@/lib/vercel/auth';
+import { buildError } from '@/lib/utils';
 
 export const POST = withAuth(
     async (_oidcClaims, _request, { params }: { params: Params }) => {
         if (!validateTransferId(params.transferId)) {
-            return NextResponse.json({ description: 'Input has failed validation' }, { status: 400 });
+            return NextResponse.json(buildError('bad_request', 'Input has failed validation'), { status: 400 });
         }
 
         const matchingClaim = await getTransferRequest(
@@ -15,26 +16,25 @@ export const POST = withAuth(
 
         // does claim exist?
         if (!matchingClaim) {
-            return NextResponse.json({ description: 'Transfer request not found' }, { status: 404 });
+            return NextResponse.json(buildError('not_found', 'Transfer request not found'), { status: 404 });
         }
-    
-        // idemoptentcy - no need to re-verify
-        if (matchingClaim.status === 'verified') {
-            return NextResponse.json({ description: 'Transfer request verified successfully' });
-        }
+
 
         // is the claim in a state that can be verified?
         const now = new Date().getTime();
-        if (matchingClaim.status !== 'unclaimed' || matchingClaim.expiration > now) {
-            return NextResponse.json({ description: 'Operation failed because of a conflict with the current state of the resource' }, { status: 409 });
+        if (matchingClaim.status === 'complete' || matchingClaim.expiration > now) {
+            return NextResponse.json(buildError('conflict', 'Operation failed because of a conflict with the current state of the resource'), { status: 409 });
         }
+
+        const targetInstallations = new Set(matchingClaim.targetInstallationIds);
+        targetInstallations.add(params.installationId);
 
         await setTransferRequest({
             ...matchingClaim,
             status: 'verified',
-            targetInstallationId: params.installationId,
+            targetInstallationIds: [...(Array.from(targetInstallations))],
         })
 
-        return NextResponse.json({ description: 'Transfer request verified successfully' });
+        return NextResponse.json({});
     },
 );

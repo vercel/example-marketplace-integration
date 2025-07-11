@@ -3,7 +3,7 @@ import { daleteTransferRequest, getTransferRequest, setTransferRequest } from '@
 import { Claim, createClaimRequestSchema } from '@/lib/vercel/schemas';
 import { Params } from '../utils';
 import { withAuth } from '@/lib/vercel/auth';
-import { readRequestBodyWithSchema } from '@/lib/utils';
+import { buildError, readRequestBodyWithSchema } from '@/lib/utils';
 
 export const PUT = withAuth(
     async (oidcClaims, request, { params }: { params: Params }) => {
@@ -12,7 +12,7 @@ export const PUT = withAuth(
         );
         
         if (matchingClaim) {
-            return NextResponse.json({ description: 'Operation failed because of a conflict with the current state of the resource' }, { status: 409 });
+            return NextResponse.json(buildError('conflict', 'Operation failed because of a conflict with the current state of the resource'), { status: 409 });
         }
         
         const requestBody = await readRequestBodyWithSchema(
@@ -22,7 +22,7 @@ export const PUT = withAuth(
 
         const {data} = requestBody;
         if (!requestBody.success || !data) {
-            return NextResponse.json({ description: 'Input has failed validation' }, { status: 400 });
+            return NextResponse.json(buildError('bad_request', 'Input has failed validation'), { status: 400 });
         }
 
         var expirationDate = new Date();
@@ -33,10 +33,11 @@ export const PUT = withAuth(
             sourceInstallationId: oidcClaims.installation_id, 
             expiration: data.expiration,
             resourceIds: data.resourceIds,
+            targetInstallationIds: [],
         }
         await setTransferRequest(newClaim);
 
-        return NextResponse.json({ description: 'Claim created successfully' });
+        return new NextResponse(null, { status: 204 });
     },
 );
 
@@ -51,7 +52,7 @@ export const GET = withAuth(
             return NextResponse.json(matchingClaim);
         }
 
-        return NextResponse.json({ description: 'Transfer request not found' }, { status: 404 });
+        return NextResponse.json(buildError('not_found', 'Transfer request not found'), { status: 404 });
     },
 );
 
@@ -63,11 +64,11 @@ export const DELETE = withAuth(
         );
 
         if (!matchingClaim) {
-            return NextResponse.json({ description: 'Transfer request not found' }, { status: 404 });
+            return NextResponse.json(buildError('not_found', 'Transfer request not found'), { status: 404 });
         }
 
         await daleteTransferRequest(matchingClaim);
 
-        return NextResponse.json({ description: 'Claim deleted successfully' });
+        return new NextResponse(null, { status: 204 });
     },
 );
