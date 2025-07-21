@@ -33,8 +33,11 @@ export const POST = withAuth(
 
         // is the claim in a state that can be completed?
         const now = new Date().getTime();
-        if (matchingClaim.status !== 'verified' || matchingClaim.expiration > now) {
-            return NextResponse.json(buildError('conflict', 'Operation failed because of a conflict with the current state of the resource'), { status: 409 });
+        if (matchingClaim.status !== 'verified') {
+            return NextResponse.json(buildError('conflict', 'The provided transfer request has not been verified for the target installation'), { status: 409 });
+        }
+        if(matchingClaim.expiration < now) {
+            return NextResponse.json(buildError('conflict', 'The provided transfer request has expired'), { status: 409 });
         }
 
         const getPipeline = kv.pipeline();
