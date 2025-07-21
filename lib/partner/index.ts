@@ -208,6 +208,20 @@ export async function updateResource(
   return nextResource;
 }
 
+export async function transferResource(installationId: string, resourceId: string, targetInstallationId: string): Promise<void> {
+  const resource = await getResource(installationId, resourceId);
+
+  if (!resource) {
+    throw new Error(`Cannot find resource ${resourceId}`);
+  }
+
+  await kv.set(
+    `${targetInstallationId}:resource:${resourceId}`,
+    serializeResource(resource),
+  );
+  await kv.del(`${installationId}:resource:${resourceId}`);
+}
+
 export async function updateResourceNotification(
   installationId: string,
   resourceId: string,

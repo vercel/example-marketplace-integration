@@ -1,9 +1,7 @@
 import { NextResponse } from 'next/server';
-import { getTransferRequest, setTransferRequest } from '@/lib/partner';
+import { getTransferRequest, setTransferRequest, transferResource } from '@/lib/partner';
 import { Params, validateTransferId } from '../../utils';
 import { withAuth } from '@/lib/vercel/auth';
-import { kv } from '@vercel/kv';
-import { Resource } from '@/lib/vercel/schemas';
 import { buildError } from '@/lib/utils';
 
 export const POST = withAuth(
@@ -40,22 +38,9 @@ export const POST = withAuth(
             return NextResponse.json(buildError('conflict', 'The provided transfer request has expired'), { status: 409 });
         }
 
-        const getPipeline = kv.pipeline();
-
         for (const resourceId of matchingClaim.resourceIds) {
-            getPipeline.get(`${matchingClaim.sourceInstallationId}:resource:${resourceId}`);
+          transferResource(matchingClaim.sourceInstallationId, resourceId, params.installationId);
         }
-
-        const resources = await getPipeline.exec<Resource[]>();
-
-        const setPipeline = kv.pipeline();
-
-        for (const resource of resources) {
-            setPipeline.del(`${matchingClaim.sourceInstallationId}:resource:${resource.id}`);
-            setPipeline.set(`${params.installationId}:resource:${resource.id}`, resource);
-        }
-
-        await setPipeline.exec();
 
         await setTransferRequest({
             ...matchingClaim,
