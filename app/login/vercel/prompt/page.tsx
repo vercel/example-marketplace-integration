@@ -1,12 +1,6 @@
-import { startAuthorization, startImplicitAuthorization } from "./actions";
+import { startAuthorization, startImplicitAuthorization } from "../actions";
 
-interface LoginSearchParams {}
-
-export default async function LoginVercelPage(props: {
-  searchParams: Promise<LoginSearchParams>;
-}) {
-  const searchParams = await props.searchParams;
-
+export default async function LoginVercelPage() {
   return (
     <div className="bg-gray-100 h-screen flex items-center justify-center">
       <div className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 w-full max-w-sm">

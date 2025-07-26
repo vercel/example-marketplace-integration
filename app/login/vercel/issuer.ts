@@ -11,7 +11,7 @@ import {
 } from "openid-client";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 
-const OIDC_ISSUER = "http://localhost:4000";
+export const OIDC_ISSUER = "http://localhost:4000";
 const OIDC_CLIENT_ID = "my_web_app1";
 const OIDC_CLIENT_SECRET = "super_secret_client_secret1";
 
@@ -53,9 +53,13 @@ export async function getOidcConfiguration(): Promise<Configuration> {
 
 export async function createAuthorizationUrl({
   callbackUrl,
+  login_hint,
+  v_deeplink,
   explicit = true,
 }: {
   callbackUrl: string;
+  login_hint?: string;
+  v_deeplink?: string;
   explicit?: boolean;
 }): Promise<{
   redirectTo: string;
@@ -70,6 +74,8 @@ export async function createAuthorizationUrl({
     scope: "openid",
     state,
     response_type: explicit ? "code" : "id_token",
+    ...(login_hint ? { login_hint } : null),
+    ...(v_deeplink ? { v_deeplink } : null),
   });
 
   return {
