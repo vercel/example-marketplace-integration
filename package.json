@@ -9,7 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@vercel/kv": "^1.0.1",
+    "@upstash/redis": "^1.35.3",
     "jose": "^5.2.4",
     "lodash": "^4.17.21",
     "nanoid": "^5.0.7",
