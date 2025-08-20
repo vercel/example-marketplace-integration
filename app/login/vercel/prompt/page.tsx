@@ -1,4 +1,4 @@
-import { startAuthorization } from "../actions";
+import { startAuthorization, startImplicitAuthorization } from "../actions";
 
 export default async function LoginVercelPage() {
   return (
@@ -14,6 +14,13 @@ export default async function LoginVercelPage() {
             formAction={startAuthorization}
           >
             Login with explicit flow
+          </button>
+          <button
+            type="submit"
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+            formAction={startImplicitAuthorization}
+          >
+            Login with implicit flow
           </button>
         </form>
       </div>

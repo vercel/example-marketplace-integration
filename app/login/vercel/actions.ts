@@ -50,3 +50,24 @@ export async function startAuthorization(formData: FormData) {
   cookies.set("vercel-oidc-state", state, { httpOnly: true });
   redirect(redirectTo);
 }
+
+export async function startImplicitAuthorization(formData: FormData) {
+  console.log("startImplicitAuthorization:", Object.fromEntries(formData));
+  const headers = getHeaders();
+  const cookies = getCookies();
+
+  const host = headers.get("host");
+
+  const protocol = host?.startsWith("localhost") ? "http" : "https";
+  const callbackUrl = `${protocol}://${host}/login/vercel/callback-implicit`;
+  const { redirectTo, state } = await createAuthorizationUrl({
+    callbackUrl,
+    explicit: false,
+  });
+  console.log("Redirecting to authorization URL:", {
+    redirectTo,
+    state,
+  });
+  cookies.set("vercel-oidc-state", state, { httpOnly: true });
+  redirect(redirectTo);
+}
