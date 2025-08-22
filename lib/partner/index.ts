@@ -18,7 +18,7 @@ import type {
   Balance,
   Claim as TransferRequest,
 } from "@/lib/vercel/schemas";
-import { kv } from "@vercel/kv";
+import { kv } from "@/lib/redis";
 import { compact } from "lodash";
 import {
   getInvoice,
@@ -277,7 +277,7 @@ export async function listResources(
     pipeline.get(`${installationId}:resource:${resourceId}`);
   }
 
-  const resources = await pipeline.exec<SerializedResource[]>();
+  const resources = await pipeline.exec<SerializedResource>();
 
   return {
     resources: compact(resources).map(deserializeResource),
@@ -579,10 +579,10 @@ export async function getTransferRequest(
 export async function setTransferRequest(
   transferRequest: TransferRequest,
 ): Promise<'OK' | TransferRequest | null> {
-  return kv.set<TransferRequest>(
+  return kv.set(
     `transfer-request:${transferRequest.transferId}`,
     transferRequest,
-  );
+  ) as Promise<'OK'>;
 }
 
 export async function daleteTransferRequest(
