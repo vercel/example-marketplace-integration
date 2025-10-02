@@ -1,4 +1,8 @@
+import { env } from "../env";
 import { getInstallation } from "../partner";
+
+// INTEGRATION_CLIENT_ID is the `oac_...` integration ID
+const userAgent = `Vercel Example Marketplace Integration/${env.INTEGRATION_CLIENT_ID}`;
 
 export async function fetchVercelApi(
   path: string,
@@ -23,6 +27,7 @@ export async function fetchVercelApi(
     options.headers = {
       ...options.headers,
       "content-type": "application/json",
+      "User-Agent": userAgent,
     };
   }
 
