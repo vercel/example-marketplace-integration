@@ -68,6 +68,7 @@ export default async function ResourcePage({
                 <option value="error">Error</option>
                 <option value="suspended">Suspended</option>
                 <option value="pending">Pending</option>
+                <option value="onboarding">Onboarding</option>
               </select>
             </div>
             <div className="flex justify-end">
