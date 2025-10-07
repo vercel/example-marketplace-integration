@@ -4,9 +4,12 @@ import { z } from "zod";
 
 export const datetimeSchema = z.string().datetime();
 
-export const resourceStateSchema = z.enum([
+export type ResourceStatusType = z.infer<typeof resourceStatusSchema>;
+
+export const resourceStatusSchema = z.enum([
   "ready",
   "pending",
+  "onboarding",
   "suspended",
   "resumed",
   "uninstalled",
@@ -154,9 +157,7 @@ export const installationResponseSchema = z.object({
   notification: notificationSchema.optional(),
 });
 
-export type InstallationResponse = z.infer<
-  typeof installationResponseSchema
->;
+export type InstallationResponse = z.infer<typeof installationResponseSchema>;
 
 // Billing
 
@@ -225,7 +226,7 @@ export const resourceSchema = z.object({
   metadata: metadataSchema,
 
   // Resource's status.
-  status: resourceStateSchema,
+  status: resourceStatusSchema,
 
   // Resource's active notification,
   // Ex: { level: 'warn', title: 'Database is nearing maximum planned size' }
@@ -277,7 +278,7 @@ export const updateResourceRequestSchema = resourceSchema
   })
   .extend({
     billingPlanId: z.string().min(1).optional(),
-    status: resourceStateSchema.optional(),
+    status: resourceStatusSchema.optional(),
   })
   .partial();
 
@@ -302,7 +303,7 @@ export type GetResourceResponse = z.infer<typeof getResourceResponseSchema>;
 export const importResourceRequestSchema = z.object({
   productId: z.string().min(1),
   name: z.string().min(1),
-  status: resourceStateSchema,
+  status: resourceStatusSchema,
   metadata: metadataSchema.optional(),
   billingPlan: billingPlanSchema.optional(),
   notification: notificationSchema.optional(),
@@ -674,13 +675,14 @@ export type DeploymentIntegrationActionStartEvent = z.infer<
   typeof deploymentIntegrationActionStartEventSchema
 >;
 
-const deploymentWebhookPayloadEventSchema = webhookEventBasePayloadSchema.extend({
-  deployment: z
-    .object({
-      id: z.string(),
-    })
-    .passthrough(),
-});
+const deploymentWebhookPayloadEventSchema =
+  webhookEventBasePayloadSchema.extend({
+    deployment: z
+      .object({
+        id: z.string(),
+      })
+      .passthrough(),
+  });
 
 const deploymentIntegrationActionStartEventSchema =
   webhookEventBaseSchema.extend({
@@ -702,26 +704,31 @@ const deploymentEvent = <T extends string>(eventType: T) => {
   });
 };
 
-const deploymentCheckrunStartEventSchema =
-  webhookEventBaseSchema.extend({
-    type: z.literal("deployment.checkrun.start"),
-    payload: webhookEventBasePayloadSchema.extend({
-      checkRun: z.object({
+const deploymentCheckrunStartEventSchema = webhookEventBaseSchema.extend({
+  type: z.literal("deployment.checkrun.start"),
+  payload: webhookEventBasePayloadSchema.extend({
+    checkRun: z
+      .object({
         id: z.string(),
         checkId: z.string(),
-        source: z.object({
-          kind: z.literal("integration"),
-          integrationConfigurationId: z.string(),
-          externalResourceId: z.string().optional(),
-        }).passthrough(),
+        source: z
+          .object({
+            kind: z.literal("integration"),
+            integrationConfigurationId: z.string(),
+            externalResourceId: z.string().optional(),
+          })
+          .passthrough(),
         deploymentId: z.string(),
         timeout: z.number().optional(),
-      }).passthrough(),
-      deployment: z.object({
+      })
+      .passthrough(),
+    deployment: z
+      .object({
         id: z.string(),
-      }).passthrough(),
-    }),
-  });
+      })
+      .passthrough(),
+  }),
+});
 
 export type DeploymentCheckrunStartEventSchema = z.infer<
   typeof deploymentCheckrunStartEventSchema
@@ -768,11 +775,11 @@ export const completeClaimRequestSchema = z.object({
 });
 
 export interface Claim {
-    transferId: string,
-    claimedByInstallationId?: string,
-    targetInstallationIds: string[],
-    status: 'unclaimed' | 'verified' | 'complete',
-    sourceInstallationId: string,
-    resourceIds: string[],
-    expiration: number,
+  transferId: string;
+  claimedByInstallationId?: string;
+  targetInstallationIds: string[];
+  status: "unclaimed" | "verified" | "complete";
+  sourceInstallationId: string;
+  resourceIds: string[];
+  expiration: number;
 }
