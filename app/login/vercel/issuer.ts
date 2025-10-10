@@ -61,12 +61,10 @@ export async function getOidcConfiguration(): Promise<Configuration> {
 export async function createAuthorizationUrl({
   callbackUrl,
   login_hint,
-  v_deeplink,
   explicit = true,
 }: {
   callbackUrl: string;
   login_hint?: string;
-  v_deeplink?: string;
   explicit?: boolean;
 }): Promise<{
   redirectTo: string;
@@ -82,7 +80,6 @@ export async function createAuthorizationUrl({
     state,
     response_type: explicit ? "code" : "id_token",
     ...(login_hint ? { login_hint } : null),
-    ...(v_deeplink ? { v_deeplink } : null),
   });
 
   return {
