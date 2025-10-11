@@ -5,6 +5,7 @@ import {
   Configuration,
   discovery,
   IDToken,
+  implicitAuthentication,
   randomState,
 } from "openid-client";
 import { createRemoteJWKSet, jwtVerify } from "jose";
@@ -134,4 +135,22 @@ export async function getTokens(
   console.log("Token Endpoint Response claims", claims);
 
   return { id_token, claims };
+}
+
+export async function validateImplicitAuthorization({
+  id_token,
+  state,
+  expectedState,
+}: {
+  id_token: string;
+  state: string;
+  expectedState: string | undefined;
+}): Promise<IDToken> {
+  const claims = await validateIdToken(id_token);
+
+  if (state !== expectedState) {
+    throw new Error("State mismatch during implicit authorization validation.");
+  }
+
+  return claims;
 }
