@@ -609,7 +609,7 @@ const webhookEventBaseSchema = z.object({
 const webhookEventBasePayloadSchema = z.object({
   user: z
     .object({
-      id: z.string(),
+      id: z.string().nullable(),
     })
     .passthrough()
     .optional(),
