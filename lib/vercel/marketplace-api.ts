@@ -102,7 +102,7 @@ export async function createCheck(
     method: "POST",
     installationId: installation_id,
     data: {
-      source: { kind: 'integration', externalResourceId: resource_id },
+      source: { kind: "integration", externalResourceId: resource_id },
       name,
       isRerequestable: isRerequestable === "on",
       requires,
@@ -119,17 +119,26 @@ export async function updateCheckRun(
   deploymentId: string,
   updates: {
     status: "queued" | "running" | "completed";
-    conclusion?: "canceled" | "skipped" | "timeout" | "failed" | "neutral" | "succeeded";
+    conclusion?:
+      | "canceled"
+      | "skipped"
+      | "timeout"
+      | "failed"
+      | "neutral"
+      | "succeeded";
     externalId?: string;
     externalUrl?: string;
     output?: unknown;
   }
 ) {
-  await fetchVercelApi(`/v2/deployments/${deploymentId}/check-runs/${checkRunId}`, {
-    method: "PATCH",
-    installationId: installation_id,
-    data: updates,
-  });
+  await fetchVercelApi(
+    `/v2/deployments/${deploymentId}/check-runs/${checkRunId}`,
+    {
+      method: "PATCH",
+      installationId: installation_id,
+      data: updates,
+    }
+  );
 }
 
 export async function getProjectChecks(
@@ -166,29 +175,6 @@ export async function updateSecrets(
       data: { secrets },
     }
   );
-}
-
-const IntegrationsSsoTokenResponse = z.object({
-  id_token: z.string(),
-});
-
-export async function exchangeCodeForToken(
-  code: string,
-  state: string | null | undefined
-): Promise<string> {
-  const { id_token } = IntegrationsSsoTokenResponse.parse(
-    await fetchVercelApi("/v1/integrations/sso/token", {
-      method: "POST",
-      data: {
-        code,
-        state,
-        client_id: env.INTEGRATION_CLIENT_ID,
-        client_secret: env.INTEGRATION_CLIENT_SECRET,
-      },
-    })
-  );
-
-  return id_token;
 }
 
 export async function importResource(
