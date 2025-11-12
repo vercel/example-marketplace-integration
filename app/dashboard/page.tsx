@@ -73,7 +73,7 @@ async function ResourceCard({
       </p>
       {balance ? (
         <p className="text-gray-600 text-sm">
-          Balance: {balance.currencyValueInCents} cents
+          Balance: {balance.currencyValueInCents} in cents
         </p>
       ) : null}
     </a>
