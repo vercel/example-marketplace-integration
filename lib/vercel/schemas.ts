@@ -132,6 +132,33 @@ export const billingPlanSchema = z.object({
 
 export type BillingPlan = z.infer<typeof billingPlanSchema>;
 
+export type ResourceSecrets = z.infer<typeof ResourceSecretsSchema>;
+const ResourceSecretsSchema = z.array(
+  z.object({
+    name: z.string().min(1).describe("Name of the secret"),
+    value: z.string().min(1).describe("Value of the secret"),
+    environmentOverrides: z
+      .object({
+        development: z
+          .string()
+          .optional()
+          .describe("Value for development environment"),
+        preview: z
+          .string()
+          .optional()
+          .describe("Value for preview environment"),
+        production: z
+          .string()
+          .optional()
+          .describe("Value for production environment"),
+      })
+      .optional()
+      .describe(
+        "A map of environments to override values for the secret, used for setting different values across deployments in production, preview, and development environments. Note: the same value will be used for all deployments in the given environment.",
+      ),
+  }),
+);
+
 // Account and Installation
 
 export const installIntegrationRequestSchema = z.object({
@@ -256,15 +283,7 @@ const environmentOverrideTargets = z.enum([
 ]);
 
 export const provisionResourceResponseSchema = resourceSchema.extend({
-  secrets: z.array(
-    z.object({
-      name: z.string(),
-      value: z.string(),
-      environmentOverrides: z
-        .record(environmentOverrideTargets, z.string())
-        .optional(),
-    }),
-  ),
+  secrets: ResourceSecretsSchema,
 });
 
 export type ProvisionResourceResponse = z.infer<
@@ -307,14 +326,7 @@ export const importResourceRequestSchema = z.object({
   metadata: metadataSchema.optional(),
   billingPlan: billingPlanSchema.optional(),
   notification: notificationSchema.optional(),
-  secrets: z
-    .array(
-      z.object({
-        name: z.string(),
-        value: z.string(),
-      }),
-    )
-    .optional(),
+  secrets: ResourceSecretsSchema.optional(),
 });
 
 export type ImportResourceRequest = z.infer<typeof importResourceRequestSchema>;
@@ -598,6 +610,80 @@ export const updateDeploymentActionRequestSchema = z.object({
   outcomes: z.array(deploymentActionResourceSecretsOutcomeSchema).optional(),
 });
 
+// Claims
+
+export const createClaimRequestSchema = z.object({
+  claimId: z.string().optional(),
+  resourceIds: z.array(z.string()),
+  expiration: z.number().min(1),
+});
+
+export const verifyClaimRequestSchema = z.object({
+  targetInstallationId: z.string().min(1),
+});
+
+export const completeClaimRequestSchema = z.object({
+  targetInstallationId: z.string().min(1),
+});
+
+export interface Claim {
+  transferId: string;
+  claimedByInstallationId?: string;
+  targetInstallationIds: string[];
+  status: "unclaimed" | "verified" | "complete";
+  sourceInstallationId: string;
+  resourceIds: string[];
+  expiration: number;
+}
+
+export type RequestSecretsRotationRequest = z.infer<
+  typeof RequestSecretsRotationRequestSchema
+>;
+
+export const RequestSecretsRotationRequestSchema = z.object({
+  reason: z
+    .string()
+    .optional()
+    .describe("Optional reason for the secrets rotation request."),
+  delayOldSecretsExpirationHours: z
+    .number()
+    .int()
+    .min(0)
+    .max(720) // Max 30 days.
+    .optional()
+    .describe("Delay in hours before old secrets expire after rotation."),
+});
+
+export type RequestSecretsRotationResponse = z.infer<
+  typeof RequestSecretsRotationResponseSchema
+>;
+
+export const RequestSecretsRotationResponseSchema = z.union([
+  z.object({
+    sync: z
+      .literal(false)
+      .describe(
+        "Indicates that the secrets rotation will be performed asynchronously. It's expected that the update-resource-secrets API will be called shortly after this response to complete the rotation.",
+      ),
+  }),
+  z.object({
+    sync: z
+      .literal(true)
+      .describe(
+        "Indicates that the secrets rotation is completed synchronously. The secrets can be used immediately after this response.",
+      ),
+    secrets: ResourceSecretsSchema.describe(
+      "New secrets rotated synchronously.",
+    ),
+    partial: z
+      .boolean()
+      .optional()
+      .describe(
+        "Whether the rotated secrets only include a partial rotated set.",
+      ),
+  }),
+]);
+
 // Webhooks
 
 const webhookEventBaseSchema = z.object({
@@ -757,29 +843,3 @@ export const unknownWebhookEventSchema = webhookEventBaseSchema.extend({
   payload: z.unknown(),
   unknown: z.boolean().optional().default(true),
 });
-
-// Claims
-
-export const createClaimRequestSchema = z.object({
-  claimId: z.string().optional(),
-  resourceIds: z.array(z.string()),
-  expiration: z.number().min(1),
-});
-
-export const verifyClaimRequestSchema = z.object({
-  targetInstallationId: z.string().min(1),
-});
-
-export const completeClaimRequestSchema = z.object({
-  targetInstallationId: z.string().min(1),
-});
-
-export interface Claim {
-  transferId: string;
-  claimedByInstallationId?: string;
-  targetInstallationIds: string[];
-  status: "unclaimed" | "verified" | "complete";
-  sourceInstallationId: string;
-  resourceIds: string[];
-  expiration: number;
-}
