@@ -31,7 +31,31 @@ export const POST = withAuth(
       requestBody.data,
     );
 
-    // Simulate asynchronous secret rotation process.
+    // Toggle via ?sync=1 / ?async=1 for testing (Vercel doesn't send these)
+    const url = new URL(request.url);
+    const forceSync = url.searchParams.get("sync") === "1";
+
+    if (forceSync) {
+      // Sync: return new secrets immediately
+      const currentDate = new Date().toISOString();
+      return Response.json(
+        {
+          sync: true,
+          secrets: [
+            {
+              name: "TOP_SECRET",
+              value: `updated for rotation (${currentDate})`,
+            },
+          ],
+          partial: false,
+        } satisfies RequestSecretsRotationResponse,
+        {
+          status: 200,
+        },
+      );
+    }
+
+    // Async: simulate asynchronous secret rotation process.
     waitUntil(rotateSecretsAsync(params.installationId, params.resourceId));
 
     return Response.json(
@@ -39,14 +63,15 @@ export const POST = withAuth(
         sync: false,
       } satisfies RequestSecretsRotationResponse,
       {
-        status: 200,
+        status: 202,
       },
     );
   },
 );
 
 async function rotateSecretsAsync(installationId: string, resourceId: string) {
-  await new Promise((resolve) => setTimeout(resolve, 10_000));
+  const delayMs = 5000 + Math.random() * 5000;
+  await new Promise((resolve) => setTimeout(resolve, delayMs));
 
   console.log(
     "Asynchronous secret rotation completed for installationId:",
