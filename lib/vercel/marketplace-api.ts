@@ -32,7 +32,7 @@ type IntegrationEvent = InstallationUpdatedEvent | ResourceUpdatedEvent;
 
 export async function dispatchEvent(
   installationId: string,
-  event: IntegrationEvent
+  event: IntegrationEvent,
 ): Promise<void> {
   await fetchVercelApi(`/v1/installations/${installationId}/events`, {
     installationId,
@@ -50,7 +50,7 @@ export type AccountInfo = {
 };
 
 export async function getAccountInfo(
-  installationId: string
+  installationId: string,
 ): Promise<AccountInfo> {
   return (await fetchVercelApi(`/v1/installations/${installationId}/account`, {
     installationId,
@@ -65,7 +65,7 @@ export type Project = {
 
 export async function getProject(
   installationId: string,
-  projectId: string
+  projectId: string,
 ): Promise<Project> {
   return (await fetchVercelApi(`/v9/projects/${projectId}`, {
     installationId,
@@ -96,13 +96,13 @@ export async function createCheck(
   requires: string,
   blocks: string,
   targets: string,
-  timeout: number
+  timeout: number,
 ) {
   await fetchVercelApi(`/v2/projects/${projectId}/checks`, {
     method: "POST",
     installationId: installation_id,
     data: {
-      source: { kind: 'integration', externalResourceId: resource_id },
+      source: { kind: "integration", externalResourceId: resource_id },
       name,
       isRerequestable: isRerequestable === "on",
       requires,
@@ -119,22 +119,31 @@ export async function updateCheckRun(
   deploymentId: string,
   updates: {
     status: "queued" | "running" | "completed";
-    conclusion?: "canceled" | "skipped" | "timeout" | "failed" | "neutral" | "succeeded";
+    conclusion?:
+      | "canceled"
+      | "skipped"
+      | "timeout"
+      | "failed"
+      | "neutral"
+      | "succeeded";
     externalId?: string;
     externalUrl?: string;
     output?: unknown;
-  }
+  },
 ) {
-  await fetchVercelApi(`/v2/deployments/${deploymentId}/check-runs/${checkRunId}`, {
-    method: "PATCH",
-    installationId: installation_id,
-    data: updates,
-  });
+  await fetchVercelApi(
+    `/v2/deployments/${deploymentId}/check-runs/${checkRunId}`,
+    {
+      method: "PATCH",
+      installationId: installation_id,
+      data: updates,
+    },
+  );
 }
 
 export async function getProjectChecks(
   installationId: string,
-  projectId: string
+  projectId: string,
 ): Promise<Check[]> {
   return (
     (await fetchVercelApi(`/v2/projects/${projectId}/checks`, {
@@ -150,7 +159,7 @@ export async function updateSecrets(
     name: string;
     value: string;
     environmentOverrides?: Record<string, string>;
-  }[]
+  }[],
 ): Promise<void> {
   const resource = await getResource(installationId, resourceId);
 
@@ -159,12 +168,12 @@ export async function updateSecrets(
   }
 
   await fetchVercelApi(
-    `/v1/installations/${installationId}/products/${resource.productId}/resources/${resource.id}/secrets`,
+    `/v1/installations/${installationId}/resources/${resource.id}/secrets`,
     {
       installationId,
       method: "PUT",
       data: { secrets },
-    }
+    },
   );
 }
 
@@ -174,7 +183,7 @@ const IntegrationsSsoTokenResponse = z.object({
 
 export async function exchangeCodeForToken(
   code: string,
-  state: string | null | undefined
+  state: string | null | undefined,
 ): Promise<string> {
   const { id_token } = IntegrationsSsoTokenResponse.parse(
     await fetchVercelApi("/v1/integrations/sso/token", {
@@ -185,7 +194,7 @@ export async function exchangeCodeForToken(
         client_id: env.INTEGRATION_CLIENT_ID,
         client_secret: env.INTEGRATION_CLIENT_SECRET,
       },
-    })
+    }),
   );
 
   return id_token;
@@ -194,7 +203,7 @@ export async function exchangeCodeForToken(
 export async function importResource(
   installationId: string,
   resourceId: string,
-  request: ImportResourceRequest
+  request: ImportResourceRequest,
 ): Promise<ImportResourceResponse> {
   return (await fetchVercelApi(
     `/v1/installations/${installationId}/resources/${resourceId}`,
@@ -202,13 +211,13 @@ export async function importResource(
       installationId,
       method: "PUT",
       data: request,
-    }
+    },
   )) as ImportResourceResponse;
 }
 
 export async function submitPrepaymentBalances(
   installationId: string,
-  balances: Balance[]
+  balances: Balance[],
 ): Promise<void> {
   await fetchVercelApi(`/v1/installations/${installationId}/billing/balance`, {
     installationId,
@@ -222,7 +231,7 @@ export async function submitPrepaymentBalances(
 
 export async function sendBillingData(
   installationId: string,
-  data: BillingData
+  data: BillingData,
 ): Promise<void> {
   await fetchVercelApi(`/v1/installations/${installationId}/billing`, {
     installationId,
@@ -233,19 +242,19 @@ export async function sendBillingData(
 
 export async function getInvoice(
   installationId: string,
-  invoiceId: string
+  invoiceId: string,
 ): Promise<Invoice> {
   return (await fetchVercelApi(
     `/v1/installations/${installationId}/billing/invoices/${invoiceId}`,
     {
       installationId,
-    }
+    },
   )) as Invoice;
 }
 
 export async function submitInvoice(
   installationId: string,
-  opts?: { test?: boolean; maxAmount?: number; discountPercent?: number }
+  opts?: { test?: boolean; maxAmount?: number; discountPercent?: number },
 ): Promise<{ invoiceId: string }> {
   const test = opts?.test ?? false;
   const maxAmount = opts?.maxAmount ?? undefined;
@@ -319,7 +328,7 @@ export async function submitInvoice(
       installationId,
       method: "POST",
       data: invoiceRequest,
-    }
+    },
   )) as { invoiceId: string };
 }
 
@@ -327,7 +336,7 @@ export async function refundInvoice(
   installationId: string,
   invoiceId: string,
   total: string,
-  reason: string
+  reason: string,
 ): Promise<{ invoiceId: string }> {
   return (await fetchVercelApi(
     `/v1/installations/${installationId}/billing/invoices/${invoiceId}/actions`,
@@ -339,7 +348,7 @@ export async function refundInvoice(
         total,
         reason,
       } satisfies RefundInvoiceRequest,
-    }
+    },
   )) as { invoiceId: string };
 }
 
@@ -370,20 +379,20 @@ export async function updateDeploymentAction({
         statusText,
         outcomes,
       } satisfies UpdateDeploymentActionRequest,
-    }
+    },
   );
 }
 
 // See https://vercel.com/docs/rest-api/endpoints/deployments#get-a-deployment-by-id-or-url
 export async function getDeployment(
   installationId: string,
-  deploymentId: string
+  deploymentId: string,
 ): Promise<any> {
   return fetchVercelApi(
     `/v13/deployments/${deploymentId}?withGitRepoInfo=true`,
     {
       installationId,
       method: "GET",
-    }
+    },
   );
 }
