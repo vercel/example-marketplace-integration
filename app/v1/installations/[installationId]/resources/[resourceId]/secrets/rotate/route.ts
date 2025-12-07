@@ -31,11 +31,14 @@ export const POST = withAuth(
       requestBody.data,
     );
 
-    // Toggle via ?sync=1 / ?async=1 for testing (Vercel doesn't send these)
+    // Toggle sync/async mode for testing (Vercel doesn't send these params)
+    // - ?sync=1  → return secrets immediately (200)
+    // - ?async=1 → return 202 and rotate in background (default behavior)
     const url = new URL(request.url);
     const forceSync = url.searchParams.get("sync") === "1";
+    const forceAsync = url.searchParams.get("async") === "1";
 
-    if (forceSync) {
+    if (forceSync && !forceAsync) {
       // Sync: return new secrets immediately
       const currentDate = new Date().toISOString();
       return Response.json(
