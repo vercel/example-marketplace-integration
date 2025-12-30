@@ -1,7 +1,10 @@
 import { listResources, provisionResource } from "@/lib/partner";
 import { readRequestBodyWithSchema } from "@/lib/utils";
 import { withAuth } from "@/lib/vercel/auth";
-import { provisionResourceRequestSchema } from "@/lib/vercel/schemas";
+import {
+  provisionResourceRequestSchema,
+  type ResourceStatusType,
+} from "@/lib/vercel/schemas";
 
 export const dynamic = "force-dynamic";
 
@@ -55,9 +58,16 @@ export const POST = withAuth(async (claims, request) => {
     );
   }
 
+  const initialStatus = requestBody.data.metadata?.testing_initial_status as
+    | ResourceStatusType
+    | undefined;
+
   const resource = await provisionResource(
     claims.installation_id,
     requestBody.data,
+    {
+      status: initialStatus,
+    },
   );
 
   return Response.json(resource, {

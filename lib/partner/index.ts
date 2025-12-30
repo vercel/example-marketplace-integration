@@ -17,6 +17,7 @@ import type {
   ProvisionPurchaseResponse,
   Balance,
   Claim as TransferRequest,
+  ResourceStatusType,
 } from "@/lib/vercel/schemas";
 import { compact } from "lodash";
 import { kv } from '../redis';
@@ -137,6 +138,7 @@ export async function listInstallations(): Promise<string[]> {
 export async function provisionResource(
   installationId: string,
   request: ProvisionResourceRequest,
+  opts?: { status?: ResourceStatusType },
 ): Promise<ProvisionResourceResponse> {
   const billingPlan = billingPlanMap.get(request.billingPlanId);
   if (!billingPlan) {
@@ -144,7 +146,7 @@ export async function provisionResource(
   }
   const resource = {
     id: nanoid(),
-    status: "ready",
+    status: opts?.status ?? "ready",
     name: request.name,
     billingPlan,
     metadata: request.metadata,
@@ -208,7 +210,11 @@ export async function updateResource(
   return nextResource;
 }
 
-export async function transferResource(installationId: string, resourceId: string, targetInstallationId: string): Promise<void> {
+export async function transferResource(
+  installationId: string,
+  resourceId: string,
+  targetInstallationId: string,
+): Promise<void> {
   const resource = await getResource(installationId, resourceId);
 
   if (!resource) {
@@ -571,14 +577,12 @@ export async function getWebhookEvents(limit = 100): Promise<WebhookEvent[]> {
 export async function getTransferRequest(
   transferId: string,
 ): Promise<TransferRequest | null> {
-  return await kv.get<TransferRequest>(
-    `transfer-request:${transferId}`,
-  );
+  return await kv.get<TransferRequest>(`transfer-request:${transferId}`);
 }
 
 export async function setTransferRequest(
   transferRequest: TransferRequest,
-): Promise<'OK' | TransferRequest | null> {
+): Promise<"OK" | TransferRequest | null> {
   return kv.set<TransferRequest>(
     `transfer-request:${transferRequest.transferId}`,
     transferRequest,
@@ -588,7 +592,5 @@ export async function setTransferRequest(
 export async function daleteTransferRequest(
   transferRequest: TransferRequest,
 ): Promise<number> {
-  return kv.del(
-    `transfer-request:${transferRequest.transferId}`,
-  );
+  return kv.del(`transfer-request:${transferRequest.transferId}`);
 }

@@ -10,10 +10,11 @@
   },
   "dependencies": {
     "@upstash/redis": "^1.35.3",
+    "@vercel/functions": "^3.3.4",
     "jose": "^5.2.4",
     "lodash": "^4.17.21",
     "nanoid": "^5.0.7",
-    "next": "14.2.6",
+    "next": "14.2.35",
     "react": "^18",
     "react-dom": "^18",
     "zod": "^3.22.4"
