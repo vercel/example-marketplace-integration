@@ -20,7 +20,7 @@ import type {
   ResourceStatusType,
 } from "@/lib/vercel/schemas";
 import { compact } from "lodash";
-import { kv } from '../redis';
+import { kv } from "../redis";
 import {
   getInvoice,
   importResource as importResourceToVercelApi,
@@ -488,7 +488,7 @@ export async function getAllBillingPlans(
   };
 }
 
-export async function getInstallationtBillingPlans(
+export async function getInstallationBillingPlans(
   installationId: string,
   _experimental_metadata?: Record<string, unknown>,
 ): Promise<GetBillingPlansResponse> {
@@ -589,7 +589,7 @@ export async function setTransferRequest(
   );
 }
 
-export async function daleteTransferRequest(
+export async function deleteTransferRequest(
   transferRequest: TransferRequest,
 ): Promise<number> {
   return kv.del(`transfer-request:${transferRequest.transferId}`);

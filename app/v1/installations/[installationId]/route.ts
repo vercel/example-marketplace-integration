@@ -1,7 +1,7 @@
 import {
   getAllBillingPlans,
   getInstallation,
-  getInstallationtBillingPlans,
+  getInstallationBillingPlans,
   installIntegration,
   uninstallInstallation,
   updateInstallation,
@@ -56,10 +56,12 @@ export const GET = withAuth(async (claims) => {
     (plan) => plan.id === installation.billingPlanId,
   );
   return Response.json({
-    billingPlan: billingPlan ? {
-      ...billingPlan,
-      scope: "installation",
-    } : undefined,
+    billingPlan: billingPlan
+      ? {
+          ...billingPlan,
+          scope: "installation",
+        }
+      : undefined,
     notification: installation.notification,
   } satisfies InstallationResponse);
 });
