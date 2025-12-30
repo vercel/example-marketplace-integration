@@ -19,7 +19,7 @@ import type {
   Claim as TransferRequest,
 } from "@/lib/vercel/schemas";
 import { compact } from "lodash";
-import { redis} from '../redis';
+import { kv } from '../redis';
 import {
   getInvoice,
   importResource as importResourceToVercelApi,
@@ -92,7 +92,7 @@ export async function installIntegration(
   installationId: string,
   request: InstallIntegrationRequest & { type: "marketplace" | "external" },
 ): Promise<void> {
-  const pipeline = redis.pipeline();
+  const pipeline = kv.pipeline();
   await pipeline.set(installationId, request);
   await pipeline.lrem("installations", 0, installationId);
   await pipeline.lpush("installations", installationId);
@@ -104,7 +104,7 @@ export async function updateInstallation(
   billingPlanId: string,
 ): Promise<void> {
   const installation = await getInstallation(installationId);
-  const pipeline = redis.pipeline();
+  const pipeline = kv.pipeline();
   await pipeline.set(installationId, { ...installation, billingPlanId });
   await pipeline.exec();
 }
@@ -116,7 +116,7 @@ export async function uninstallInstallation(
   if (!installation || installation.deletedAt) {
     return undefined;
   }
-  const pipeline = redis.pipeline();
+  const pipeline = kv.pipeline();
   await pipeline.set(installationId, {
     ...installation,
     deletedAt: Date.now(),
@@ -130,7 +130,7 @@ export async function uninstallInstallation(
 }
 
 export async function listInstallations(): Promise<string[]> {
-  const installationIds = await redis.lrange("installations", 0, -1);
+  const installationIds = await kv.lrange("installations", 0, -1);
   return installationIds;
 }
 
@@ -151,11 +151,11 @@ export async function provisionResource(
     productId: request.productId,
   } satisfies Resource;
 
-  await redis.set(
+  await kv.set(
     `${installationId}:resource:${resource.id}`,
     serializeResource(resource),
   );
-  await redis.lpush(`${installationId}:resources`, resource.id);
+  await kv.lpush(`${installationId}:resources`, resource.id);
   await updateInstallation(installationId, request.billingPlanId);
 
   const currentDate = new Date().toISOString();
@@ -200,7 +200,7 @@ export async function updateResource(
       : resource.billingPlan,
   };
 
-  await redis.set(
+  await kv.set(
     `${installationId}:resource:${resourceId}`,
     serializeResource(nextResource),
   );
@@ -215,11 +215,11 @@ export async function transferResource(installationId: string, resourceId: strin
     throw new Error(`Cannot find resource ${resourceId}`);
   }
 
-  await redis.set(
+  await kv.set(
     `${targetInstallationId}:resource:${resourceId}`,
     serializeResource(resource),
   );
-  await redis.del(`${installationId}:resource:${resourceId}`);
+  await kv.del(`${installationId}:resource:${resourceId}`);
 }
 
 export async function updateResourceNotification(
@@ -233,7 +233,7 @@ export async function updateResourceNotification(
     throw new Error(`Cannot find resource ${resourceId}`);
   }
 
-  await redis.set(
+  await kv.set(
     `${installationId}:resource:${resourceId}`,
     serializeResource({
       ...resource,
@@ -253,7 +253,7 @@ export async function deleteResource(
   installationId: string,
   resourceId: string,
 ): Promise<void> {
-  const pipeline = redis.pipeline();
+  const pipeline = kv.pipeline();
   pipeline.del(`${installationId}:resource:${resourceId}`);
   pipeline.lrem(`${installationId}:resources`, 0, resourceId);
   await pipeline.exec();
@@ -265,13 +265,13 @@ export async function listResources(
 ): Promise<ListResourcesResponse> {
   const resourceIds = targetResourceIds?.length
     ? targetResourceIds
-    : await redis.lrange(`${installationId}:resources`, 0, -1);
+    : await kv.lrange(`${installationId}:resources`, 0, -1);
 
   if (resourceIds.length === 0) {
     return { resources: [] };
   }
 
-  const pipeline = redis.pipeline();
+  const pipeline = kv.pipeline();
 
   for (const resourceId of resourceIds) {
     pipeline.get(`${installationId}:resource:${resourceId}`);
@@ -288,7 +288,7 @@ export async function getResource(
   installationId: string,
   resourceId: string,
 ): Promise<GetResourceResponse | null> {
-  const resource = await redis.get<SerializedResource>(
+  const resource = await kv.get<SerializedResource>(
     `${installationId}:resource:${resourceId}`,
   );
 
@@ -393,7 +393,7 @@ export async function addInstallationBalanceInternal(
   installationId: string,
   currencyValueInCents: number,
 ): Promise<Balance> {
-  const result = await redis.incrby(
+  const result = await kv.incrby(
     `${installationId}:balance`,
     currencyValueInCents,
   );
@@ -407,7 +407,7 @@ export async function addInstallationBalanceInternal(
 export async function getInstallationBalance(
   installationId: string,
 ): Promise<Balance | null> {
-  const result = await redis.get<number>(`${installationId}:balance`);
+  const result = await kv.get<number>(`${installationId}:balance`);
   if (result === null) {
     return null;
   }
@@ -423,7 +423,7 @@ export async function addResourceBalanceInternal(
   resourceId: string,
   currencyValueInCents: number,
 ): Promise<Balance> {
-  const result = await redis.incrby(
+  const result = await kv.incrby(
     `${installationId}:${resourceId}:balance`,
     currencyValueInCents,
   );
@@ -439,7 +439,7 @@ export async function getResourceBalance(
   installationId: string,
   resourceId: string,
 ): Promise<Balance | null> {
-  const result = await redis.get<number>(
+  const result = await kv.get<number>(
     `${installationId}:${resourceId}:balance`,
   );
   if (result === null) {
@@ -524,7 +524,7 @@ export async function getInstallation(installationId: string): Promise<
     notification?: Notification;
   }
 > {
-  const installation = await redis.get<
+  const installation = await kv.get<
     InstallIntegrationRequest & {
       type: "marketplace" | "external";
       billingPlanId: string;
@@ -545,7 +545,7 @@ export async function setInstallationNotification(
   notification: Notification | undefined | null,
 ): Promise<void> {
   const installation = await getInstallation(installationId);
-  const pipeline = redis.pipeline();
+  const pipeline = kv.pipeline();
   await pipeline.set(installationId, {
     ...installation,
     notification: notification ?? undefined,
@@ -556,14 +556,14 @@ export async function setInstallationNotification(
 export async function storeWebhookEvent(
   event: WebhookEvent | UnknownWebhookEvent,
 ): Promise<void> {
-  const pipeline = redis.pipeline();
+  const pipeline = kv.pipeline();
   await pipeline.lpush("webhook_events", event);
   await pipeline.ltrim("webhook_events", 0, 100);
   await pipeline.exec();
 }
 
 export async function getWebhookEvents(limit = 100): Promise<WebhookEvent[]> {
-  return (await redis.lrange<WebhookEvent>("webhook_events", 0, limit)).sort(
+  return (await kv.lrange<WebhookEvent>("webhook_events", 0, limit)).sort(
     (a, b) => b.createdAt - a.createdAt,
   );
 }
@@ -571,7 +571,7 @@ export async function getWebhookEvents(limit = 100): Promise<WebhookEvent[]> {
 export async function getTransferRequest(
   transferId: string,
 ): Promise<TransferRequest | null> {
-  return await redis.get<TransferRequest>(
+  return await kv.get<TransferRequest>(
     `transfer-request:${transferId}`,
   );
 }
@@ -579,7 +579,7 @@ export async function getTransferRequest(
 export async function setTransferRequest(
   transferRequest: TransferRequest,
 ): Promise<'OK' | TransferRequest | null> {
-  return redis.set<TransferRequest>(
+  return kv.set<TransferRequest>(
     `transfer-request:${transferRequest.transferId}`,
     transferRequest,
   );
@@ -588,7 +588,7 @@ export async function setTransferRequest(
 export async function daleteTransferRequest(
   transferRequest: TransferRequest,
 ): Promise<number> {
-  return redis.del(
+  return kv.del(
     `transfer-request:${transferRequest.transferId}`,
   );
 }
