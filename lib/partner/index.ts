@@ -19,8 +19,8 @@ import type {
   Claim as TransferRequest,
   ResourceStatusType,
 } from "@/lib/vercel/schemas";
-import { kv } from "@vercel/kv";
 import { compact } from "lodash";
+import { kv } from '../redis';
 import {
   getInvoice,
   importResource as importResourceToVercelApi,
@@ -372,7 +372,7 @@ export async function provisionPurchase(
   const balances: Record<string, Balance> = {};
 
   for (const item of invoice.items ?? []) {
-    const amountInCents = Math.floor(parseFloat(item.total) * 100);
+    const amountInCents = Math.floor(Number.parseFloat(item.total) * 100);
     if (item.resourceId) {
       const balance = await addResourceBalanceInternal(
         installationId,

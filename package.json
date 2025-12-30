@@ -9,8 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@upstash/redis": "^1.35.3",
     "@vercel/functions": "^3.3.4",
-    "@vercel/kv": "^1.0.1",
     "jose": "^5.2.4",
     "lodash": "^4.17.21",
     "nanoid": "^5.0.7",
