@@ -1,5 +1,5 @@
 import { stringify } from "node:querystring";
-import { z } from "zod";
+import { z } from "zod/v3";
 import { env } from "../env";
 import { fetchVercelApi } from "./api";
 

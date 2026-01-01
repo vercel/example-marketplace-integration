@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v3";
 import { mockBillingData } from "@/data/mock-billing-data";
 import { env } from "../env";
 import { getResource } from "../partner";
