@@ -1,7 +1,7 @@
-import { z } from "zod/v3";
+import { Vercel } from "@vercel/sdk";
 import { mockBillingData } from "@/data/mock-billing-data";
 import { env } from "../env";
-import { getResource } from "../partner";
+import { getInstallation, getResource } from "../partner";
 import { fetchVercelApi } from "./api";
 import type {
   Balance,
@@ -9,12 +9,7 @@ import type {
   CreateInvoiceRequest,
   DeploymentActionOutcome,
   ImportResourceRequest,
-  ImportResourceResponse,
-  Invoice,
   InvoiceDiscount,
-  RefundInvoiceRequest,
-  SubmitPrepaymentBalanceRequest,
-  UpdateDeploymentActionRequest,
 } from "./schemas";
 
 interface InstallationUpdatedEvent {
@@ -33,28 +28,31 @@ type IntegrationEvent = InstallationUpdatedEvent | ResourceUpdatedEvent;
 export async function dispatchEvent(
   installationId: string,
   event: IntegrationEvent
-): Promise<void> {
-  await fetchVercelApi(`/v1/installations/${installationId}/events`, {
-    installationId,
-    method: "POST",
-    data: { event },
+) {
+  const installation = await getInstallation(installationId);
+
+  const vercel = new Vercel({
+    bearerToken: installation.credentials.access_token,
+  });
+
+  await vercel.marketplace.createEvent({
+    integrationConfigurationId: installationId,
+    requestBody: {
+      event,
+    },
   });
 }
 
-export interface AccountInfo {
-  name: string;
-  contact: {
-    email: string;
-    name: string;
-  };
-}
+export async function getAccountInfo(installationId: string) {
+  const installation = await getInstallation(installationId);
 
-export async function getAccountInfo(
-  installationId: string
-): Promise<AccountInfo> {
-  return (await fetchVercelApi(`/v1/installations/${installationId}/account`, {
-    installationId,
-  })) as AccountInfo;
+  const vercel = new Vercel({
+    bearerToken: installation.credentials.access_token,
+  });
+
+  return await vercel.marketplace.getAccountInfo({
+    integrationConfigurationId: installationId,
+  });
 }
 
 export interface Project {
@@ -63,13 +61,22 @@ export interface Project {
   accountId: string;
 }
 
-export async function getProject(
-  installationId: string,
-  projectId: string
-): Promise<Project> {
-  return (await fetchVercelApi(`/v9/projects/${projectId}`, {
-    installationId,
-  })) as Project;
+export async function getProject(installationId: string, projectId: string) {
+  const installation = await getInstallation(installationId);
+
+  const vercel = new Vercel({
+    bearerToken: installation.credentials.access_token,
+  });
+
+  // Vercel SDK doesn't support getting a single project, so we get all projects and find the one we want
+  const projects = await vercel.projects.getProjects({});
+  const project = projects.projects.find((project) => project.id === projectId);
+
+  if (!project) {
+    throw new Error(`Project ${projectId} not found`);
+  }
+
+  return project;
 }
 
 export interface Check {
@@ -98,6 +105,7 @@ export async function createCheck(
   targets: string,
   timeout: number
 ) {
+  // Is this the correct endpoint?
   await fetchVercelApi(`/v2/projects/${projectId}/checks`, {
     method: "POST",
     installationId: installation_id,
@@ -131,6 +139,7 @@ export async function updateCheckRun(
     output?: unknown;
   }
 ) {
+  // Is this the correct endpoint?
   await fetchVercelApi(
     `/v2/deployments/${deploymentId}/check-runs/${checkRunId}`,
     {
@@ -145,6 +154,7 @@ export async function getProjectChecks(
   installationId: string,
   projectId: string
 ): Promise<Check[]> {
+  // Is this the correct endpoint?
   return (
     (await fetchVercelApi(`/v2/projects/${projectId}/checks`, {
       installationId,
@@ -160,96 +170,128 @@ export async function updateSecrets(
     value: string;
     environmentOverrides?: Record<string, string>;
   }[]
-): Promise<void> {
+) {
   const resource = await getResource(installationId, resourceId);
 
   if (!resource) {
     throw new Error(`Unknown resource '${resourceId}'`);
   }
 
-  await fetchVercelApi(
-    `/v1/installations/${installationId}/resources/${resource.id}/secrets`,
-    {
-      installationId,
-      method: "PUT",
-      data: { secrets },
-    }
-  );
-}
+  const installation = await getInstallation(installationId);
 
-const IntegrationsSsoTokenResponse = z.object({
-  id_token: z.string(),
-});
+  if (!installation) {
+    throw new Error(`Unknown installation '${installationId}'`);
+  }
+
+  const vercel = new Vercel({
+    bearerToken: installation.credentials.access_token,
+  });
+
+  await vercel.marketplace.updateResourceSecretsById({
+    integrationConfigurationId: installationId,
+    resourceId,
+    requestBody: {
+      secrets,
+    },
+  });
+}
 
 export async function exchangeCodeForToken(
   code: string,
   state: string | null | undefined
-): Promise<string> {
-  const { id_token } = IntegrationsSsoTokenResponse.parse(
-    await fetchVercelApi("/v1/integrations/sso/token", {
-      method: "POST",
-      data: {
-        code,
-        state,
-        client_id: env.INTEGRATION_CLIENT_ID,
-        client_secret: env.INTEGRATION_CLIENT_SECRET,
-      },
-    })
-  );
+) {
+  const vercel = new Vercel();
 
-  return id_token;
+  const result = await vercel.marketplace.exchangeSsoToken({
+    code,
+    state: state ?? undefined,
+    clientId: env.INTEGRATION_CLIENT_ID,
+    clientSecret: env.INTEGRATION_CLIENT_SECRET,
+  });
+
+  return result.idToken;
 }
 
 export async function importResource(
   installationId: string,
   resourceId: string,
   request: ImportResourceRequest
-): Promise<ImportResourceResponse> {
-  return (await fetchVercelApi(
-    `/v1/installations/${installationId}/resources/${resourceId}`,
-    {
-      installationId,
-      method: "PUT",
-      data: request,
-    }
-  )) as ImportResourceResponse;
+) {
+  const installation = await getInstallation(installationId);
+
+  if (!installation) {
+    throw new Error(`Unknown installation '${installationId}'`);
+  }
+
+  const vercel = new Vercel({
+    bearerToken: installation.credentials.access_token,
+  });
+
+  return await vercel.marketplace.importResource({
+    integrationConfigurationId: installationId,
+    resourceId,
+    requestBody: request,
+  });
 }
 
 export async function submitPrepaymentBalances(
   installationId: string,
   balances: Balance[]
-): Promise<void> {
-  await fetchVercelApi(`/v1/installations/${installationId}/billing/balance`, {
-    installationId,
-    method: "POST",
-    data: {
-      timestamp: new Date().toISOString(),
+) {
+  const installation = await getInstallation(installationId);
+
+  if (!installation) {
+    throw new Error(`Unknown installation '${installationId}'`);
+  }
+
+  const vercel = new Vercel({
+    bearerToken: installation.credentials.access_token,
+  });
+
+  await vercel.marketplace.submitPrepaymentBalances({
+    integrationConfigurationId: installationId,
+    requestBody: {
+      timestamp: new Date(),
       balances,
-    } satisfies SubmitPrepaymentBalanceRequest,
+    },
   });
 }
 
 export async function sendBillingData(
   installationId: string,
   data: BillingData
-): Promise<void> {
-  await fetchVercelApi(`/v1/installations/${installationId}/billing`, {
-    installationId,
-    method: "POST",
-    data,
+) {
+  const installation = await getInstallation(installationId);
+
+  if (!installation) {
+    throw new Error(`Unknown installation '${installationId}'`);
+  }
+
+  const vercel = new Vercel({
+    bearerToken: installation.credentials.access_token,
+  });
+
+  await vercel.marketplace.submitBillingData({
+    integrationConfigurationId: installationId,
+    requestBody: data,
   });
 }
 
-export async function getInvoice(
-  installationId: string,
-  invoiceId: string
-): Promise<Invoice> {
-  return (await fetchVercelApi(
-    `/v1/installations/${installationId}/billing/invoices/${invoiceId}`,
-    {
-      installationId,
-    }
-  )) as Invoice;
+export async function getInvoice(installationId: string, invoiceId: string) {
+  const installation = await getInstallation(installationId);
+
+  if (!installation) {
+    throw new Error(`Unknown installation '${installationId}'`);
+  }
+
+  const vercel = new Vercel({
+    bearerToken: installation.credentials.access_token,
+  });
+
+  return await vercel.marketplace.getInvoice({
+    integrationConfigurationId: installationId,
+    invoiceId,
+  });
 }
 
 export async function submitInvoice(
@@ -328,14 +370,19 @@ export async function submitInvoice(
     })),
   };
   console.log("Submitting invoice:", invoiceRequest);
-  return (await fetchVercelApi(
-    `/v1/installations/${installationId}/billing/invoices`,
-    {
-      installationId,
-      method: "POST",
-      data: invoiceRequest,
-    }
-  )) as { invoiceId: string };
+
+  const installation = await getInstallation(installationId);
+
+  const vercel = new Vercel({
+    bearerToken: installation.credentials.access_token,
+  });
+
+  const invoice = await vercel.marketplace.submitInvoice({
+    integrationConfigurationId: installationId,
+    requestBody: invoiceRequest,
+  });
+
+  return invoice;
 }
 
 export async function refundInvoice(
@@ -343,19 +390,28 @@ export async function refundInvoice(
   invoiceId: string,
   total: string,
   reason: string
-): Promise<{ invoiceId: string }> {
-  return (await fetchVercelApi(
-    `/v1/installations/${installationId}/billing/invoices/${invoiceId}/actions`,
-    {
-      installationId,
-      method: "POST",
-      data: {
-        action: "refund",
-        total,
-        reason,
-      } satisfies RefundInvoiceRequest,
-    }
-  )) as { invoiceId: string };
+) {
+  const installation = await getInstallation(installationId);
+
+  if (!installation) {
+    throw new Error(`Unknown installation '${installationId}'`);
+  }
+
+  const vercel = new Vercel({
+    bearerToken: installation.credentials.access_token,
+  });
+
+  const invoice = await vercel.marketplace.updateInvoice({
+    integrationConfigurationId: installationId,
+    invoiceId,
+    requestBody: {
+      action: "refund",
+      total,
+      reason,
+    },
+  });
+
+  return invoice;
 }
 
 export async function updateDeploymentAction({
@@ -374,31 +430,46 @@ export async function updateDeploymentAction({
   status: "succeeded" | "failed";
   statusText?: string;
   outcomes?: DeploymentActionOutcome[];
-}): Promise<void> {
-  await fetchVercelApi(
-    `/v1/deployments/${deploymentId}/integrations/${installationId}/resources/${resourceId}/actions/${action}`,
-    {
-      installationId,
-      method: "PATCH",
-      data: {
-        status,
-        statusText,
-        outcomes,
-      } satisfies UpdateDeploymentActionRequest,
-    }
-  );
+}) {
+  const installation = await getInstallation(installationId);
+
+  if (!installation) {
+    throw new Error(`Unknown installation '${installationId}'`);
+  }
+
+  const vercel = new Vercel({
+    bearerToken: installation.credentials.access_token,
+  });
+
+  await vercel.integrations.updateIntegrationDeploymentAction({
+    integrationConfigurationId: installationId,
+    deploymentId,
+    resourceId,
+    action,
+    requestBody: {
+      status,
+      statusText,
+      outcomes,
+    },
+  });
 }
 
-// See https://vercel.com/docs/rest-api/endpoints/deployments#get-a-deployment-by-id-or-url
 export async function getDeployment(
   installationId: string,
   deploymentId: string
-): Promise<any> {
-  return fetchVercelApi(
-    `/v13/deployments/${deploymentId}?withGitRepoInfo=true`,
-    {
-      installationId,
-      method: "GET",
-    }
-  );
+) {
+  const installation = await getInstallation(installationId);
+
+  if (!installation) {
+    throw new Error(`Unknown installation '${installationId}'`);
+  }
+
+  const vercel = new Vercel({
+    bearerToken: installation.credentials.access_token,
+  });
+
+  return await vercel.deployments.getDeployment({
+    idOrUrl: deploymentId,
+    withGitRepoInfo: "true",
+  });
 }
