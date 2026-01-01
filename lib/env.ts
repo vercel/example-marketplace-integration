@@ -5,7 +5,7 @@ const envSchema = z.object({
   INTEGRATION_CLIENT_ID: z.string().min(1),
   INTEGRATION_CLIENT_SECRET: z.string().min(1),
   CRON_SECRET: z.string().min(1),
-  VERCEL_EXTERNAL_REDIRECT_URI: z.string().min(1).optional(),
+  VERCEL_EXTERNAL_REDIRECT_URI: z.string().min(1),
 });
 
 const parsed = envSchema.safeParse(process.env);

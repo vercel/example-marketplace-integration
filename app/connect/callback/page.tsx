@@ -12,12 +12,6 @@ const Page = async (props: PageProps<"/connect/callback">) => {
     return notFound();
   }
 
-  if (!env.VERCEL_EXTERNAL_REDIRECT_URI) {
-    throw new Error(
-      "VERCEL_EXTERNAL_REDIRECT_URI is not set, cannot connect account"
-    );
-  }
-
   const result = await exchangeExternalCodeForToken(
     code,
     env.VERCEL_EXTERNAL_REDIRECT_URI
