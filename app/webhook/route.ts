@@ -183,6 +183,10 @@ export async function POST(req: Request): Promise<Response> {
       );
       break;
     }
+    default: {
+      console.error("Unknown webhook event:", type, payload);
+      break;
+    }
   }
 
   return new Response("", { status: 200 });
