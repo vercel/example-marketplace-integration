@@ -1,16 +1,16 @@
 import crypto from "crypto";
 import { env } from "@/lib/env";
 import {
-  unknownWebhookEventSchema,
-  type WebhookEvent,
-  webhookEventSchema,
-} from "@/lib/vercel/schemas";
-import {
   listInstallations,
   storeWebhookEvent,
   uninstallInstallation,
 } from "@/lib/partner";
 import { fetchVercelApi } from "@/lib/vercel/api";
+import {
+  unknownWebhookEventSchema,
+  type WebhookEvent,
+  webhookEventSchema,
+} from "@/lib/vercel/schemas";
 
 export const dynamic = "force-dynamic";
 
@@ -66,7 +66,7 @@ export async function POST(req: Request): Promise<Response> {
       if (!installationId) {
         console.error(
           `No installations found for deployment ${deploymentId}`,
-          payload,
+          payload
         );
         break;
       }
@@ -87,7 +87,7 @@ export async function POST(req: Request): Promise<Response> {
       if (!installationId) {
         console.error(
           `No installations found for deployment ${deploymentId}`,
-          payload,
+          payload
         );
         break;
       }
@@ -97,7 +97,7 @@ export async function POST(req: Request): Promise<Response> {
         {
           method: "get",
           installationId,
-        },
+        }
       )) as { checks: { id: string }[] };
 
       const checkId = data.checks[0]?.id;
@@ -114,7 +114,7 @@ export async function POST(req: Request): Promise<Response> {
           },
           method: "PATCH",
           installationId,
-        },
+        }
       );
 
       await delay(8000); // Wait for 8 seconds
@@ -128,7 +128,7 @@ export async function POST(req: Request): Promise<Response> {
           },
           method: "PATCH",
           installationId,
-        },
+        }
       );
       break;
     }
@@ -138,7 +138,7 @@ export async function POST(req: Request): Promise<Response> {
       if (!installationId) {
         console.error(
           `No installations found for deployment ${deploymentId}`,
-          payload,
+          payload
         );
         break;
       }
@@ -148,7 +148,7 @@ export async function POST(req: Request): Promise<Response> {
         {
           method: "get",
           installationId,
-        },
+        }
       )) as { checks: { id: string }[] };
 
       const checkId = data.checks[0]?.id;
@@ -165,7 +165,7 @@ export async function POST(req: Request): Promise<Response> {
           },
           method: "PATCH",
           installationId,
-        },
+        }
       );
 
       await delay(8000); // Wait for 8 seconds
@@ -179,7 +179,7 @@ export async function POST(req: Request): Promise<Response> {
           },
           method: "PATCH",
           installationId,
-        },
+        }
       );
       break;
     }
@@ -200,7 +200,7 @@ const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 async function getInstallationId(installationIds: string[] | undefined) {
   const installations = await listInstallations();
   const installationId = installationIds?.find((id) =>
-    installations.includes(id),
+    installations.includes(id)
   );
   return installationId;
 }

@@ -10,7 +10,7 @@ interface Params {
 export const POST = withAuth(async (claims, request) => {
   const requestBody = await readRequestBodyWithSchema(
     request,
-    provisionPurchaseRequestSchema,
+    provisionPurchaseRequestSchema
   );
 
   if (!requestBody.success) {
@@ -21,7 +21,7 @@ export const POST = withAuth(async (claims, request) => {
 
   const response = await provisionPurchase(
     claims.installation_id,
-    requestBody.data,
+    requestBody.data
   );
 
   return Response.json(response);

@@ -1,7 +1,7 @@
-import { z } from "zod";
 import { stringify } from "querystring";
-import { fetchVercelApi } from "./api";
+import { z } from "zod";
 import { env } from "../env";
+import { fetchVercelApi } from "./api";
 
 const IntegrationsExternalTokenResponse = z.object({
   token_type: z.string(),
@@ -13,7 +13,7 @@ const IntegrationsExternalTokenResponse = z.object({
 
 export async function exchangeExternalCodeForToken(
   code: string,
-  redirectUri: string,
+  redirectUri: string
 ): Promise<z.TypeOf<typeof IntegrationsExternalTokenResponse>> {
   return IntegrationsExternalTokenResponse.parse(
     await fetchVercelApi("/v2/oauth/access_token", {
@@ -27,6 +27,6 @@ export async function exchangeExternalCodeForToken(
         client_secret: env.INTEGRATION_CLIENT_SECRET,
         redirect_uri: redirectUri,
       }),
-    }),
+    })
   );
 }

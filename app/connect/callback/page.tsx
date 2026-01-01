@@ -11,13 +11,13 @@ export default async function Page({
 }) {
   if (!env.VERCEL_EXTERNAL_REDIRECT_URI) {
     throw new Error(
-      `VERCEL_EXTERNAL_REDIRECT_URI is not set, cannot connect account`,
+      "VERCEL_EXTERNAL_REDIRECT_URI is not set, cannot connect account"
     );
   }
 
   const result = await exchangeExternalCodeForToken(
     code,
-    env.VERCEL_EXTERNAL_REDIRECT_URI,
+    env.VERCEL_EXTERNAL_REDIRECT_URI
   );
 
   await installIntegration(result.installation_id, {
@@ -31,10 +31,10 @@ export default async function Page({
   });
 
   return (
-    <div className="space-y-10 text-center p-10">
-      <h1 className="text-lg font-medium">Account is connected. ✅</h1>
+    <div className="space-y-10 p-10 text-center">
+      <h1 className="font-medium text-lg">Account is connected. ✅</h1>
       <h3>
-        <a className="underline text-blue-500" href={next}>
+        <a className="text-blue-500 underline" href={next}>
           Redirect me back to Vercel
         </a>
       </h3>

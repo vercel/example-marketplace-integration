@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getSession } from "@/app/dashboard/auth";
 import { FormButton } from "@/app/dashboard/components/form-button";
 import { Section } from "@/app/dashboard/components/section";
@@ -9,7 +10,6 @@ import {
   getProjectChecks,
 } from "@/lib/vercel/marketplace-api";
 import type { Resource } from "@/lib/vercel/schemas";
-import Link from "next/link";
 import { createCheckFormSubmit } from "./actions";
 
 export default async function ResourcePage({
@@ -34,8 +34,8 @@ export default async function ResourcePage({
 
   return (
     <main className="space-y-8">
-      <h1 className="text-xl font-bold">
-        <Link href="/dashboard" className="text-blue-500 underline">
+      <h1 className="font-bold text-xl">
+        <Link className="text-blue-500 underline" href="/dashboard">
           Dashboard
         </Link>{" "}
         &gt; {resource.name} &gt; {project.name}
@@ -45,11 +45,11 @@ export default async function ResourcePage({
 
       {checks && (
         <div>
-          <h2 className="text-l font-bold">Checks</h2>
+          <h2 className="font-bold text-l">Checks</h2>
           {checks?.map((check) => (
             <CheckCard
-              key={check.id}
               check={check}
+              key={check.id}
               selected={check.id === checkId}
             />
           ))}
@@ -57,20 +57,20 @@ export default async function ResourcePage({
       )}
       <Section title="Create check">
         <form action={createCheckFormSubmit}>
-          <input type="hidden" name="resourceId" value={resource.id} />
-          <input type="hidden" name="projectId" value={project.id} />
+          <input name="resourceId" type="hidden" value={resource.id} />
+          <input name="projectId" type="hidden" value={project.id} />
           <div className="space-y-4">
             <div className="flex flex-col">
               <label>Name</label>
               <input
-                type="text"
-                name="name"
                 className="border border-1 border-slate-400"
+                name="name"
+                type="text"
               />
             </div>
-            <div className="flex gap-2 items-center">
+            <div className="flex items-center gap-2">
               <label>Is Rerequestable</label>
-              <input type="checkbox" name="is-rerequestable" />
+              <input name="is-rerequestable" type="checkbox" />
             </div>
             <div className="flex flex-row gap-2">
               <label>Requires</label>
@@ -91,23 +91,23 @@ export default async function ResourcePage({
             <div className="flex flex-col">
               <label>Targets</label>
               <input
-                type="text"
-                name="target"
                 className="border border-1 border-slate-400"
+                name="target"
                 placeholder="Comma-separated list of targets, e.g. preview, production"
+                type="text"
                 value="preview,production"
               />
             </div>
             <div className="flex flex-col">
               <label>Timeout</label>
               <input
-                type="number"
-                name="timeout"
                 className="border border-1 border-slate-400"
+                name="timeout"
+                type="number"
               />
             </div>
             <div className="flex justify-end">
-              <FormButton className="rounded bg-blue-500 text-white px-2 py-1 disabled:opacity-50">
+              <FormButton className="rounded bg-blue-500 px-2 py-1 text-white disabled:opacity-50">
                 Create
               </FormButton>
             </div>
@@ -120,21 +120,21 @@ export default async function ResourcePage({
 
 function ResourceCard({ resource }: { resource: Resource }) {
   return (
-    <div className="bg-white rounded-lg shadow-md p-4">
-      <div className="flex justify-between items-center mb-2">
+    <div className="rounded-lg bg-white p-4 shadow-md">
+      <div className="mb-2 flex items-center justify-between">
         <span className="text-gray-600 text-sm">ID: {resource.id}</span>
         <span
-          className={`px-2 py-1 text-xs rounded-full ${
+          className={`rounded-full px-2 py-1 text-xs ${
             resource.status === "ready"
-              ? " bg-green-200 text-green-800"
-              : " bg-red-200 text-red-800"
+              ? "bg-green-200 text-green-800"
+              : "bg-red-200 text-red-800"
           }`}
         >
           {resource.status}
         </span>
       </div>
-      <h2 className="text-lg font-medium mb-2">{resource.name}</h2>
-      <p className="text-gray-600 text-sm mb-2">
+      <h2 className="mb-2 font-medium text-lg">{resource.name}</h2>
+      <p className="mb-2 text-gray-600 text-sm">
         Product: {resource.productId}
       </p>
       <p className="text-gray-600 text-sm">
@@ -153,10 +153,10 @@ function ResourceCard({ resource }: { resource: Resource }) {
 function CheckCard({ check, selected }: { check: Check; selected: boolean }) {
   return (
     <div
-      className={`${selected ? "bg-green-100" : "bg-white"} rounded-lg shadow-md p-4`}
+      className={`${selected ? "bg-green-100" : "bg-white"} rounded-lg p-4 shadow-md`}
     >
       <span className="text-gray-600 text-sm">ID: {check.id}</span>
-      <div className="text-lg font-medium mb-2">{check.name}</div>
+      <div className="mb-2 font-medium text-lg">{check.name}</div>
       <details className="mt-4">
         <summary>JSON</summary>
         <pre className="overflow-scroll">

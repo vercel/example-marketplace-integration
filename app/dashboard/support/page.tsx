@@ -1,10 +1,8 @@
 import Link from "next/link";
-import { Resource } from "@/lib/vercel/schemas";
+import { getResource } from "@/lib/partner";
+import { getSession } from "../auth";
 import { FormButton } from "../components/form-button";
 import { Section } from "../components/section";
-import { getResource } from "@/lib/partner";
-import { getAccountInfo } from "@/lib/vercel/marketplace-api";
-import { getSession } from "../auth";
 
 export default async function SupportPage({
   searchParams: { resourceId },
@@ -22,8 +20,8 @@ export default async function SupportPage({
 
   return (
     <main className="space-y-8">
-      <h1 className="text-xl font-bold">
-        <Link href="/dashboard" className="text-blue-500 underline">
+      <h1 className="font-bold text-xl">
+        <Link className="text-blue-500 underline" href="/dashboard">
           Dashboard
         </Link>{" "}
         &gt; Support {resourceName}
@@ -35,14 +33,14 @@ export default async function SupportPage({
             <div className="flex flex-col">
               <label>Message</label>
               <textarea
-                name="name"
                 className="border border-1 border-slate-400"
+                name="name"
                 rows={10}
               />
             </div>
 
             <div className="flex justify-end">
-              <FormButton className="rounded bg-blue-500 text-white px-2 py-1 disabled:opacity-50">
+              <FormButton className="rounded bg-blue-500 px-2 py-1 text-white disabled:opacity-50">
                 Submit
               </FormButton>
             </div>

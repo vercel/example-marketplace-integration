@@ -33,10 +33,10 @@ export function Nav() {
       {links.map((link) => (
         <li key={link.href}>
           <Link
-            href={link.href}
             className={`hover:underline ${
               link.segment === segment ? "font-bold" : ""
             }`}
+            href={link.href}
           >
             {link.label}
           </Link>

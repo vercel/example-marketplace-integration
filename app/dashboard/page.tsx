@@ -1,6 +1,6 @@
 import { getResourceBalance, listResources } from "@/lib/partner";
+import type { Resource } from "@/lib/vercel/schemas";
 import { getSession } from "./auth";
-import { Resource } from "@/lib/vercel/schemas";
 
 export default async function DashboardPage() {
   return (
@@ -18,10 +18,10 @@ async function Resources() {
   // {/* grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 */}
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Resources</h1>
+      <h1 className="mb-4 font-bold text-2xl">Resources</h1>
 
       {resources.length === 0 ? (
-        <div className="flex justify-center items-center h-[100px]">
+        <div className="flex h-[100px] items-center justify-center">
           <span className="text-slate-500">No resources</span>
         </div>
       ) : (
@@ -49,23 +49,23 @@ async function ResourceCard({
   const balance = await getResourceBalance(installationId, resource.id);
   return (
     <a
-      className="bg-white rounded-lg shadow-md p-4"
+      className="rounded-lg bg-white p-4 shadow-md"
       href={`/dashboard/resources/${resource.id}`}
     >
-      <div className="flex justify-between items-center mb-2">
+      <div className="mb-2 flex items-center justify-between">
         <span className="text-gray-600 text-sm">ID: {resource.id}</span>
         <span
-          className={`px-2 py-1 text-xs rounded-full ${
+          className={`rounded-full px-2 py-1 text-xs ${
             resource.status === "ready"
-              ? " bg-green-200 text-green-800"
-              : " bg-red-200 text-red-800"
+              ? "bg-green-200 text-green-800"
+              : "bg-red-200 text-red-800"
           }`}
         >
           {resource.status}
         </span>
       </div>
-      <h2 className="text-lg font-medium mb-2">{resource.name}</h2>
-      <p className="text-gray-600 text-sm mb-2">
+      <h2 className="mb-2 font-medium text-lg">{resource.name}</h2>
+      <p className="mb-2 text-gray-600 text-sm">
         Product: {resource.productId}
       </p>
       <p className="text-gray-600 text-sm">

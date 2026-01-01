@@ -5,7 +5,7 @@ import {
   getResourceBalance,
   listResources,
 } from "@/lib/partner";
-import { Balance } from "@/lib/vercel/schemas";
+import type { Balance } from "@/lib/vercel/schemas";
 
 export const dynamic = "force-dynamic";
 
@@ -19,9 +19,9 @@ export const GET = async () => {
       [
         getInstallationBalance(installationId),
         ...resources.map((resource) =>
-          getResourceBalance(installationId, resource.id),
+          getResourceBalance(installationId, resource.id)
         ),
-      ].filter((x) => x !== null),
+      ].filter((x) => x !== null)
     )
   ).filter((x) => x !== null) as Balance[];
   return Response.json({ billingData, balances });

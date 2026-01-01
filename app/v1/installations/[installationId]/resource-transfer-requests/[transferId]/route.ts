@@ -4,10 +4,10 @@ import {
   getTransferRequest,
   setTransferRequest,
 } from "@/lib/partner";
-import { Claim, createClaimRequestSchema } from "@/lib/vercel/schemas";
-import { Params } from "../utils";
-import { withAuth } from "@/lib/vercel/auth";
 import { buildError, readRequestBodyWithSchema } from "@/lib/utils";
+import { withAuth } from "@/lib/vercel/auth";
+import { type Claim, createClaimRequestSchema } from "@/lib/vercel/schemas";
+import type { Params } from "../utils";
 
 export const PUT = withAuth(
   async (oidcClaims, request, { params }: { params: Params }) => {
@@ -17,22 +17,22 @@ export const PUT = withAuth(
       return NextResponse.json(
         buildError(
           "conflict",
-          "Operation failed because of a conflict with the current state of the resource",
+          "Operation failed because of a conflict with the current state of the resource"
         ),
-        { status: 409 },
+        { status: 409 }
       );
     }
 
     const requestBody = await readRequestBodyWithSchema(
       request,
-      createClaimRequestSchema,
+      createClaimRequestSchema
     );
 
     const { data } = requestBody;
-    if (!requestBody.success || !data) {
+    if (!(requestBody.success && data)) {
       return NextResponse.json(
         buildError("bad_request", "Input has failed validation"),
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -49,7 +49,7 @@ export const PUT = withAuth(
     await setTransferRequest(newClaim);
 
     return new NextResponse(null, { status: 204 });
-  },
+  }
 );
 
 // NOTE - this GET is not part of the spec but makes it much easier to test
@@ -63,9 +63,9 @@ export const GET = withAuth(
 
     return NextResponse.json(
       buildError("not_found", "Transfer request not found"),
-      { status: 404 },
+      { status: 404 }
     );
-  },
+  }
 );
 
 // NOTE - this DELETE is not part of the spec, it exists to allow us to clean up test data
@@ -76,12 +76,12 @@ export const DELETE = withAuth(
     if (!matchingClaim) {
       return NextResponse.json(
         buildError("not_found", "Transfer request not found"),
-        { status: 404 },
+        { status: 404 }
       );
     }
 
     await deleteTransferRequest(matchingClaim);
 
     return new NextResponse(null, { status: 204 });
-  },
+  }
 );

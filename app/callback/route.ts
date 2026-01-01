@@ -1,6 +1,6 @@
-import { exchangeCodeForToken } from "@/lib/vercel/marketplace-api";
 import { redirect } from "next/navigation";
-import { NextRequest } from "next/server";
+import type { NextRequest } from "next/server";
+import { exchangeCodeForToken } from "@/lib/vercel/marketplace-api";
 import { createSession } from "../dashboard/auth";
 
 export async function GET(request: NextRequest) {

@@ -6,7 +6,7 @@ const userAgent = `Vercel Example Marketplace Integration/${env.INTEGRATION_CLIE
 
 export async function fetchVercelApi(
   path: string,
-  init?: RequestInit & { installationId?: string; data?: unknown },
+  init?: RequestInit & { installationId?: string; data?: unknown }
 ): Promise<unknown> {
   const options = init || {};
 
@@ -39,14 +39,14 @@ export async function fetchVercelApi(
   console.log(
     `<< ${options.method || "GET"} ${url} ${res.status} ${
       res.statusText
-    } ${res.headers.get("X-Vercel-Id")}`,
+    } ${res.headers.get("X-Vercel-Id")}`
   );
 
   if (!res.ok) {
     throw new Error(
       `Request to Vercel API failed: ${res.status} ${
         res.statusText
-      } ${await res.text()}`,
+      } ${await res.text()}`
     );
   }
 

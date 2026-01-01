@@ -1,11 +1,11 @@
+import { waitUntil } from "@vercel/functions";
 import { readRequestBodyWithSchema } from "@/lib/utils";
 import { withAuth } from "@/lib/vercel/auth";
 import { updateSecrets } from "@/lib/vercel/marketplace-api";
 import {
   RequestSecretsRotationRequestSchema,
-  RequestSecretsRotationResponse,
+  type RequestSecretsRotationResponse,
 } from "@/lib/vercel/schemas";
-import { waitUntil } from "@vercel/functions";
 
 interface Params {
   installationId: string;
@@ -16,7 +16,7 @@ export const POST = withAuth(
   async (_claims, request, { params }: { params: Params }) => {
     const requestBody = await readRequestBodyWithSchema(
       request,
-      RequestSecretsRotationRequestSchema,
+      RequestSecretsRotationRequestSchema
     );
 
     if (!requestBody.success) {
@@ -28,7 +28,7 @@ export const POST = withAuth(
       params.installationId,
       params.resourceId,
       "with body:",
-      requestBody.data,
+      requestBody.data
     );
 
     // Toggle sync/async mode for testing (Vercel doesn't send these params)
@@ -54,7 +54,7 @@ export const POST = withAuth(
         } satisfies RequestSecretsRotationResponse,
         {
           status: 200,
-        },
+        }
       );
     }
 
@@ -67,9 +67,9 @@ export const POST = withAuth(
       } satisfies RequestSecretsRotationResponse,
       {
         status: 202,
-      },
+      }
     );
-  },
+  }
 );
 
 async function rotateSecretsAsync(installationId: string, resourceId: string) {
@@ -80,7 +80,7 @@ async function rotateSecretsAsync(installationId: string, resourceId: string) {
     "Asynchronous secret rotation completed for installationId:",
     installationId,
     "resourceId:",
-    resourceId,
+    resourceId
   );
 
   const currentDate = new Date().toISOString();

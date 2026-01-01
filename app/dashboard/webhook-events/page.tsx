@@ -1,6 +1,6 @@
-import { getSession } from "../auth";
 import { getWebhookEvents } from "@/lib/partner";
-import { WebhookEvent } from "@/lib/vercel/schemas";
+import type { WebhookEvent } from "@/lib/vercel/schemas";
+import { getSession } from "../auth";
 import { EventActions } from "./actions-ui";
 
 export default async function Page() {
@@ -10,15 +10,15 @@ export default async function Page() {
 
   return (
     <main className="space-y-8">
-      <h1 className="text-2xl font-bold mb-4">Webhook Events</h1>
+      <h1 className="mb-4 font-bold text-2xl">Webhook Events</h1>
       {events.length === 0 ? (
-        <div className="flex justify-center items-center h-[100px]">
+        <div className="flex h-[100px] items-center justify-center">
           <span className="text-slate-500">No events</span>
         </div>
       ) : (
         <div className="flex flex-col gap-4">
           {events.map((event) => (
-            <EventCard key={event.id} event={event} />
+            <EventCard event={event} key={event.id} />
           ))}
         </div>
       )}
@@ -28,11 +28,11 @@ export default async function Page() {
 
 function EventCard({ event }: { event: WebhookEvent }) {
   return (
-    <div className="bg-white rounded-lg shadow-md p-4">
-      <div className="flex justify-between items-center mb-2">
+    <div className="rounded-lg bg-white p-4 shadow-md">
+      <div className="mb-2 flex items-center justify-between">
         <span className="text-gray-600 text-sm">ID: {event.id}</span>
       </div>
-      <h2 className="text-lg font-medium mb-2">
+      <h2 className="mb-2 font-medium text-lg">
         {event.type} {event.unknown ? "(unknown)" : ""} (
         {new Date(event.createdAt).toISOString()})
       </h2>

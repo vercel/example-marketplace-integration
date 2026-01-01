@@ -2,12 +2,12 @@ import { listResources } from "@/lib/partner";
 import type {
   BillingData,
   BillingItem,
-  ResourceUsage,
   BillingPlan,
+  ResourceUsage,
 } from "@/lib/vercel/schemas";
 
 export async function mockBillingData(
-  installationId: string,
+  installationId: string
 ): Promise<BillingData> {
   const timestamp = new Date();
   const year = timestamp.getUTCFullYear();
@@ -43,9 +43,9 @@ export async function mockBillingData(
     },
   } as const;
 
-  const resourceUsage = resources
-    .map((r) => mockUsageData(r, timestamp, startOfMoth, bod))
-    .flat();
+  const resourceUsage = resources.flatMap((r) =>
+    mockUsageData(r, timestamp, startOfMoth, bod)
+  );
 
   const installationUsage = Object.values(
     resourceUsage.reduce(
@@ -71,14 +71,14 @@ export async function mockBillingData(
             usage.dayValue = Math.max(usage.dayValue, resourceUsage.dayValue);
             usage.periodValue = Math.max(
               usage.periodValue,
-              resourceUsage.periodValue,
+              resourceUsage.periodValue
             );
             break;
         }
         return acc;
       },
-      {} as Record<string, ResourceUsage>,
-    ),
+      {} as Record<string, ResourceUsage>
+    )
   );
   const usage = [...installationUsage, ...resourceUsage];
 
@@ -86,7 +86,7 @@ export async function mockBillingData(
     .map((u) => {
       const resource = resources.find((r) => r.id === u.resourceId);
       const pricing = pricingModel[u.name];
-      if (!resource || !pricing) {
+      if (!(resource && pricing)) {
         return undefined;
       }
       return {
@@ -124,7 +124,7 @@ function mockUsageData(
   },
   timestamp: Date,
   periodStart: Date,
-  dayStart: Date,
+  dayStart: Date
 ): ResourceUsage[] {
   // May 1, 2024
   const baseTimestamp = Date.UTC(2024, 4, 1);
@@ -163,7 +163,7 @@ function mockUsageData(
       units: "1k",
       dayValue: queriesToday,
       periodValue: queriesTotal,
-      planValue: 2000000,
+      planValue: 2_000_000,
     },
   ];
 }

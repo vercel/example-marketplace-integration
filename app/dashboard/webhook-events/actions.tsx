@@ -1,15 +1,18 @@
 "use server";
 
-import { DeploymentCheckrunStartEventSchema, DeploymentIntegrationActionStartEvent } from "@/lib/vercel/schemas";
-import { getSession } from "../auth";
 import {
-  updateDeploymentAction,
   getDeployment,
   updateCheckRun,
+  updateDeploymentAction,
 } from "@/lib/vercel/marketplace-api";
+import type {
+  DeploymentCheckrunStartEventSchema,
+  DeploymentIntegrationActionStartEvent,
+} from "@/lib/vercel/schemas";
+import { getSession } from "../auth";
 
 export async function succeedAction(
-  event: DeploymentIntegrationActionStartEvent,
+  event: DeploymentIntegrationActionStartEvent
 ): Promise<void> {
   await getSession();
 
@@ -17,7 +20,7 @@ export async function succeedAction(
 
   const deployment = await getDeployment(
     event.payload.installationId,
-    event.payload.deployment.id,
+    event.payload.deployment.id
   );
 
   const newSecret = `Value set in action for ${deployment.id}, branch ${deployment.gitSource?.ref}, sha ${deployment.gitSource?.sha}`;
@@ -43,7 +46,7 @@ export async function succeedAction(
 }
 
 export async function failAction(
-  event: DeploymentIntegrationActionStartEvent,
+  event: DeploymentIntegrationActionStartEvent
 ): Promise<void> {
   await getSession();
 
@@ -59,7 +62,7 @@ export async function failAction(
 }
 
 export async function succeedCheck(
-  event: DeploymentCheckrunStartEventSchema,
+  event: DeploymentCheckrunStartEventSchema
 ): Promise<void> {
   await getSession();
 
@@ -67,25 +70,17 @@ export async function succeedCheck(
   const { checkRun } = payload;
   const installationId = checkRun.source.integrationConfigurationId;
 
-  const deployment = await getDeployment(
-    installationId,
-    payload.deployment.id,
-  );
+  const deployment = await getDeployment(installationId, payload.deployment.id);
 
-  await updateCheckRun(
-    installationId,
-    checkRun.id,
-    payload.deployment.id,
-    {
-      status: "completed",
-      conclusion: "succeeded",
-      externalUrl: `sso:/checks/${checkRun.id}`,
-    },
-  );
+  await updateCheckRun(installationId, checkRun.id, payload.deployment.id, {
+    status: "completed",
+    conclusion: "succeeded",
+    externalUrl: `sso:/checks/${checkRun.id}`,
+  });
 }
 
 export async function failCheck(
-  event: DeploymentCheckrunStartEventSchema,
+  event: DeploymentCheckrunStartEventSchema
 ): Promise<void> {
   await getSession();
 
@@ -93,14 +88,9 @@ export async function failCheck(
   const { checkRun } = payload;
   const installationId = checkRun.source.integrationConfigurationId;
 
-  await updateCheckRun(
-    installationId,
-    checkRun.id,
-    payload.deployment.id,
-    {
-      status: "completed",
-      conclusion: "failed",
-      externalUrl: `sso:/checks/${checkRun.id}`,
-    },
-  );
+  await updateCheckRun(installationId, checkRun.id, payload.deployment.id, {
+    status: "completed",
+    conclusion: "failed",
+    externalUrl: `sso:/checks/${checkRun.id}`,
+  });
 }

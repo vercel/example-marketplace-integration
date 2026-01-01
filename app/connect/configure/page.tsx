@@ -4,8 +4,8 @@ export default async function Page({
   searchParams: { configurationId: string };
 }) {
   return (
-    <div className="space-y-10 text-center p-10">
-      <h1 className="text-lg font-medium">Nothing to configure here. 👀</h1>
+    <div className="space-y-10 p-10 text-center">
+      <h1 className="font-medium text-lg">Nothing to configure here. 👀</h1>
       <h3 className="font-mono">{configurationId}</h3>
     </div>
   );

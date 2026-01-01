@@ -10,9 +10,9 @@ export const GET = withAuth(
   async (claims, _request, { params }: { params: Params }) => {
     const response = await getResourceBillingPlans(
       claims.installation_id,
-      params.resourceId,
+      params.resourceId
     );
 
     return Response.json(response);
-  },
+  }
 );

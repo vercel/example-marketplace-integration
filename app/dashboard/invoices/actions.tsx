@@ -1,8 +1,8 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { getSession } from "../auth";
 import { refundInvoice, submitInvoice } from "@/lib/vercel/marketplace-api";
+import { getSession } from "../auth";
 
 export async function submitInvoiceAction(formData: FormData): Promise<void> {
   const session = await getSession();
@@ -16,14 +16,14 @@ export async function submitInvoiceAction(formData: FormData): Promise<void> {
   try {
     const { invoiceId: resultInvoiceId } = await submitInvoice(
       session.installation_id,
-      { test, maxAmount, discountPercent: 0.2 },
+      { test, maxAmount, discountPercent: 0.2 }
     );
     invoiceId = resultInvoiceId;
   } catch (e) {
     redirect(
       `/dashboard/invoices?submitError=${encodeURIComponent(
-        e instanceof Error ? e.message : String(e),
-      )}`,
+        e instanceof Error ? e.message : String(e)
+      )}`
     );
   }
   redirect(`/dashboard/invoices?id=${encodeURIComponent(invoiceId)}`);
@@ -40,7 +40,7 @@ export async function refundInvoiceAction(formData: FormData) {
     session.installation_id,
     invoiceId,
     refundAmount,
-    refundReason,
+    refundReason
   );
   redirect(`/dashboard/invoices?id=${encodeURIComponent(invoiceId)}`);
 }

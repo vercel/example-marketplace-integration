@@ -3,7 +3,7 @@
 import { useFormStatus } from "react-dom";
 
 export function FormButton(
-  props: React.ButtonHTMLAttributes<HTMLButtonElement>,
+  props: React.ButtonHTMLAttributes<HTMLButtonElement>
 ) {
   const { pending } = useFormStatus();
 

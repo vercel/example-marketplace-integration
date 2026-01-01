@@ -1,7 +1,6 @@
 import {
   getAllBillingPlans,
   getInstallation,
-  getInstallationBillingPlans,
   installIntegration,
   uninstallInstallation,
   updateInstallation,
@@ -9,7 +8,7 @@ import {
 import { readRequestBodyWithSchema } from "@/lib/utils";
 import { withAuth } from "@/lib/vercel/auth";
 import {
-  InstallationResponse,
+  type InstallationResponse,
   installIntegrationRequestSchema,
   updateInstallationRequestSchema,
 } from "@/lib/vercel/schemas";
@@ -21,7 +20,7 @@ interface Params {
 export const PUT = withAuth(async (claims, request) => {
   const requestBody = await readRequestBodyWithSchema(
     request,
-    installIntegrationRequestSchema,
+    installIntegrationRequestSchema
   );
 
   if (!requestBody.success) {
@@ -53,7 +52,7 @@ export const GET = withAuth(async (claims) => {
   }
   const billingPlans = await getAllBillingPlans(claims.installation_id);
   const billingPlan = billingPlans.plans.find(
-    (plan) => plan.id === installation.billingPlanId,
+    (plan) => plan.id === installation.billingPlanId
   );
   return Response.json({
     billingPlan: billingPlan
@@ -69,7 +68,7 @@ export const GET = withAuth(async (claims) => {
 export const PATCH = withAuth(async (claims, request) => {
   const requestBody = await readRequestBodyWithSchema(
     request,
-    updateInstallationRequestSchema,
+    updateInstallationRequestSchema
   );
 
   if (!requestBody.success) {
@@ -78,7 +77,7 @@ export const PATCH = withAuth(async (claims, request) => {
 
   await updateInstallation(
     claims.installation_id,
-    requestBody.data.billingPlanId,
+    requestBody.data.billingPlanId
   );
 
   return new Response(null, { status: 204 });

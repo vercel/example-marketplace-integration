@@ -17,7 +17,7 @@ export const GET = withAuth(async (claims, request) => {
 export const POST = withAuth(async (claims, request) => {
   const requestBody = await readRequestBodyWithSchema(
     request,
-    provisionResourceRequestSchema,
+    provisionResourceRequestSchema
   );
 
   if (!requestBody.success) {
@@ -41,7 +41,7 @@ export const POST = withAuth(async (claims, request) => {
       },
       {
         status: 400,
-      },
+      }
     );
   }
   if (requestBody.data.name === "conflict") {
@@ -54,7 +54,7 @@ export const POST = withAuth(async (claims, request) => {
       },
       {
         status: 409,
-      },
+      }
     );
   }
 
@@ -67,7 +67,7 @@ export const POST = withAuth(async (claims, request) => {
     requestBody.data,
     {
       status: initialStatus,
-    },
+    }
   );
 
   return Response.json(resource, {

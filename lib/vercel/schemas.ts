@@ -87,7 +87,7 @@ export const billingPlanSchema = z.object({
       z.object({
         label: z.string().min(1),
         value: z.string().min(1).optional(),
-      }),
+      })
     )
     .optional()
     .describe("Highlighted plan's details"),
@@ -104,7 +104,7 @@ export const billingPlanSchema = z.object({
       z.object({
         label: z.string().min(1),
         value: z.string().min(1).optional(),
-      }),
+      })
     )
     .optional(),
 
@@ -119,7 +119,7 @@ export const billingPlanSchema = z.object({
         id: z.string().min(1),
         name: z.string().min(1),
         url: z.string().min(1),
-      }),
+      })
     )
     .optional(),
 
@@ -154,9 +154,9 @@ const ResourceSecretsSchema = z.array(
       })
       .optional()
       .describe(
-        "A map of environments to override values for the secret, used for setting different values across deployments in production, preview, and development environments. Note: the same value will be used for all deployments in the given environment.",
+        "A map of environments to override values for the secret, used for setting different values across deployments in production, preview, and development environments. Note: the same value will be used for all deployments in the given environment."
       ),
-  }),
+  })
 );
 
 // Account and Installation
@@ -484,7 +484,7 @@ export const invoiceSchema = z.object({
         details: z.string().optional(),
         start: datetimeSchema.optional(),
         end: datetimeSchema.optional(),
-      }),
+      })
     )
     .optional(),
   discounts: z
@@ -497,7 +497,7 @@ export const invoiceSchema = z.object({
         details: z.string().optional(),
         start: datetimeSchema.optional(),
         end: datetimeSchema.optional(),
-      }),
+      })
     )
     .optional(),
 });
@@ -600,7 +600,7 @@ export const deploymentActionResourceSecretsOutcomeSchema = z.object({
     z.object({
       name: z.string(),
       value: z.string(),
-    }),
+    })
   ),
 });
 
@@ -663,23 +663,23 @@ export const RequestSecretsRotationResponseSchema = z.union([
     sync: z
       .literal(false)
       .describe(
-        "Indicates that the secrets rotation will be performed asynchronously. It's expected that the update-resource-secrets API will be called shortly after this response to complete the rotation.",
+        "Indicates that the secrets rotation will be performed asynchronously. It's expected that the update-resource-secrets API will be called shortly after this response to complete the rotation."
       ),
   }),
   z.object({
     sync: z
       .literal(true)
       .describe(
-        "Indicates that the secrets rotation is completed synchronously. The secrets can be used immediately after this response.",
+        "Indicates that the secrets rotation is completed synchronously. The secrets can be used immediately after this response."
       ),
     secrets: ResourceSecretsSchema.describe(
-      "New secrets rotated synchronously.",
+      "New secrets rotated synchronously."
     ),
     partial: z
       .boolean()
       .optional()
       .describe(
-        "Whether the rotated secrets only include a partial rotated set.",
+        "Whether the rotated secrets only include a partial rotated set."
       ),
   }),
 ]);
