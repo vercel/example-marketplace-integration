@@ -3,10 +3,6 @@ import { readRequestBodyWithSchema } from "@/lib/utils";
 import { withAuth } from "@/lib/vercel/auth";
 import { provisionPurchaseRequestSchema } from "@/lib/vercel/schemas";
 
-interface Params {
-  installationId: string;
-}
-
 export const POST = withAuth(async (claims, request) => {
   const requestBody = await readRequestBodyWithSchema(
     request,
