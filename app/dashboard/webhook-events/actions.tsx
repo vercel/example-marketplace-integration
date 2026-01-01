@@ -2,7 +2,7 @@
 
 import {
   getDeployment,
-  updateCheckRun,
+  updateCheck,
   updateDeploymentAction,
 } from "@/lib/vercel/marketplace-api";
 import type {
@@ -75,10 +75,10 @@ export async function succeedCheck(
     payload.deployment.id
   );
 
-  await updateCheckRun(installationId, checkRun.id, payload.deployment.id, {
+  await updateCheck(installationId, payload.deployment.id, checkRun.id, {
     status: "completed",
     conclusion: "succeeded",
-    externalUrl: `sso:/checks/${checkRun.id}`,
+    detailsUrl: `sso:/checks/${checkRun.id}`,
   });
 }
 
@@ -91,9 +91,9 @@ export async function failCheck(
   const { checkRun } = payload;
   const installationId = checkRun.source.integrationConfigurationId;
 
-  await updateCheckRun(installationId, checkRun.id, payload.deployment.id, {
+  await updateCheck(installationId, payload.deployment.id, checkRun.id, {
     status: "completed",
     conclusion: "failed",
-    externalUrl: `sso:/checks/${checkRun.id}`,
+    detailsUrl: `sso:/checks/${checkRun.id}`,
   });
 }

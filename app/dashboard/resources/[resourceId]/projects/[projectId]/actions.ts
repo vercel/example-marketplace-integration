@@ -5,25 +5,13 @@ import { createCheck } from "@/lib/vercel/marketplace-api";
 
 export async function createCheckFormSubmit(formData: FormData): Promise<void> {
   const session = await getSession();
-  const resourceId = formData.get("resourceId") as string;
-  const projectId = formData.get("projectId") as string;
-
+  const deploymentId = formData.get("deploymentId") as string;
   const name = formData.get("name") as string;
-  const isRerequestable = formData.get("is-rerequestable") as string;
-  const requires = formData.get("requires") as string;
-  const blocks = formData.get("blocks") as string;
-  const target = formData.get("target") as string;
-  const timeout = formData.get("timeout") as string;
+  const blocking = formData.get("blocking") === "on";
+  const rerequestable = formData.get("rerequestable") === "on";
 
-  await createCheck(
-    session.installation_id,
-    resourceId,
-    projectId,
-    name,
-    isRerequestable,
-    requires,
-    blocks,
-    target,
-    Number(timeout)
-  );
+  await createCheck(session.installation_id, deploymentId, name, {
+    blocking,
+    rerequestable,
+  });
 }

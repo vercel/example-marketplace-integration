@@ -79,87 +79,80 @@ export async function getProject(installationId: string, projectId: string) {
   return project;
 }
 
-export interface Check {
-  name: string;
-  id: string;
-  isRerequestable: boolean;
-  requires: "build-ready" | "deployment-url" | "none";
-  targets?: ("preview" | "production" | string)[];
-  blocks?:
-    | "build-start"
-    | `deployment-start`
-    | "deployment-alias"
-    | "deployment-promotion"
-    | "none";
-  timeout?: number; // default to 5 mins
-}
-
 export async function createCheck(
-  installation_id: string,
-  resource_id: string,
-  projectId: string,
+  installationId: string,
+  deploymentId: string,
   name: string,
-  isRerequestable: string,
-  requires: string,
-  blocks: string,
-  targets: string,
-  timeout: number
+  options?: {
+    blocking?: boolean;
+    rerequestable?: boolean;
+    detailsUrl?: string;
+  }
 ) {
-  // Is this the correct endpoint?
-  await fetchVercelApi(`/v2/projects/${projectId}/checks`, {
-    method: "POST",
-    installationId: installation_id,
-    data: {
-      source: { kind: "integration", externalResourceId: resource_id },
-      name,
-      isRerequestable: isRerequestable === "on",
-      requires,
-      blocks,
-      targets: targets.split(",").map((target) => target.trim()),
-      timeout,
-    },
+  const installation = await getInstallation(installationId);
+
+  const vercel = new Vercel({
+    bearerToken: installation.credentials.access_token,
+  });
+
+  const requestBody: Parameters<
+    typeof vercel.checks.createCheck
+  >[0]["requestBody"] = { name };
+
+  if (options?.blocking !== undefined) {
+    requestBody.blocking = options.blocking;
+  }
+  if (options?.rerequestable !== undefined) {
+    requestBody.rerequestable = options.rerequestable;
+  }
+  if (options?.detailsUrl !== undefined) {
+    requestBody.detailsUrl = options.detailsUrl;
+  }
+
+  return await vercel.checks.createCheck({
+    deploymentId,
+    requestBody,
   });
 }
 
-export async function updateCheckRun(
-  installation_id: string,
-  checkRunId: string,
+export async function updateCheck(
+  installationId: string,
   deploymentId: string,
+  checkId: string,
   updates: {
-    status: "queued" | "running" | "completed";
-    conclusion?:
-      | "canceled"
-      | "skipped"
-      | "timeout"
-      | "failed"
-      | "neutral"
-      | "succeeded";
-    externalId?: string;
-    externalUrl?: string;
-    output?: unknown;
+    status?: "running" | "completed";
+    conclusion?: "canceled" | "skipped" | "failed" | "neutral" | "succeeded";
+    detailsUrl?: string;
   }
 ) {
-  // Is this the correct endpoint?
-  await fetchVercelApi(
-    `/v2/deployments/${deploymentId}/check-runs/${checkRunId}`,
-    {
-      method: "PATCH",
-      installationId: installation_id,
-      data: updates,
-    }
-  );
+  const installation = await getInstallation(installationId);
+
+  const vercel = new Vercel({
+    bearerToken: installation.credentials.access_token,
+  });
+
+  return await vercel.checks.updateCheck({
+    deploymentId,
+    checkId,
+    requestBody: updates,
+  });
 }
 
-export async function getProjectChecks(
+export async function getDeploymentChecks(
   installationId: string,
-  projectId: string
-): Promise<Check[]> {
-  // Is this the correct endpoint?
-  return (
-    (await fetchVercelApi(`/v2/projects/${projectId}/checks`, {
-      installationId,
-    })) as { checks: Check[] }
-  ).checks;
+  deploymentId: string
+) {
+  const installation = await getInstallation(installationId);
+
+  const vercel = new Vercel({
+    bearerToken: installation.credentials.access_token,
+  });
+
+  const result = await vercel.checks.getAllChecks({
+    deploymentId,
+  });
+
+  return result.checks;
 }
 
 export async function updateSecrets(

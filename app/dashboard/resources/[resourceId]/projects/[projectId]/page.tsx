@@ -3,29 +3,21 @@ import { getSession } from "@/app/dashboard/auth";
 import { FormButton } from "@/app/dashboard/components/form-button";
 import { Section } from "@/app/dashboard/components/section";
 import { getResource } from "@/lib/partner";
-import {
-  type Check,
-  getAccountInfo,
-  getProject,
-  getProjectChecks,
-} from "@/lib/vercel/marketplace-api";
+import { getAccountInfo, getProject } from "@/lib/vercel/marketplace-api";
 import type { Resource } from "@/lib/vercel/schemas";
 import { createCheckFormSubmit } from "./actions";
 
 export default async function ResourcePage({
   params: { resourceId, projectId },
-  searchParams: { checkId },
 }: {
   params: { resourceId: string; projectId: string };
-  searchParams: { checkId: string };
 }) {
   const session = await getSession();
   const installationId = session.installation_id;
-  const [resource, _account, project, checks] = await Promise.all([
-    await getResource(installationId, resourceId),
-    await getAccountInfo(installationId),
-    await getProject(installationId, projectId),
-    await getProjectChecks(installationId, projectId),
+  const [resource, _account, project] = await Promise.all([
+    getResource(installationId, resourceId),
+    getAccountInfo(installationId),
+    getProject(installationId, projectId),
   ]);
 
   if (!resource) {
@@ -43,68 +35,40 @@ export default async function ResourcePage({
 
       <ResourceCard resource={resource} />
 
-      {checks && (
-        <div>
-          <h2 className="font-bold text-l">Checks</h2>
-          {checks?.map((check) => (
-            <CheckCard
-              check={check}
-              key={check.id}
-              selected={check.id === checkId}
-            />
-          ))}
-        </div>
-      )}
-      <Section title="Create check">
+      <Section title="Create check on deployment">
+        <p className="mb-4 text-gray-600 text-sm">
+          Checks are created per deployment. Enter a deployment ID to create a
+          check.
+        </p>
         <form action={createCheckFormSubmit}>
-          <input name="resourceId" type="hidden" value={resource.id} />
-          <input name="projectId" type="hidden" value={project.id} />
           <div className="space-y-4">
             <div className="flex flex-col">
-              <label>Name</label>
+              <label htmlFor="deploymentId">Deployment ID</label>
               <input
                 className="border border-1 border-slate-400"
+                id="deploymentId"
+                name="deploymentId"
+                required
+                type="text"
+              />
+            </div>
+            <div className="flex flex-col">
+              <label htmlFor="name">Name</label>
+              <input
+                className="border border-1 border-slate-400"
+                id="name"
                 name="name"
+                required
                 type="text"
               />
             </div>
             <div className="flex items-center gap-2">
-              <label>Is Rerequestable</label>
-              <input name="is-rerequestable" type="checkbox" />
+              <input id="blocking" name="blocking" type="checkbox" />
+              <label htmlFor="blocking">Blocking</label>
             </div>
-            <div className="flex flex-row gap-2">
-              <label>Requires</label>
-              <select name="requires">
-                <option selected value="build-ready">
-                  Build ready
-                </option>
-                <option value="deployment-url">Deployment url</option>
-              </select>
-            </div>
-            <div className="flex flex-row gap-2">
-              <label>Blocks</label>
-              <select name="blocks">
-                <option value="none">None</option>
-                <option value="deployment-alias">Deployment alias</option>
-              </select>
-            </div>
-            <div className="flex flex-col">
-              <label>Targets</label>
-              <input
-                className="border border-1 border-slate-400"
-                name="target"
-                placeholder="Comma-separated list of targets, e.g. preview, production"
-                type="text"
-                value="preview,production"
-              />
-            </div>
-            <div className="flex flex-col">
-              <label>Timeout</label>
-              <input
-                className="border border-1 border-slate-400"
-                name="timeout"
-                type="number"
-              />
+            <div className="flex items-center gap-2">
+              <input id="rerequestable" name="rerequestable" type="checkbox" />
+              <label htmlFor="rerequestable">Rerequestable</label>
             </div>
             <div className="flex justify-end">
               <FormButton className="rounded bg-blue-500 px-2 py-1 text-white disabled:opacity-50">
@@ -150,19 +114,3 @@ function ResourceCard({ resource }: { resource: Resource }) {
   );
 }
 
-function CheckCard({ check, selected }: { check: Check; selected: boolean }) {
-  return (
-    <div
-      className={`${selected ? "bg-green-100" : "bg-white"} rounded-lg p-4 shadow-md`}
-    >
-      <span className="text-gray-600 text-sm">ID: {check.id}</span>
-      <div className="mb-2 font-medium text-lg">{check.name}</div>
-      <details className="mt-4">
-        <summary>JSON</summary>
-        <pre className="overflow-scroll">
-          <code>{JSON.stringify(check, null, 2)}</code>
-        </pre>
-      </details>
-    </div>
-  );
-}
