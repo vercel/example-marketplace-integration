@@ -20,21 +20,21 @@ You can find your `INTEGRATION_CLIENT_ID` and `INTEGRATION_CLIENT_SECRET` on you
 
 You can generate a `CRON_SECRET` with `openssl rand -hex 32`. See [Securing cron jobs](https://vercel.com/docs/cron-jobs/manage-cron-jobs#securing-cron-jobs) for more information.
 
-On your Vercel project, visit the Storage tab (Vercel Dashboard > (Your Project) > Storage tab) and create a new Upstash Redis database. You should be prompted to connect your new store to your project, if not, connect it manually. Once connected, you should see the `KV_URL`, `KV_REST_API_URL`, `KV_REST_API_TOKEN`, `KV_REST_API_READ_ONLY_TOKEN` environment variables in your project. This database is used to store state for your example marketplace integration.
+If you deploy to Vercel using the link above, Upstash Redis will be automatically provisioned and connected to your project. Otherwise, you can install it manually through the [Vercel Marketplace](https://vercel.com/marketplace/integrations/upstash-kv). Once this is done, you can find the environment variables in your Vercel project under the Environment Variables tab.
 
-![](/docs/assets/storage-upstash-redis.png)
+## Setup the Integration
 
-6. Return to your Vercel Integration in the [Integrations Console](https://vercel.com/dashboard/integrations/console) and update the Marketplace Integration Settings (near the bottom of the page).
+Head to the in the [Integrations Console](https://vercel.com/dashboard/integrations/console) and update the Marketplace Integration Settings (near the bottom of the page).
 
 - Set the "Base URL" to your deployed project's URL e.g. https://example-marketplace-integration.vercel.app
 - Set the "Redirect Login URL" to your deployed projects URL with the path `/callback` e.g. https://example-marketplace-integration.vercel.app/callback
 - Click the "Update" button at the bottom to save your changes.
 
-7. In the same Marketplace Integration Settings, create a product for your Vercel Integration using the "Create Product" button. A "product" maps to your own products you want to sell on Vercel. Depending on the product type (e.g. storage), the Vercel dashboard will understand how to interact with your product.
+In the same Marketplace Integration Settings, create a product for your Vercel Integration using the "Create Product" button. A "product" maps to your own products you want to sell on Vercel. Depending on the product type (e.g. storage), the Vercel dashboard will understand how to interact with your product.
 
 - Fill out relevant metadata for your product like product name and logo.
 
-8. If you created a "storage" product type, you should be able to:
+If you created a "storage" product type, you should be able to:
 
 - Create a database for your product in the Storage tab via the "Create Store" button.
 - View and manage your new database for your product.;
