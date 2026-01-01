@@ -1,7 +1,17 @@
+import { stringify } from "node:querystring";
 import { notFound } from "next/navigation";
+import { z } from "zod/v3";
 import { env } from "@/lib/env";
 import { installIntegration } from "@/lib/partner";
-import { exchangeExternalCodeForToken } from "@/lib/vercel/external-api";
+import { fetchVercelApi } from "@/lib/vercel/api";
+
+const IntegrationsExternalTokenResponse = z.object({
+  token_type: z.string(),
+  access_token: z.string(),
+  installation_id: z.string(),
+  user_id: z.string(),
+  team_id: z.string().nullable(),
+});
 
 export const dynamic = "force-dynamic";
 
@@ -16,10 +26,20 @@ const Page = async (props: PageProps<"/connect/callback">) => {
     return notFound();
   }
 
-  const result = await exchangeExternalCodeForToken(
-    code,
-    env.VERCEL_EXTERNAL_REDIRECT_URI
-  );
+  const response = await fetchVercelApi("/v2/oauth/access_token", {
+    method: "POST",
+    headers: {
+      "content-type": "application/x-www-form-urlencoded",
+    },
+    body: stringify({
+      code,
+      client_id: env.INTEGRATION_CLIENT_ID,
+      client_secret: env.INTEGRATION_CLIENT_SECRET,
+      redirect_uri: env.VERCEL_EXTERNAL_REDIRECT_URI,
+    }),
+  });
+
+  const result = IntegrationsExternalTokenResponse.parse(response);
 
   await installIntegration(result.installation_id, {
     type: "external",
