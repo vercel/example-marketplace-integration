@@ -3,15 +3,12 @@ import type { NextRequest } from "next/server";
 import { exchangeCodeForToken } from "@/lib/vercel/marketplace-api";
 import { createSession } from "../dashboard/auth";
 
-export async function GET(request: NextRequest) {
-  const _host = getHost(request);
+export const GET = async (request: NextRequest) => {
   const code = request.nextUrl.searchParams.get("code");
   const state = request.nextUrl.searchParams.get("state");
 
   if (!code) {
-    return new Response("Missing code", {
-      status: 400,
-    });
+    return new Response("Missing code", { status: 400 });
   }
 
   const token = await exchangeCodeForToken(code, state);
@@ -50,12 +47,4 @@ export async function GET(request: NextRequest) {
   }
 
   redirect("/dashboard");
-}
-
-function getHost(request: NextRequest): string {
-  return request.headers.get("x-forwarded-host")
-    ? `${request.headers.get("x-forwarded-proto")}://${request.headers.get(
-        "x-forwarded-host"
-      )}`
-    : request.nextUrl.host;
-}
+};
