@@ -19,12 +19,13 @@ export const GET = async (request: NextRequest) => {
   const projectId = request.nextUrl.searchParams.get("project_id");
   const invoiceId = request.nextUrl.searchParams.get("invoice_id");
   const checkId = request.nextUrl.searchParams.get("check_id");
+  const support = request.nextUrl.searchParams.get("support");
 
   if (invoiceId) {
     return redirect(`/dashboard/invoices?id=${invoiceId}`);
   }
 
-  if (request.nextUrl.searchParams.get("support")) {
+  if (support) {
     return redirect(
       `/dashboard/support${resourceId ? `?resource_id=${resourceId}` : ""}`
     );
