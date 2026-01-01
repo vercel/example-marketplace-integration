@@ -10,6 +10,7 @@
     "fix": "ultracite fix"
   },
   "dependencies": {
+    "@tailwindcss/postcss": "^4.1.18",
     "@upstash/redis": "^1.36.0",
     "@vercel/functions": "^3.3.4",
     "@vercel/sdk": "^1.18.5",
@@ -28,7 +29,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "autoprefixer": "^10.4.23",
-    "postcss": "^8",
+    "postcss": "^8.5.4",
     "tailwindcss": "^4.1.18",
     "typescript": "^5",
     "ultracite": "7.0.4"
