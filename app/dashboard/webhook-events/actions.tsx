@@ -70,7 +70,10 @@ export async function succeedCheck(
   const { checkRun } = payload;
   const installationId = checkRun.source.integrationConfigurationId;
 
-  const deployment = await getDeployment(installationId, payload.deployment.id);
+  const _deployment = await getDeployment(
+    installationId,
+    payload.deployment.id
+  );
 
   await updateCheckRun(installationId, checkRun.id, payload.deployment.id, {
     status: "completed",

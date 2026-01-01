@@ -52,7 +52,7 @@ export async function sendBillingDataAction() {
   await submitPrepaymentBalances(installationId, balances);
 }
 
-export async function setExampleNotificationAction(formData: FormData) {
+export async function setExampleNotificationAction(_formData: FormData) {
   const session = await getSession();
 
   await setInstallationNotification(session.installation_id, {
@@ -71,7 +71,7 @@ export async function setExampleNotificationAction(formData: FormData) {
 }
 
 export async function clearResourceNotificationAction(
-  formData: FormData
+  _formData: FormData
 ): Promise<void> {
   const session = await getSession();
 

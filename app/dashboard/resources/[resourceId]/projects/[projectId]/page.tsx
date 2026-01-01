@@ -21,7 +21,7 @@ export default async function ResourcePage({
 }) {
   const session = await getSession();
   const installationId = session.installation_id;
-  const [resource, account, project, checks] = await Promise.all([
+  const [resource, _account, project, checks] = await Promise.all([
     await getResource(installationId, resourceId),
     await getAccountInfo(installationId),
     await getProject(installationId, projectId),

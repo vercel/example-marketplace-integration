@@ -47,7 +47,7 @@ export const POST = withAuth(
     }
 
     // is the claim in a state that can be completed?
-    const now = new Date().getTime();
+    const now = Date.now();
     if (matchingClaim.status !== "verified") {
       return NextResponse.json(
         buildError(

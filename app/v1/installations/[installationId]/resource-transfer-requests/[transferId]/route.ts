@@ -36,7 +36,7 @@ export const PUT = withAuth(
       );
     }
 
-    var expirationDate = new Date();
+    const expirationDate = new Date();
     expirationDate.setDate(expirationDate.getDate() + 7);
     const newClaim: Claim = {
       transferId: params.transferId,

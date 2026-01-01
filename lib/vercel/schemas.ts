@@ -276,7 +276,7 @@ export type ProvisionResourceRequest = z.infer<
   typeof provisionResourceRequestSchema
 >;
 
-const environmentOverrideTargets = z.enum([
+const _environmentOverrideTargets = z.enum([
   "production",
   "preview",
   "development",

@@ -4,7 +4,7 @@ import { exchangeCodeForToken } from "@/lib/vercel/marketplace-api";
 import { createSession } from "../dashboard/auth";
 
 export async function GET(request: NextRequest) {
-  const host = getHost(request);
+  const _host = getHost(request);
   const code = request.nextUrl.searchParams.get("code");
   const state = request.nextUrl.searchParams.get("state");
 
@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
 
   if (request.nextUrl.searchParams.get("support")) {
     return redirect(
-      `/dashboard/support${resourceId ? "?resource_id=" + resourceId : ""}`
+      `/dashboard/support${resourceId ? `?resource_id=${resourceId}` : ""}`
     );
   }
 

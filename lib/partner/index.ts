@@ -336,7 +336,7 @@ export async function importResourceToVercel(
     throw new Error(`Cannot find resource ${resourceId}`);
   }
 
-  const response = await importResourceToVercelApi(
+  const _response = await importResourceToVercelApi(
     installationId,
     resource.id,
     {

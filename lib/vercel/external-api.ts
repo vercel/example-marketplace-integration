@@ -1,4 +1,4 @@
-import { stringify } from "querystring";
+import { stringify } from "node:querystring";
 import { z } from "zod";
 import { env } from "../env";
 import { fetchVercelApi } from "./api";

@@ -41,13 +41,13 @@ export async function dispatchEvent(
   });
 }
 
-export type AccountInfo = {
+export interface AccountInfo {
   name: string;
   contact: {
     email: string;
     name: string;
   };
-};
+}
 
 export async function getAccountInfo(
   installationId: string
@@ -57,11 +57,11 @@ export async function getAccountInfo(
   })) as AccountInfo;
 }
 
-export type Project = {
+export interface Project {
   id: string;
   name: string;
   accountId: string;
-};
+}
 
 export async function getProject(
   installationId: string,
@@ -72,7 +72,7 @@ export async function getProject(
   })) as Project;
 }
 
-export type Check = {
+export interface Check {
   name: string;
   id: string;
   isRerequestable: boolean;
@@ -85,7 +85,7 @@ export type Check = {
     | "deployment-promotion"
     | "none";
   timeout?: number; // default to 5 mins
-};
+}
 
 export async function createCheck(
   installation_id: string,
