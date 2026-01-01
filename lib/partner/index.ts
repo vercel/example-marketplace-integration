@@ -1,7 +1,7 @@
+import type { Balances } from "@vercel/sdk/models/submitprepaymentbalancesop.js";
 import { compact } from "lodash";
 import { nanoid } from "nanoid";
 import type {
-  Balance,
   BillingPlan,
   GetBillingPlansResponse,
   GetResourceResponse,
@@ -369,7 +369,7 @@ export async function provisionPurchase(
     throw new Error(`Invoice ${request.invoiceId} is not paid`);
   }
 
-  const balances: Record<string, Balance> = {};
+  const balances: Record<string, Balances> = {};
 
   for (const item of invoice.items ?? []) {
     const amountInCents = Math.floor(Number.parseFloat(item.total) * 100);
@@ -398,7 +398,7 @@ export async function provisionPurchase(
 export async function addInstallationBalanceInternal(
   installationId: string,
   currencyValueInCents: number
-): Promise<Balance> {
+): Promise<Balances> {
   const result = await kv.incrby(
     `${installationId}:balance`,
     currencyValueInCents
@@ -412,7 +412,7 @@ export async function addInstallationBalanceInternal(
 
 export async function getInstallationBalance(
   installationId: string
-): Promise<Balance | null> {
+): Promise<Balances | null> {
   const result = await kv.get<number>(`${installationId}:balance`);
   if (result === null) {
     return null;
@@ -428,7 +428,7 @@ export async function addResourceBalanceInternal(
   installationId: string,
   resourceId: string,
   currencyValueInCents: number
-): Promise<Balance> {
+): Promise<Balances> {
   const result = await kv.incrby(
     `${installationId}:${resourceId}:balance`,
     currencyValueInCents
@@ -444,7 +444,7 @@ export async function addResourceBalanceInternal(
 export async function getResourceBalance(
   installationId: string,
   resourceId: string
-): Promise<Balance | null> {
+): Promise<Balances | null> {
   const result = await kv.get<number>(
     `${installationId}:${resourceId}:balance`
   );

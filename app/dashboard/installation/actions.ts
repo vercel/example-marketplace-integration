@@ -14,7 +14,8 @@ import {
   sendBillingData,
   submitPrepaymentBalances,
 } from "@/lib/vercel/marketplace-api";
-import type { Balance, Notification } from "@/lib/vercel/schemas";
+import type { Balances } from "@vercel/sdk/models/submitprepaymentbalancesop.js";
+import type { Notification } from "@/lib/vercel/schemas";
 import { getSession } from "../auth";
 
 export async function addInstallationBalance(formData: FormData) {
@@ -44,7 +45,7 @@ export async function sendBillingDataAction() {
         ),
       ].filter((x) => x !== null)
     )
-  ).filter((x) => x !== null) as Balance[];
+  ).filter((x) => x !== null) as Balances[];
 
   console.log("Send balances: ", balances);
 

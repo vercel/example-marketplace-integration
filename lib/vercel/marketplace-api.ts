@@ -1,16 +1,15 @@
 import { Vercel } from "@vercel/sdk";
+import type { ImportResourceRequestBody } from "@vercel/sdk/models/importresourceop.js";
 import type { SubmitBillingDataRequestBody } from "@vercel/sdk/models/submitbillingdataop.js";
-import type { SubmitInvoiceRequestBody } from "@vercel/sdk/models/submitinvoiceop.js";
+import type {
+  SubmitInvoiceDiscounts,
+  SubmitInvoiceRequestBody,
+} from "@vercel/sdk/models/submitinvoiceop.js";
+import type { Balances } from "@vercel/sdk/models/submitprepaymentbalancesop.js";
+import type { Outcomes } from "@vercel/sdk/models/updateintegrationdeploymentactionop.js";
 import { mockBillingData } from "@/data/mock-billing-data";
 import { env } from "../env";
 import { getInstallation, getResource } from "../partner";
-import { fetchVercelApi } from "./api";
-import type {
-  Balance,
-  DeploymentActionOutcome,
-  ImportResourceRequest,
-  InvoiceDiscount,
-} from "./schemas";
 
 interface InstallationUpdatedEvent {
   type: "installation.updated";
@@ -95,23 +94,14 @@ export async function createCheck(
     bearerToken: installation.credentials.access_token,
   });
 
-  const requestBody: Parameters<
-    typeof vercel.checks.createCheck
-  >[0]["requestBody"] = { name };
-
-  if (options?.blocking !== undefined) {
-    requestBody.blocking = options.blocking;
-  }
-  if (options?.rerequestable !== undefined) {
-    requestBody.rerequestable = options.rerequestable;
-  }
-  if (options?.detailsUrl !== undefined) {
-    requestBody.detailsUrl = options.detailsUrl;
-  }
-
   return await vercel.checks.createCheck({
     deploymentId,
-    requestBody,
+    requestBody: {
+      name,
+      blocking: options?.blocking ?? false,
+      rerequestable: options?.rerequestable,
+      detailsUrl: options?.detailsUrl,
+    },
   });
 }
 
@@ -208,7 +198,7 @@ export async function exchangeCodeForToken(
 export async function importResource(
   installationId: string,
   resourceId: string,
-  request: ImportResourceRequest
+  request: ImportResourceRequestBody
 ) {
   const installation = await getInstallation(installationId);
 
@@ -229,7 +219,7 @@ export async function importResource(
 
 export async function submitPrepaymentBalances(
   installationId: string,
-  balances: Balance[]
+  balances: Balances[]
 ) {
   const installation = await getInstallation(installationId);
 
@@ -312,7 +302,7 @@ export async function submitInvoice(
     }
   }
 
-  const discounts: InvoiceDiscount[] = [];
+  const discounts: SubmitInvoiceDiscounts[] = [];
   if (opts?.discountPercent !== undefined && opts.discountPercent > 0) {
     const total = items.reduce(
       (acc, item) => acc + Number.parseFloat(item.total),
@@ -425,7 +415,7 @@ export async function updateDeploymentAction({
   action: string;
   status: "succeeded" | "failed";
   statusText?: string;
-  outcomes?: DeploymentActionOutcome[];
+  outcomes?: Outcomes[];
 }) {
   const installation = await getInstallation(installationId);
 

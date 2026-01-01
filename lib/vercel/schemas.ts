@@ -198,14 +198,12 @@ export type GetBillingPlansResponse = z.infer<
 
 // Provisioning of direct purchases
 
-export const balanceSchema = z.object({
+const balanceSchema = z.object({
   currencyValueInCents: z.number(),
   credit: z.string().optional(),
   nameLabel: z.string().optional(),
   resourceId: z.string().optional(),
 });
-
-export type Balance = z.infer<typeof balanceSchema>;
 
 export const submitPrepaymentBalanceRequestSchema = z.object({
   timestamp: datetimeSchema,
@@ -318,18 +316,6 @@ export type ListResourcesResponse = z.infer<typeof listResourcesResponseSchema>;
 export const getResourceResponseSchema = resourceSchema;
 
 export type GetResourceResponse = z.infer<typeof getResourceResponseSchema>;
-
-export const importResourceRequestSchema = z.object({
-  productId: z.string().min(1),
-  name: z.string().min(1),
-  status: resourceStatusSchema,
-  metadata: metadataSchema.optional(),
-  billingPlan: billingPlanSchema.optional(),
-  notification: notificationSchema.optional(),
-  secrets: ResourceSecretsSchema.optional(),
-});
-
-export type ImportResourceRequest = z.infer<typeof importResourceRequestSchema>;
 
 export const importResourceResponseSchema = z.object({
   name: z.string().min(1),
@@ -526,7 +512,7 @@ export const invoiceItemSchema = z.object({
 
 export type InvoiceItem = z.infer<typeof invoiceItemSchema>;
 
-export const invoiceDiscountSchema = z.object({
+const invoiceDiscountSchema = z.object({
   // Partner's billing plan ID.
   billingPlanId: z.string(),
 
@@ -542,8 +528,6 @@ export const invoiceDiscountSchema = z.object({
   details: z.string().optional(),
   amount: currencySchema,
 });
-
-export type InvoiceDiscount = z.infer<typeof invoiceDiscountSchema>;
 
 export const createInvoiceRequest = z.object({
   // Test mode.
@@ -586,15 +570,7 @@ export const refundInvoiceRequestSchema = z.object({
 
 export type RefundInvoiceRequest = z.infer<typeof refundInvoiceRequestSchema>;
 
-export type UpdateDeploymentActionRequest = z.infer<
-  typeof updateDeploymentActionRequestSchema
->;
-
-export type DeploymentActionOutcome = z.infer<
-  typeof deploymentActionResourceSecretsOutcomeSchema
->;
-
-export const deploymentActionResourceSecretsOutcomeSchema = z.object({
+const deploymentActionResourceSecretsOutcomeSchema = z.object({
   kind: z.literal("resource-secrets"),
   secrets: z.array(
     z.object({
@@ -609,6 +585,10 @@ export const updateDeploymentActionRequestSchema = z.object({
   statusText: z.string().optional(),
   outcomes: z.array(deploymentActionResourceSecretsOutcomeSchema).optional(),
 });
+
+export type UpdateDeploymentActionRequest = z.infer<
+  typeof updateDeploymentActionRequestSchema
+>;
 
 // Claims
 

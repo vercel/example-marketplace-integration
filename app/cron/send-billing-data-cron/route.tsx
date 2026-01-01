@@ -10,7 +10,7 @@ import {
   sendBillingData,
   submitPrepaymentBalances,
 } from "@/lib/vercel/marketplace-api";
-import type { Balance } from "@/lib/vercel/schemas";
+import type { Balances } from "@vercel/sdk/models/submitprepaymentbalancesop.js";
 
 export const dynamic = "force-dynamic";
 
@@ -29,7 +29,7 @@ export const GET = cronJob(async (request: Request) => {
           ),
         ].filter((x) => x !== null)
       )
-    ).filter((x) => x !== null) as Balance[];
+    ).filter((x) => x !== null) as Balances[];
     console.log("Sending billing data: ", installationId, data);
     console.log("Sending balances: ", installationId, balances);
     let error: string | undefined;
