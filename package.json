@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "check": "ultracite check",
+    "fix": "ultracite fix"
   },
   "dependencies": {
     "@upstash/redis": "^1.35.3",
