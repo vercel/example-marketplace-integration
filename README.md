@@ -4,68 +4,17 @@ Welcome to the Example Marketplace Integration. This repository contains a refer
 
 ## Getting Started
 
-1. Clone the code to your machine.
+1. Clone the code to your machine with `git clone git@github.com:vercel/example-marketplace-integration.git example-marketplace-integration`.
+2. Copy the example env vars file with `cp .env.example .env.local` and fill in the values.
+3. Deploy the example Marketplace integration to your Vercel team.
 
-```sh
-$ git clone git@github.com:vercel/example-marketplace-integration.git example-marketplace-integration
-Cloning into 'example-marketplace-integration'...
-remote: Enumerating objects: 318, done.
-remote: Counting objects: 100% (81/81), done.
-remote: Compressing objects: 100% (57/57), done.
-remote: Total 318 (delta 29), reused 53 (delta 15), pack-reused 237
-Receiving objects: 100% (318/318), 120.25 KiB | 552.00 KiB/s, done.
-Resolving deltas: 100% (120/120), done.
-```
+## Environment Variables
 
-2. Deploy the example Marketplace integration to your Vercel team.
+You can find your `INTEGRATION_CLIENT_ID` and `INTEGRATION_CLIENT_SECRET` on your Integration in the [Integrations Console](https://vercel.com/dashboard/integrations/console). If you do not have an existing Vercel integration, [please create one](https://vercel.com/docs/integrations/create-integration#creating-an-integration).
 
-```sh
-$ cd example-marketplace-integration
-$ vc link
-Vercel CLI 33.5.5
-? Set up “~/src/example-marketplace-integration”? [Y/n] y
-? Which scope should contain your project? My Team
-? Link to existing project? [y/N] n
-? What’s your project’s name? example-marketplace-integration
-? In which directory is your code located? ./
-Local settings detected in vercel.json:
-Auto-detected Project Settings (Next.js):
-- Build Command: next build
-- Development Command: next dev --port $PORT
-- Install Command: `yarn install`, `pnpm install`, `npm install`, or `bun install`
-- Output Directory: Next.js default
-? Want to modify these settings? [y/N] n
-✅  Linked to my-team-name/example-marketplace-integration (created .vercel)
-```
+You can generate a `CRON_SECRET` with `openssl rand -hex 32`. See [Securing cron jobs](https://vercel.com/docs/cron-jobs/manage-cron-jobs#securing-cron-jobs) for more information.
 
-3. Add your `INTEGRATION_CLIENT_ID` and `INTEGRATION_CLIENT_SECRET` to your Vercel project. You can find these values on your Integration in the [Integrations Console](https://vercel.com/dashboard/integrations/console). If you do not have an existing Vercel integration, [please create one](https://vercel.com/docs/integrations/create-integration#creating-an-integration).
-
-```sh
-$ vercel env add INTEGRATION_CLIENT_ID
-Vercel CLI 33.5.5
-? What’s the value of INTEGRATION_CLIENT_ID? my-client-id
-? Add INTEGRATION_CLIENT_ID to which Environments (select multiple)? Production, Preview, Development
-✅  Added Environment Variable INTEGRATION_CLIENT_ID to Project example-marketplace-integration [234ms]
-$ vercel env add INTEGRATION_CLIENT_SECRET
-Vercel CLI 33.5.5
-? What’s the value of INTEGRATION_CLIENT_SECRET? my-secret
-? Add INTEGRATION_CLIENT_SECRET to which Environments (select multiple)? Production, Preview, Development
-✅  Added Environment Variable INTEGRATION_CLIENT_SECRET to Project example-marketplace-integration [211ms]
-```
-
-4. Secure cron jobs with `CRON_SECRET`
-
-```sh
-$ vercel env add CRON_SECRET
-Vercel CLI 41.6.2
-? What’s the value of CRON_SECRET? my-cron-secret
-? Add CRON_SECRET to which Environments (select multiple)? Production, Preview,Development
-✅  Added Environment Variable CRON_SECRET to Project example-marketplace-integration [103ms]
-```
-
-See [Securing cron jobs](https://vercel.com/docs/cron-jobs/manage-cron-jobs#securing-cron-jobs) for more information.
-
-5. On your Vercel project, visit the Storage tab (Vercel Dashboard > (Your Project) > Storage tab) and create a new Upstash Redis database. You should be prompted to connect your new store to your project, if not, connect it manually. Once connected, you should see the `KV_URL`, `KV_REST_API_URL`, `KV_REST_API_TOKEN`, `KV_REST_API_READ_ONLY_TOKEN` environment variables in your project. This database is used to store state for your example marketplace integration.
+On your Vercel project, visit the Storage tab (Vercel Dashboard > (Your Project) > Storage tab) and create a new Upstash Redis database. You should be prompted to connect your new store to your project, if not, connect it manually. Once connected, you should see the `KV_URL`, `KV_REST_API_URL`, `KV_REST_API_TOKEN`, `KV_REST_API_READ_ONLY_TOKEN` environment variables in your project. This database is used to store state for your example marketplace integration.
 
 ![](/docs/assets/storage-upstash-redis.png)
 
