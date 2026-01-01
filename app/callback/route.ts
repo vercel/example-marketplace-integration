@@ -3,6 +3,9 @@ import type { NextRequest } from "next/server";
 import { exchangeCodeForToken } from "@/lib/vercel/marketplace-api";
 import { createSession } from "../dashboard/auth";
 
+/**
+ * Callback route for the marketplace integration.
+ */
 export const GET = async (request: NextRequest) => {
   const code = request.nextUrl.searchParams.get("code");
   const state = request.nextUrl.searchParams.get("state");

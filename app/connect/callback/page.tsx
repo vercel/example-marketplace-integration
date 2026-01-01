@@ -5,6 +5,10 @@ import { exchangeExternalCodeForToken } from "@/lib/vercel/external-api";
 
 export const dynamic = "force-dynamic";
 
+/**
+ * Callback page for the connect integration.
+ * This page is used to connect the installation to an existing partner account.
+ */
 const Page = async (props: PageProps<"/connect/callback">) => {
   const { code, next } = await props.searchParams;
 
