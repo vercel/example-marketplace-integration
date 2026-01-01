@@ -1,14 +1,17 @@
+import { notFound } from "next/navigation";
 import { env } from "@/lib/env";
 import { installIntegration } from "@/lib/partner";
 import { exchangeExternalCodeForToken } from "@/lib/vercel/external-api";
 
 export const dynamic = "force-dynamic";
 
-export default async function Page({
-  searchParams: { code, next },
-}: {
-  searchParams: { code: string; next: string };
-}) {
+const Page = async (props: PageProps<"/connect/callback">) => {
+  const { code, next } = await props.searchParams;
+
+  if (typeof code !== "string" || typeof next !== "string") {
+    return notFound();
+  }
+
   if (!env.VERCEL_EXTERNAL_REDIRECT_URI) {
     throw new Error(
       "VERCEL_EXTERNAL_REDIRECT_URI is not set, cannot connect account"
@@ -40,4 +43,6 @@ export default async function Page({
       </h3>
     </div>
   );
-}
+};
+
+export default Page;
