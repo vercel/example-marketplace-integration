@@ -1,11 +1,12 @@
 import crypto from "node:crypto";
+import { Vercel } from "@vercel/sdk";
 import { env } from "@/lib/env";
 import {
+  getInstallation,
   listInstallations,
   storeWebhookEvent,
   uninstallInstallation,
 } from "@/lib/partner";
-import { fetchVercelApi } from "@/lib/vercel/api";
 import {
   unknownWebhookEventSchema,
   type WebhookEvent,
@@ -14,7 +15,7 @@ import {
 
 export const dynamic = "force-dynamic";
 
-export async function POST(req: Request): Promise<Response> {
+export const POST = async (req: Request): Promise<Response> => {
   const rawBody = await req.text();
   const rawBodyBuffer = Buffer.from(rawBody, "utf-8");
   const bodySignature = sha1(rawBodyBuffer, env.INTEGRATION_CLIENT_SECRET);
@@ -63,6 +64,7 @@ export async function POST(req: Request): Promise<Response> {
     case "deployment.created": {
       const deploymentId = payload.deployment.id;
       const installationId = await getInstallationId(payload.installationIds);
+
       if (!installationId) {
         console.error(
           `No installations found for deployment ${deploymentId}`,
@@ -70,20 +72,36 @@ export async function POST(req: Request): Promise<Response> {
         );
         break;
       }
-      await fetchVercelApi(`/v1/deployments/${deploymentId}/checks`, {
-        data: {
+
+      const installation = await getInstallation(installationId);
+
+      if (!installation) {
+        console.error(
+          `No installations found for deployment ${deploymentId}`,
+          payload
+        );
+        break;
+      }
+
+      const vercel = new Vercel({
+        bearerToken: installation.credentials.access_token,
+      });
+
+      await vercel.checks.createCheck({
+        deploymentId,
+        requestBody: {
           blocking: true,
           rerequestable: true,
           name: "Test Check",
         },
-        method: "POST",
-        installationId,
       });
+
       break;
     }
     case "deployment.ready": {
       const deploymentId = payload.deployment.id;
       const installationId = await getInstallationId(payload.installationIds);
+
       if (!installationId) {
         console.error(
           `No installations found for deployment ${deploymentId}`,
@@ -92,49 +110,56 @@ export async function POST(req: Request): Promise<Response> {
         break;
       }
 
-      const data = (await fetchVercelApi(
-        `/v1/deployments/${deploymentId}/checks`,
-        {
-          method: "get",
-          installationId,
-        }
-      )) as { checks: { id: string }[] };
+      const installation = await getInstallation(installationId);
 
-      const checkId = data.checks[0]?.id;
-
-      if (!checkId) {
-        console.error(`No Check found for deployment ${deploymentId}`, data);
+      if (!installation) {
+        console.error(
+          `No installations found for deployment ${deploymentId}`,
+          payload
+        );
+        break;
       }
 
-      await fetchVercelApi(
-        `/v1/deployments/${deploymentId}/checks/${data.checks[0]?.id}`,
-        {
-          data: {
-            status: "running",
-          },
-          method: "PATCH",
-          installationId,
-        }
-      );
+      const vercel = new Vercel({
+        bearerToken: installation.credentials.access_token,
+      });
+
+      const checks = await vercel.checks.getAllChecks({
+        deploymentId,
+      });
+
+      const checkId = checks.checks.at(0)?.id;
+
+      if (!checkId) {
+        console.error(`No Check found for deployment ${deploymentId}`, checks);
+        break;
+      }
+
+      await vercel.checks.updateCheck({
+        deploymentId,
+        checkId,
+        requestBody: {
+          status: "running",
+        },
+      });
 
       await delay(8000); // Wait for 8 seconds
 
-      await fetchVercelApi(
-        `/v1/deployments/${deploymentId}/checks/${data.checks[0]?.id}`,
-        {
-          data: {
-            conclusion: "failed",
-            status: "completed",
-          },
-          method: "PATCH",
-          installationId,
-        }
-      );
+      await vercel.checks.updateCheck({
+        deploymentId,
+        checkId,
+        requestBody: {
+          conclusion: "failed",
+          status: "completed",
+        },
+      });
+
       break;
     }
     case "deployment.check-rerequested": {
       const deploymentId = payload.deployment.id;
       const installationId = await getInstallationId(payload.installationIds);
+
       if (!installationId) {
         console.error(
           `No installations found for deployment ${deploymentId}`,
@@ -143,44 +168,50 @@ export async function POST(req: Request): Promise<Response> {
         break;
       }
 
-      const data = (await fetchVercelApi(
-        `/v1/deployments/${deploymentId}/checks`,
-        {
-          method: "get",
-          installationId,
-        }
-      )) as { checks: { id: string }[] };
+      const installation = await getInstallation(installationId);
 
-      const checkId = data.checks[0]?.id;
-
-      if (!checkId) {
-        console.error(`No Check found for deployment ${deploymentId}`, data);
+      if (!installation) {
+        console.error(
+          `No installations found for deployment ${deploymentId}`,
+          payload
+        );
+        break;
       }
 
-      await fetchVercelApi(
-        `/v1/deployments/${deploymentId}/checks/${data.checks[0]?.id}`,
-        {
-          data: {
-            status: "running",
-          },
-          method: "PATCH",
-          installationId,
-        }
-      );
+      const vercel = new Vercel({
+        bearerToken: installation.credentials.access_token,
+      });
+
+      const checks = await vercel.checks.getAllChecks({
+        deploymentId,
+      });
+
+      const checkId = checks.checks.at(0)?.id;
+
+      if (!checkId) {
+        console.error(`No Check found for deployment ${deploymentId}`, checks);
+        break;
+      }
+
+      await vercel.checks.updateCheck({
+        deploymentId,
+        checkId,
+        requestBody: {
+          status: "running",
+        },
+      });
 
       await delay(8000); // Wait for 8 seconds
 
-      await fetchVercelApi(
-        `/v1/deployments/${deploymentId}/checks/${data.checks[0]?.id}`,
-        {
-          data: {
-            conclusion: "succeeded",
-            status: "completed",
-          },
-          method: "PATCH",
-          installationId,
-        }
-      );
+      await vercel.checks.updateCheck({
+        deploymentId,
+        checkId,
+        requestBody: {
+          conclusion: "succeeded",
+          status: "completed",
+        },
+      });
+
       break;
     }
     default: {
@@ -190,7 +221,7 @@ export async function POST(req: Request): Promise<Response> {
   }
 
   return new Response("", { status: 200 });
-}
+};
 
 function sha1(data: Buffer, secret: string): string {
   return crypto
