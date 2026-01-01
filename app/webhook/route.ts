@@ -27,33 +27,38 @@ export const POST = async (req: Request): Promise<Response> => {
     });
   }
 
-  let json: any;
+  let json: unknown;
+
   try {
     json = JSON.parse(rawBody);
-  } catch (e) {
-    console.error("Failed to parse webhook event: not a json:", rawBody, e);
-  }
-  if (!json) {
-    return new Response("", { status: 200 });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    const response = `Failed to parse webhook event: ${message}`;
+
+    console.error(response);
+
+    return new Response(response, { status: 400 });
   }
 
   let event: WebhookEvent | undefined;
+
   try {
     event = webhookEventSchema.parse(json);
-  } catch (e) {
-    console.error("Failed to parse webhook event: unknown event:", rawBody, e);
-  }
-  if (!event) {
-    try {
-      await storeWebhookEvent(unknownWebhookEventSchema.parse(json));
-    } catch (e) {
-      console.error("Failed to parse webhook event: not an event:", rawBody, e);
-    }
-    return new Response("", { status: 200 });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    const response = `Failed to parse webhook event: ${message}`;
+
+    console.error(response);
+
+    await storeWebhookEvent(unknownWebhookEventSchema.parse(json));
+
+    return new Response(response, { status: 400 });
   }
 
   const { id, type, createdAt, payload } = event;
+
   console.log("webhook event:", id, type, new Date(createdAt), payload);
+
   await storeWebhookEvent(event);
 
   switch (type) {
