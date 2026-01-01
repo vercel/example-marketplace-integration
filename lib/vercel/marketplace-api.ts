@@ -1,12 +1,12 @@
 import { Vercel } from "@vercel/sdk";
+import type { SubmitBillingDataRequestBody } from "@vercel/sdk/models/submitbillingdataop.js";
+import type { SubmitInvoiceRequestBody } from "@vercel/sdk/models/submitinvoiceop.js";
 import { mockBillingData } from "@/data/mock-billing-data";
 import { env } from "../env";
 import { getInstallation, getResource } from "../partner";
 import { fetchVercelApi } from "./api";
 import type {
   Balance,
-  BillingData,
-  CreateInvoiceRequest,
   DeploymentActionOutcome,
   ImportResourceRequest,
   InvoiceDiscount,
@@ -259,7 +259,7 @@ export async function submitPrepaymentBalances(
 
 export async function sendBillingData(
   installationId: string,
-  data: BillingData
+  data: SubmitBillingDataRequestBody
 ) {
   const installation = await getInstallation(installationId);
 
@@ -297,7 +297,7 @@ export async function getInvoice(installationId: string, invoiceId: string) {
 export async function submitInvoice(
   installationId: string,
   opts?: { test?: boolean; maxAmount?: number; discountPercent?: number }
-): Promise<{ invoiceId: string }> {
+) {
   const test = opts?.test ?? false;
   const maxAmount = opts?.maxAmount ?? undefined;
 
@@ -336,15 +336,18 @@ export async function submitInvoice(
     }
   }
 
-  const invoiceRequest: CreateInvoiceRequest = {
+  const invoiceRequest: SubmitInvoiceRequestBody = {
     test: test ? { result: "paid", validate: false } : undefined,
     externalId: new Date().toISOString().replace(/[^0-9]/g, ""),
-    invoiceDate: new Date().toISOString(),
-    period: billingData.period,
+    invoiceDate: new Date(),
+    period: {
+      start: new Date(billingData.period.start),
+      end: new Date(billingData.period.end),
+    },
     items:
       items.length > 0
         ? items.map((item) => ({
-            resourceId: item.resourceId!,
+            resourceId: item.resourceId,
             billingPlanId: item.billingPlanId,
             name: item.name,
             price: item.price,
@@ -363,7 +366,7 @@ export async function submitInvoice(
             },
           ],
     discounts: discounts.map((discount) => ({
-      resourceId: discount.resourceId!,
+      resourceId: discount.resourceId,
       billingPlanId: discount.billingPlanId,
       name: discount.name,
       amount: discount.amount,

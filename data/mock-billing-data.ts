@@ -1,6 +1,6 @@
+import type { SubmitBillingDataRequestBody } from "@vercel/sdk/models/submitbillingdataop.js";
 import { listResources } from "@/lib/partner";
 import type {
-  BillingData,
   BillingItem,
   BillingPlan,
   ResourceUsage,
@@ -8,7 +8,7 @@ import type {
 
 export async function mockBillingData(
   installationId: string
-): Promise<BillingData> {
+): Promise<SubmitBillingDataRequestBody> {
   const timestamp = new Date();
   const year = timestamp.getUTCFullYear();
   const month = timestamp.getUTCMonth();
@@ -21,11 +21,11 @@ export async function mockBillingData(
   const { resources } = await listResources(installationId);
   if (resources.length === 0) {
     return {
-      timestamp: timestamp.toISOString(),
-      eod: eod.toISOString(),
+      timestamp,
+      eod,
       period: {
-        start: startOfMoth.toISOString(),
-        end: endOfMonth.toISOString(),
+        start: startOfMoth,
+        end: endOfMonth,
       },
       billing: [],
       usage: [],
@@ -74,6 +74,8 @@ export async function mockBillingData(
               resourceUsage.periodValue
             );
             break;
+          default:
+            throw new Error(`Unknown usage type: ${usage.type}`);
         }
         return acc;
       },
@@ -102,11 +104,11 @@ export async function mockBillingData(
     .filter(isNotNull);
 
   return {
-    timestamp: timestamp.toISOString(),
-    eod: eod.toISOString(),
+    timestamp,
+    eod,
     period: {
-      start: startOfMoth.toISOString(),
-      end: endOfMonth.toISOString(),
+      start: startOfMoth,
+      end: endOfMonth,
     },
     billing,
     usage,
