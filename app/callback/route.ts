@@ -31,21 +31,19 @@ export const GET = async (request: NextRequest) => {
     );
   }
 
-  if (resourceId) {
-    if (projectId) {
-      if (checkId) {
-        return redirect(
-          `/dashboard/resources/${resourceId}/projects/${projectId}?checkId=${encodeURIComponent(checkId)}`
-        );
-      }
+  if (!resourceId) {
+    return redirect("/dashboard");
+  }
 
-      return redirect(
-        `/dashboard/resources/${resourceId}/projects/${projectId}`
-      );
-    }
-
+  if (!projectId) {
     return redirect(`/dashboard/resources/${resourceId}`);
   }
 
-  redirect("/dashboard");
+  if (!checkId) {
+    return redirect(`/dashboard/resources/${resourceId}/projects/${projectId}`);
+  }
+
+  return redirect(
+    `/dashboard/resources/${resourceId}/projects/${projectId}?checkId=${encodeURIComponent(checkId)}`
+  );
 };
