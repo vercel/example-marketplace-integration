@@ -2,6 +2,8 @@ import { getResourceBalance, listResources } from "@/lib/partner";
 import type { Resource } from "@/lib/vercel/schemas";
 import { getSession } from "./auth";
 
+export const dynamic = "force-dynamic";
+
 const DashboardPage = async () => {
   const session = await getSession();
   const installationId = session.installation_id;

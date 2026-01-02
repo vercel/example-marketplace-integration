@@ -3,6 +3,8 @@ import type { WebhookEvent } from "@/lib/vercel/schemas";
 import { getSession } from "../auth";
 import { EventActions } from "./actions-ui";
 
+export const dynamic = "force-dynamic";
+
 const WebhookEventsPage = async () => {
   await getSession();
 

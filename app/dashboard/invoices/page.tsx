@@ -4,6 +4,8 @@ import { FormButton } from "../components/form-button";
 import { Section } from "../components/section";
 import { refundInvoiceAction, submitInvoiceAction } from "./actions";
 
+export const dynamic = "force-dynamic";
+
 const InvoicesPage = async (props: PageProps<"/dashboard/invoices">) => {
   const { id, submitError } = await props.searchParams;
   const session = await getSession();

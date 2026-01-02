@@ -4,6 +4,8 @@ import { getSession } from "../auth";
 import { FormButton } from "../components/form-button";
 import { Section } from "../components/section";
 
+export const dynamic = "force-dynamic";
+
 const SupportPage = async (props: PageProps<"/dashboard/support">) => {
   const { resourceId } = await props.searchParams;
   let resourceName = "";
