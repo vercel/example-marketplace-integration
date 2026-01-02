@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import { z } from "zod/v3";
 import { env } from "@/lib/env";
 import { installIntegration } from "@/lib/partner";
-import { fetchVercelApi } from "@/lib/vercel/api";
 
 const IntegrationsExternalTokenResponse = z.object({
   token_type: z.string(),
@@ -26,7 +25,7 @@ const Page = async (props: PageProps<"/connect/callback">) => {
     return notFound();
   }
 
-  const response = await fetchVercelApi("/v2/oauth/access_token", {
+  const res = await fetch("https://vercel.com/api/v2/oauth/access_token", {
     method: "POST",
     headers: {
       "content-type": "application/x-www-form-urlencoded",
@@ -39,7 +38,13 @@ const Page = async (props: PageProps<"/connect/callback">) => {
     }),
   });
 
-  const result = IntegrationsExternalTokenResponse.parse(response);
+  if (!res.ok) {
+    throw new Error(
+      `OAuth token exchange failed: ${res.status} ${res.statusText}`
+    );
+  }
+
+  const result = IntegrationsExternalTokenResponse.parse(await res.json());
 
   await installIntegration(result.installation_id, {
     type: "external",
