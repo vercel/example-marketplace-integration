@@ -1,4 +1,3 @@
-import type { SubmitBillingDataRequestBody } from "@vercel/sdk/models/submitbillingdataop.js";
 import { listResources } from "@/lib/partner";
 import type {
   BillingItem,

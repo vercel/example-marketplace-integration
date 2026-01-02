@@ -105,8 +105,7 @@ async function* makeIterator() {
   );
 }
 
-export const POST = withAuth(async (_claims, request, ...rest: unknown[]) => {
-  const [{ params }] = rest as [{ params: Params }];
+export const POST = withAuth(async (_claims, request) => {
   const body: PostResourceREPLRequestBody = await request.json();
 
   if (body.input.includes("throw")) {

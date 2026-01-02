@@ -89,9 +89,7 @@ export const clearResourceNotificationAction = async (formData: FormData) => {
   revalidatePath(`/dashboard/resources/${resource.id}`);
 };
 
-export const updateResourceNotificationAction = async (
-  formData: FormData
-) => {
+export const updateResourceNotificationAction = async (formData: FormData) => {
   const session = await getSession();
 
   const resourceId = formData.get("resourceId") as string;

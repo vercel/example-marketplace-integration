@@ -1,4 +1,4 @@
-import type { SafeParseReturnType, ZodSchema, z } from "zod/v3";
+import type { ZodSchema } from "zod/v3";
 
 export const readRequestBodyWithSchema = async <
   TRequestBodySchema extends ZodSchema,

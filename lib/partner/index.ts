@@ -2,21 +2,15 @@ import type { Balances } from "@vercel/sdk/models/submitprepaymentbalancesop.js"
 import { compact } from "lodash";
 import { nanoid } from "nanoid";
 import type {
-  GetBillingPlansResponse,
-  GetResourceResponse,
   InstallIntegrationRequest,
-  ListResourcesResponse,
   Notification,
   ProvisionPurchaseRequest,
-  ProvisionPurchaseResponse,
   ProvisionResourceRequest,
-  ProvisionResourceResponse,
   Resource,
   ResourceStatusType,
   Claim as TransferRequest,
   UnknownWebhookEvent,
   UpdateResourceRequest,
-  UpdateResourceResponse,
   WebhookEvent,
 } from "@/lib/vercel/schemas";
 import { kv } from "../redis";

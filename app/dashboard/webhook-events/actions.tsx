@@ -82,9 +82,7 @@ export const succeedCheck = async (
   });
 };
 
-export const failCheck = async (
-  event: DeploymentCheckrunStartEventSchema
-) => {
+export const failCheck = async (event: DeploymentCheckrunStartEventSchema) => {
   await getSession();
 
   const { payload } = event;

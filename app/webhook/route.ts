@@ -219,10 +219,7 @@ const getCheckId = async (vercel: Vercel, deploymentId: string) => {
 };
 
 const sha1 = (data: Buffer, secret: string) =>
-  crypto
-    .createHmac("sha1", secret)
-    .update(new Uint8Array(data))
-    .digest("hex");
+  crypto.createHmac("sha1", secret).update(new Uint8Array(data)).digest("hex");
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 

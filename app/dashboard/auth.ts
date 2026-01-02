@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { type OidcClaims, verifyToken } from "@/lib/vercel/auth";
+import { verifyToken } from "@/lib/vercel/auth";
 
 export const getSession = async () => {
   const idToken = (await cookies()).get("id-token");
