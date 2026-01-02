@@ -17,6 +17,7 @@ export const dynamic = "force-dynamic";
 /**
  * Callback page for the connect integration.
  * This page is used to connect the installation to an existing partner account.
+ * @see https://vercel.com/docs/integrations/create-integration/marketplace-flows#open-in-provider-button-flow
  */
 const Page = async (props: PageProps<"/connect/callback">) => {
   const { code, next } = await props.searchParams;

@@ -4,7 +4,8 @@ import { exchangeCodeForToken } from "@/lib/vercel/marketplace-api";
 import { createSession } from "../dashboard/auth";
 
 /**
- * Callback route for the marketplace integration.
+ * Main OAuth callback
+ * Exchanges auth code for token, creates session and redirects to dashboard
  */
 export const GET = async (request: NextRequest) => {
   const code = request.nextUrl.searchParams.get("code");

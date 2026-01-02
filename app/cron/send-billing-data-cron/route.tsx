@@ -14,6 +14,10 @@ import {
 
 export const dynamic = "force-dynamic";
 
+/**
+ * Scheduled job to submit billing/usage data to Vercel.
+ * @see https://vercel.com/docs/integrations/create-integration/native-integration#billing-and-usage
+ */
 export const GET = cronJob(async (request: Request) => {
   const dryRun = new URL(request.url).searchParams.get("dryrun") === "1";
   const installationIds = await listInstallations();

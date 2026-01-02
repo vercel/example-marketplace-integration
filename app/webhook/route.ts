@@ -15,6 +15,11 @@ import {
 
 export const dynamic = "force-dynamic";
 
+/**
+ * Webhook route for the marketplace integration
+ * Handles webhook events and stores them in the database
+ * @see https://vercel.com/docs/webhooks/webhooks-api
+ */
 export const POST = async (req: Request) => {
   const rawBody = await req.text();
   const rawBodyBuffer = Buffer.from(rawBody, "utf-8");
