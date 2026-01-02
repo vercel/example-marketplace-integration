@@ -14,15 +14,23 @@ export const GET = async () => {
   const installationId = session.installation_id;
   const { resources } = await listResources(installationId);
   const billingData = await mockBillingData(installationId);
-  const balances = (
-    await Promise.all(
-      [
-        getInstallationBalance(installationId),
-        ...resources.map((resource) =>
-          getResourceBalance(installationId, resource.id)
-        ),
-      ].filter((x) => x !== null)
-    )
-  ).filter((x) => x !== null) as Balances[];
+
+  const balances: Balances[] = [];
+
+  const installationBalance = await getInstallationBalance(installationId);
+  if (installationBalance) {
+    balances.push(installationBalance);
+  }
+
+  const resourceBalances = await Promise.all(
+    resources.map((resource) => getResourceBalance(installationId, resource.id))
+  );
+
+  for (const resourceBalance of resourceBalances) {
+    if (resourceBalance) {
+      balances.push(resourceBalance);
+    }
+  }
+
   return Response.json({ billingData, balances });
 };
