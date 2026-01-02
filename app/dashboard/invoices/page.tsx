@@ -4,19 +4,17 @@ import { FormButton } from "../components/form-button";
 import { Section } from "../components/section";
 import { refundInvoiceAction, submitInvoiceAction } from "./actions";
 
-export default async function Page({
-  searchParams,
-}: {
-  searchParams: { id?: string; submitError?: string };
-}) {
+const InvoicesPage = async (props: PageProps<"/dashboard/invoices">) => {
+  const { id, submitError } = await props.searchParams;
   const session = await getSession();
 
   let invoice: Awaited<ReturnType<typeof getInvoice>> | null = null;
   let invoiceError: string | undefined;
   try {
-    invoice = searchParams.id
-      ? await getInvoice(session.installation_id, searchParams.id)
-      : null;
+    invoice =
+      typeof id === "string"
+        ? await getInvoice(session.installation_id, id)
+        : null;
   } catch (err) {
     invoiceError = err instanceof Error ? err.message : String(err);
   }
@@ -47,13 +45,13 @@ export default async function Page({
           </div>
         </form>
 
-        {searchParams.submitError ? (
+        {submitError ? (
           <div
             className="relative mt-4 rounded border border-pink-400 bg-pink-100 px-4 py-3 text-pink-700"
             role="alert"
           >
             <strong className="font-bold">Error! </strong>
-            <span className="block sm:inline">{searchParams.submitError}</span>
+            <span className="block sm:inline">{submitError}</span>
           </div>
         ) : null}
       </Section>
@@ -63,7 +61,7 @@ export default async function Page({
           Look up by ID:{" "}
           <input
             className="border"
-            defaultValue={searchParams.id ?? ""}
+            defaultValue={id ?? ""}
             name="id"
             type="text"
           />
@@ -92,7 +90,7 @@ export default async function Page({
           Refund up by ID:{" "}
           <input
             className="border"
-            defaultValue={searchParams.id ?? ""}
+            defaultValue={id ?? ""}
             name="id"
             type="text"
           />
@@ -113,4 +111,6 @@ export default async function Page({
       </Section>
     </main>
   );
-}
+};
+
+export default InvoicesPage;

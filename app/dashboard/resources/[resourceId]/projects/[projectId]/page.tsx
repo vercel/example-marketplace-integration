@@ -1,27 +1,26 @@
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { getSession } from "@/app/dashboard/auth";
 import { FormButton } from "@/app/dashboard/components/form-button";
 import { Section } from "@/app/dashboard/components/section";
 import { getResource } from "@/lib/partner";
-import { getAccountInfo, getProject } from "@/lib/vercel/marketplace-api";
+import { getProject } from "@/lib/vercel/marketplace-api";
 import type { Resource } from "@/lib/vercel/schemas";
 import { createCheckFormSubmit } from "./actions";
 
-export default async function ResourcePage({
-  params: { resourceId, projectId },
-}: {
-  params: { resourceId: string; projectId: string };
-}) {
+const ResourceProjectPage = async (
+  props: PageProps<"/dashboard/resources/[resourceId]/projects/[projectId]">
+) => {
+  const { resourceId, projectId } = await props.params;
   const session = await getSession();
   const installationId = session.installation_id;
-  const [resource, _account, project] = await Promise.all([
+  const [resource, project] = await Promise.all([
     getResource(installationId, resourceId),
-    getAccountInfo(installationId),
     getProject(installationId, projectId),
   ]);
 
   if (!resource) {
-    throw new Error(`Resource ${resourceId} not found`);
+    notFound();
   }
 
   return (
@@ -80,7 +79,7 @@ export default async function ResourcePage({
       </Section>
     </main>
   );
-}
+};
 
 function ResourceCard({ resource }: { resource: Resource }) {
   return (
@@ -113,3 +112,5 @@ function ResourceCard({ resource }: { resource: Resource }) {
     </div>
   );
 }
+
+export default ResourceProjectPage;

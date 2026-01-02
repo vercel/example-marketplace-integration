@@ -3,7 +3,7 @@ import type { WebhookEvent } from "@/lib/vercel/schemas";
 import { getSession } from "../auth";
 import { EventActions } from "./actions-ui";
 
-export default async function Page() {
+const WebhookEventsPage = async () => {
   await getSession();
 
   const events = await getWebhookEvents();
@@ -24,7 +24,7 @@ export default async function Page() {
       )}
     </main>
   );
-}
+};
 
 function EventCard({ event }: { event: WebhookEvent }) {
   return (
@@ -46,3 +46,5 @@ function EventCard({ event }: { event: WebhookEvent }) {
     </div>
   );
 }
+
+export default WebhookEventsPage;

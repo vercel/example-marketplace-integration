@@ -2,42 +2,35 @@ import { getResourceBalance, listResources } from "@/lib/partner";
 import type { Resource } from "@/lib/vercel/schemas";
 import { getSession } from "./auth";
 
-export default async function DashboardPage() {
-  return (
-    <main className="space-y-8">
-      <Resources />
-    </main>
-  );
-}
-
-async function Resources() {
+const DashboardPage = async () => {
   const session = await getSession();
   const installationId = session.installation_id;
   const { resources } = await listResources(installationId);
 
-  // {/* grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 */}
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="mb-4 font-bold text-2xl">Resources</h1>
+    <main className="space-y-8">
+      <div className="container mx-auto p-4">
+        <h1 className="mb-4 font-bold text-2xl">Resources</h1>
 
-      {resources.length === 0 ? (
-        <div className="flex h-[100px] items-center justify-center">
-          <span className="text-slate-500">No resources</span>
-        </div>
-      ) : (
-        <div className="flex flex-col gap-4">
-          {resources.map((resource) => (
-            <ResourceCard
-              installationId={installationId}
-              key={resource.id}
-              resource={resource}
-            />
-          ))}
-        </div>
-      )}
-    </div>
+        {resources.length === 0 ? (
+          <div className="flex h-[100px] items-center justify-center">
+            <span className="text-slate-500">No resources</span>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-4">
+            {resources.map((resource) => (
+              <ResourceCard
+                installationId={installationId}
+                key={resource.id}
+                resource={resource}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </main>
   );
-}
+};
 
 async function ResourceCard({
   installationId,
@@ -79,3 +72,5 @@ async function ResourceCard({
     </a>
   );
 }
+
+export default DashboardPage;

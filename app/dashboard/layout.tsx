@@ -4,11 +4,7 @@ import { getAccountInfo } from "@/lib/vercel/marketplace-api";
 import { getSession } from "./auth";
 import { Nav } from "./nav";
 
-export default async function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+const DashboardLayout = async ({ children }: LayoutProps<"/dashboard">) => {
   const session = await getSession();
   const account = await getAccountInfo(session.installation_id);
   const installation = await getInstallation(session.installation_id);
@@ -85,4 +81,6 @@ export default async function DashboardLayout({
       <main className="container mx-auto p-4">{children}</main>
     </div>
   );
-}
+};
+
+export default DashboardLayout;

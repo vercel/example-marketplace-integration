@@ -13,7 +13,7 @@ import {
 
 export const dynamic = "force-dynamic";
 
-export default async function IntallationPage() {
+const InstallationPage = async () => {
   const session = await getSession();
 
   const [installation, account] = await Promise.all([
@@ -153,4 +153,6 @@ export default async function IntallationPage() {
       </Section>
     </main>
   );
-}
+};
+
+export default InstallationPage;

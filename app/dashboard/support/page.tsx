@@ -4,14 +4,12 @@ import { getSession } from "../auth";
 import { FormButton } from "../components/form-button";
 import { Section } from "../components/section";
 
-export default async function SupportPage({
-  searchParams: { resourceId },
-}: {
-  searchParams: { resourceId?: string };
-}) {
+const SupportPage = async (props: PageProps<"/dashboard/support">) => {
+  const { resourceId } = await props.searchParams;
   let resourceName = "";
   const session = await getSession();
-  if (resourceId) {
+
+  if (typeof resourceId === "string") {
     const resource = await getResource(session.installation_id, resourceId);
     if (resource) {
       resourceName = resource.name;
@@ -49,4 +47,6 @@ export default async function SupportPage({
       </Section>
     </main>
   );
-}
+};
+
+export default SupportPage;

@@ -1,6 +1,6 @@
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { getResource, getResourceBalance } from "@/lib/partner";
-import { getAccountInfo } from "@/lib/vercel/marketplace-api";
 import type { Resource } from "@/lib/vercel/schemas";
 import { getSession } from "../../auth";
 import { FormButton } from "../../components/form-button";
@@ -16,20 +16,16 @@ import {
   updateResourceNotificationAction,
 } from "./actions";
 
-export default async function ResourcePage({
-  params: { resourceId },
-}: {
-  params: { resourceId: string };
-}) {
+const ResourcePage = async (
+  props: PageProps<"/dashboard/resources/[resourceId]">
+) => {
+  const { resourceId } = await props.params;
   const session = await getSession();
   const installationId = session.installation_id;
-  const [resource, _account] = await Promise.all([
-    await getResource(installationId, resourceId),
-    await getAccountInfo(installationId),
-  ]);
+  const resource = await getResource(installationId, resourceId);
 
   if (!resource) {
-    throw new Error(`Resource ${resourceId} not found`);
+    notFound();
   }
 
   const balance = await getResourceBalance(installationId, resource.id);
@@ -205,7 +201,7 @@ export default async function ResourcePage({
       </Section>
     </main>
   );
-}
+};
 
 function ResourceCard({ resource }: { resource: Resource }) {
   return (
@@ -238,3 +234,5 @@ function ResourceCard({ resource }: { resource: Resource }) {
     </div>
   );
 }
+
+export default ResourcePage;
