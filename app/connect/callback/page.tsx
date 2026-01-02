@@ -44,15 +44,20 @@ const Page = async (props: PageProps<"/connect/callback">) => {
     );
   }
 
-  const result = IntegrationsExternalTokenResponse.parse(await res.json());
+  const json = await res.json();
+  const result = IntegrationsExternalTokenResponse.safeParse(json);
 
-  await installIntegration(result.installation_id, {
+  if (!result.success) {
+    notFound();
+  }
+
+  await installIntegration(result.data.installation_id, {
     type: "external",
     scopes: [],
     acceptedPolicies: {},
     credentials: {
-      access_token: result.access_token,
-      token_type: result.token_type,
+      access_token: result.data.access_token,
+      token_type: result.data.token_type,
     },
   });
 
