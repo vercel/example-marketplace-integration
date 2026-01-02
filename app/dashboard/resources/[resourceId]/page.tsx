@@ -57,9 +57,7 @@ const ResourcePage = async (
             <label className="flex flex-row gap-1">
               <span>Status: </span>
               <select defaultValue={resource.status} name="status">
-                <option selected value="ready">
-                  Ready
-                </option>
+                <option value="ready">Ready</option>
                 <option value="error">Error</option>
                 <option value="suspended">Suspended</option>
                 <option value="pending">Pending</option>
