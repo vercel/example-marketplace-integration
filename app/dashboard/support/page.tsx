@@ -33,7 +33,7 @@ export default async function SupportPage({
             <label className="flex flex-col">
               <span>Message</span>
               <textarea
-                className="border border-1 border-slate-400"
+                className="border border-slate-400"
                 name="name"
                 rows={10}
               />

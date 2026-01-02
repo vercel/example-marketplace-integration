@@ -45,7 +45,7 @@ export default async function ResourcePage({
             <div className="flex flex-col">
               <label htmlFor="deploymentId">Deployment ID</label>
               <input
-                className="border border-1 border-slate-400"
+                className="border border-slate-400"
                 id="deploymentId"
                 name="deploymentId"
                 required
@@ -55,7 +55,7 @@ export default async function ResourcePage({
             <div className="flex flex-col">
               <label htmlFor="name">Name</label>
               <input
-                className="border border-1 border-slate-400"
+                className="border border-slate-400"
                 id="name"
                 name="name"
                 required

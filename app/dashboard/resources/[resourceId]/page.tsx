@@ -52,7 +52,7 @@ export default async function ResourcePage({
             <label className="flex flex-col">
               <span>Name</span>
               <input
-                className="border border-1 border-slate-400"
+                className="border border-slate-400"
                 defaultValue={resource.name}
                 name="name"
                 type="text"
@@ -97,7 +97,7 @@ export default async function ResourcePage({
             <label className="flex flex-col">
               <span>Add credit value in cents</span>
               <input
-                className="border border-1 border-slate-400"
+                className="border border-slate-400"
                 defaultValue={1000}
                 name="currencyValueInCents"
                 type="number"
@@ -160,7 +160,7 @@ export default async function ResourcePage({
             <label className="flex flex-col">
               <span>Title</span>
               <input
-                className="border border-1 border-slate-400"
+                className="border border-slate-400"
                 defaultValue={resource.notification?.title}
                 name="title"
                 required
@@ -170,7 +170,7 @@ export default async function ResourcePage({
             <label className="flex flex-col">
               <span>Message</span>
               <input
-                className="border border-1 border-slate-400"
+                className="border border-slate-400"
                 defaultValue={resource.notification?.message}
                 name="message"
                 type="text"
@@ -181,7 +181,7 @@ export default async function ResourcePage({
                 URL (<code>href</code>)
               </span>
               <input
-                className="border border-1 border-slate-400"
+                className="border border-slate-400"
                 defaultValue={resource.notification?.href}
                 name="href"
                 type="text"
