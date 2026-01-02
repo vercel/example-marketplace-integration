@@ -17,22 +17,33 @@ export const dynamic = "force-dynamic";
 export const GET = cronJob(async (request: Request) => {
   const dryRun = new URL(request.url).searchParams.get("dryrun") === "1";
   const installationIds = await listInstallations();
+
   const promises = installationIds.map(async (installationId) => {
     const data = await mockBillingData(installationId);
     const { resources } = await listResources(installationId);
-    const balances = (
-      await Promise.all(
-        [
-          getInstallationBalance(installationId),
-          ...resources.map((resource) =>
-            getResourceBalance(installationId, resource.id)
-          ),
-        ].filter((x) => x !== null)
+    const balances: Balances[] = [];
+    const installationBalance = await getInstallationBalance(installationId);
+
+    if (installationBalance) {
+      balances.push(installationBalance);
+    }
+
+    const resourceBalances = await Promise.all(
+      resources.map((resource) =>
+        getResourceBalance(installationId, resource.id)
       )
-    ).filter((x) => x !== null) as Balances[];
+    );
+
+    for (const resourceBalance of resourceBalances) {
+      if (resourceBalance) {
+        balances.push(resourceBalance);
+      }
+    }
+
     console.log("Sending billing data: ", installationId, data);
     console.log("Sending balances: ", installationId, balances);
     let error: string | undefined;
+
     if (!dryRun) {
       try {
         await sendBillingData(installationId, data);
@@ -43,6 +54,8 @@ export const GET = cronJob(async (request: Request) => {
     }
     return { installationId, data, error };
   });
+
   const results = await Promise.all(promises);
+
   return Response.json(results);
 });
