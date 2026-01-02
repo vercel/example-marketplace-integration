@@ -24,11 +24,10 @@ If you deploy to Vercel using the link above, Upstash Redis will be automaticall
 
 ## Setup the Integration
 
-Head to the in the [Integrations Console](https://vercel.com/dashboard/integrations/console) and update the Marketplace Integration Settings (near the bottom of the page).
+Head to the Vercel [Integrations Console](https://vercel.com/dashboard/integrations/console) and create a new Marketplace Integration.
 
-- Set the "Base URL" to your deployed project's URL e.g. https://example-marketplace-integration.vercel.app
-- Set the "Redirect Login URL" to your deployed projects URL with the path `/callback` e.g. https://example-marketplace-integration.vercel.app/callback
-- Click the "Update" button at the bottom to save your changes.
+- Set the "Base URL" to your deployed project's URL e.g. `https://example-marketplace-integration.vercel.app`
+- Set the "Redirect Login URL" to your deployed projects URL with the path `/callback` e.g. `https://example-marketplace-integration.vercel.app/callback`
 
 In the same Marketplace Integration Settings, create a product for your Vercel Integration using the "Create Product" button. A "product" maps to your own products you want to sell on Vercel. Depending on the product type (e.g. storage), the Vercel dashboard will understand how to interact with your product.
 
@@ -38,4 +37,4 @@ If you created a "storage" product type, you should be able to:
 
 - Create a database for your product in the Storage tab via the "Create Store" button.
 - View and manage your new database for your product.;
-- When you've created a database, you should be able to click the "Open in <Product Name>" button on the store detail page to open the database on your integration's dashboard.
+- When you've created a database, you should be able to click the `Open in <Product Name>` button on the store detail page to open the database on your integration's dashboard.
