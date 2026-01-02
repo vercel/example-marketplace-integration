@@ -14,12 +14,18 @@
     "@upstash/redis": "^1.36.0",
     "@vercel/functions": "^3.3.4",
     "@vercel/sdk": "^1.18.5",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "jose": "^6.1.3",
     "lodash": "^4.17.21",
+    "lucide-react": "^0.562.0",
     "nanoid": "^5.1.6",
     "next": "16.1.1",
     "react": "^19",
     "react-dom": "^19",
+    "tailwind-merge": "^3.4.0",
+    "tailwindcss-animate": "^1.0.7",
+    "tw-animate-css": "^1.4.0",
     "zod": "^4.3.4"
   },
   "devDependencies": {

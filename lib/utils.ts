@@ -1,4 +1,10 @@
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
 import type { ZodSchema } from "zod/v3";
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
 
 export const readRequestBodyWithSchema = async <
   TRequestBodySchema extends ZodSchema,
