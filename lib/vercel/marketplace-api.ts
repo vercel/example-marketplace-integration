@@ -288,11 +288,7 @@ export const submitInvoice = async (
   const maxAmount = opts?.maxAmount ?? undefined;
 
   const billingData = await mockBillingData(installationId);
-
-  // Normalize billing to always be an array of Billing1
-  const billingArray: Billing1[] = Array.isArray(billingData.billing)
-    ? billingData.billing
-    : billingData.billing.items;
+  const billingArray: Billing1[] = billingData.billing;
 
   let items = billingArray.filter((item) => Boolean(item.resourceId));
   if (maxAmount !== undefined) {

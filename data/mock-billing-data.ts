@@ -144,7 +144,7 @@ const mockUsageData = (
     Math.floor(Math.max(minutes - 2, 0) / 3) * 100;
   const queriesTotal = queriesByMinutes(minutesSincePeriod) / 1000;
   const queriesToday = queriesByMinutes(minutesSinceToday) / 1000;
-  return [
+  const usage: ResourceUsage[] = [
     {
       resourceId: resource.id,
       name: "Storage",
@@ -164,4 +164,6 @@ const mockUsageData = (
       planValue: 2_000_000,
     },
   ];
+
+  return usage;
 };
