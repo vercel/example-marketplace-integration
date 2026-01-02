@@ -5,7 +5,26 @@ import { getSession } from "./auth";
 import { Nav } from "./nav";
 
 const DashboardLayout = async ({ children }: LayoutProps<"/dashboard">) => {
-  const session = await getSession();
+  let session: Awaited<ReturnType<typeof getSession>> | null = null;
+
+  try {
+    session = await getSession();
+  } catch (error) {
+    console.error(error);
+  }
+
+  if (!session) {
+    return (
+      <main className="container mx-auto flex min-h-screen max-w-md flex-col items-center justify-center p-4 text-center">
+        <h1 className="font-bold text-xl">Session Required</h1>
+        <p className="mt-2 text-muted-foreground">
+          To access this dashboard, please go to your Vercel dashboard, navigate
+          to the integration, and click the "Open In Provider" button.
+        </p>
+      </main>
+    );
+  }
+
   const account = await getAccountInfo(session.installation_id);
   const installation = await getInstallation(session.installation_id);
 
