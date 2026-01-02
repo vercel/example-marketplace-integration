@@ -479,13 +479,11 @@ function deserializeResource(serializedResource: SerializedResource): Resource {
   return { ...serializedResource, billingPlan };
 }
 
-export function getAllBillingPlans(
+export async function getAllBillingPlans(
   _installationId: string,
   _experimental_metadata?: Record<string, unknown>
-): GetBillingPlansResponse {
-  return {
-    plans: billingPlans,
-  };
+): Promise<GetBillingPlansResponse> {
+  return await Promise.resolve({ plans: billingPlans });
 }
 
 export async function getInstallationBillingPlans(
@@ -515,11 +513,11 @@ export async function getProductBillingPlans(
   };
 }
 
-export function getResourceBillingPlans(
+export async function getResourceBillingPlans(
   _installationId: string,
   _resourceId: string
-): GetBillingPlansResponse {
-  return { plans: billingPlans };
+): Promise<GetBillingPlansResponse> {
+  return await Promise.resolve({ plans: billingPlans });
 }
 
 export async function getInstallation(installationId: string): Promise<
