@@ -30,14 +30,14 @@ export default async function SupportPage({
       <Section title="Suport">
         <form>
           <div className="space-y-4">
-            <div className="flex flex-col">
-              <label>Message</label>
+            <label className="flex flex-col">
+              <span>Message</span>
               <textarea
                 className="border border-1 border-slate-400"
                 name="name"
                 rows={10}
               />
-            </div>
+            </label>
 
             <div className="flex justify-end">
               <FormButton className="rounded bg-blue-500 px-2 py-1 text-white disabled:opacity-50">

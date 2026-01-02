@@ -27,39 +27,58 @@ export const POST = async (req: Request): Promise<Response> => {
     });
   }
 
-  let json: unknown;
-
-  try {
-    json = JSON.parse(rawBody);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    const response = `Failed to parse webhook event: ${message}`;
-
-    console.error(response);
-
-    return new Response(response, { status: 400 });
+  const parseResult = parseWebhookBody(rawBody);
+  if (parseResult.error) {
+    return new Response(parseResult.error, { status: 400 });
   }
 
-  let event: WebhookEvent | undefined;
-
-  try {
-    event = webhookEventSchema.parse(json);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    const response = `Failed to parse webhook event: ${message}`;
-
-    console.error(response);
-
-    await storeWebhookEvent(unknownWebhookEventSchema.parse(json));
-
-    return new Response(response, { status: 400 });
+  const eventResult = await parseWebhookEvent(parseResult.json);
+  if (eventResult.error) {
+    return new Response(eventResult.error, { status: 400 });
   }
 
+  const event = eventResult.event;
   const { id, type, createdAt, payload } = event;
 
   console.log("webhook event:", id, type, new Date(createdAt), payload);
 
   await storeWebhookEvent(event);
+  await handleWebhookEvent(event);
+
+  return new Response("", { status: 200 });
+};
+
+function parseWebhookBody(
+  rawBody: string
+): { json: unknown; error?: never } | { json?: never; error: string } {
+  try {
+    return { json: JSON.parse(rawBody) };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    const response = `Failed to parse webhook event: ${message}`;
+    console.error(response);
+    return { error: response };
+  }
+}
+
+async function parseWebhookEvent(
+  json: unknown
+): Promise<
+  { event: WebhookEvent; error?: never } | { event?: never; error: string }
+> {
+  try {
+    return { event: webhookEventSchema.parse(json) };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    const response = `Failed to parse webhook event: ${message}`;
+    console.error(response);
+    await storeWebhookEvent(unknownWebhookEventSchema.parse(json));
+    return { error: response };
+  }
+}
+
+async function handleWebhookEvent(event: WebhookEvent): Promise<void> {
+  const { type, payload } = event;
 
   switch (type) {
     case "integration-configuration.removed": {
@@ -67,156 +86,15 @@ export const POST = async (req: Request): Promise<Response> => {
       break;
     }
     case "deployment.created": {
-      const deploymentId = payload.deployment.id;
-      const installationId = await getInstallationId(payload.installationIds);
-
-      if (!installationId) {
-        console.error(
-          `No installations found for deployment ${deploymentId}`,
-          payload
-        );
-        break;
-      }
-
-      const installation = await getInstallation(installationId);
-
-      if (!installation) {
-        console.error(
-          `No installations found for deployment ${deploymentId}`,
-          payload
-        );
-        break;
-      }
-
-      const vercel = new Vercel({
-        bearerToken: installation.credentials.access_token,
-      });
-
-      await vercel.checks.createCheck({
-        deploymentId,
-        requestBody: {
-          blocking: true,
-          rerequestable: true,
-          name: "Test Check",
-        },
-      });
-
+      await handleDeploymentCreated(payload);
       break;
     }
     case "deployment.ready": {
-      const deploymentId = payload.deployment.id;
-      const installationId = await getInstallationId(payload.installationIds);
-
-      if (!installationId) {
-        console.error(
-          `No installations found for deployment ${deploymentId}`,
-          payload
-        );
-        break;
-      }
-
-      const installation = await getInstallation(installationId);
-
-      if (!installation) {
-        console.error(
-          `No installations found for deployment ${deploymentId}`,
-          payload
-        );
-        break;
-      }
-
-      const vercel = new Vercel({
-        bearerToken: installation.credentials.access_token,
-      });
-
-      const checks = await vercel.checks.getAllChecks({
-        deploymentId,
-      });
-
-      const checkId = checks.checks.at(0)?.id;
-
-      if (!checkId) {
-        console.error(`No Check found for deployment ${deploymentId}`, checks);
-        break;
-      }
-
-      await vercel.checks.updateCheck({
-        deploymentId,
-        checkId,
-        requestBody: {
-          status: "running",
-        },
-      });
-
-      await delay(8000); // Wait for 8 seconds
-
-      await vercel.checks.updateCheck({
-        deploymentId,
-        checkId,
-        requestBody: {
-          conclusion: "failed",
-          status: "completed",
-        },
-      });
-
+      await handleDeploymentReady(payload);
       break;
     }
     case "deployment.check-rerequested": {
-      const deploymentId = payload.deployment.id;
-      const installationId = await getInstallationId(payload.installationIds);
-
-      if (!installationId) {
-        console.error(
-          `No installations found for deployment ${deploymentId}`,
-          payload
-        );
-        break;
-      }
-
-      const installation = await getInstallation(installationId);
-
-      if (!installation) {
-        console.error(
-          `No installations found for deployment ${deploymentId}`,
-          payload
-        );
-        break;
-      }
-
-      const vercel = new Vercel({
-        bearerToken: installation.credentials.access_token,
-      });
-
-      const checks = await vercel.checks.getAllChecks({
-        deploymentId,
-      });
-
-      const checkId = checks.checks.at(0)?.id;
-
-      if (!checkId) {
-        console.error(`No Check found for deployment ${deploymentId}`, checks);
-        break;
-      }
-
-      await vercel.checks.updateCheck({
-        deploymentId,
-        checkId,
-        requestBody: {
-          status: "running",
-        },
-      });
-
-      await delay(8000); // Wait for 8 seconds
-
-      await vercel.checks.updateCheck({
-        deploymentId,
-        checkId,
-        requestBody: {
-          conclusion: "succeeded",
-          status: "completed",
-        },
-      });
-
+      await handleCheckRerequested(payload);
       break;
     }
     default: {
@@ -224,9 +102,123 @@ export const POST = async (req: Request): Promise<Response> => {
       break;
     }
   }
+}
 
-  return new Response("", { status: 200 });
-};
+async function handleDeploymentCreated(payload: {
+  deployment: { id: string };
+  installationIds?: string[];
+}): Promise<void> {
+  const deploymentId = payload.deployment.id;
+  const vercel = await getVercelClient(deploymentId, payload.installationIds);
+  if (!vercel) {
+    return;
+  }
+
+  await vercel.checks.createCheck({
+    deploymentId,
+    requestBody: {
+      blocking: true,
+      rerequestable: true,
+      name: "Test Check",
+    },
+  });
+}
+
+async function handleDeploymentReady(payload: {
+  deployment: { id: string };
+  installationIds?: string[];
+}): Promise<void> {
+  const deploymentId = payload.deployment.id;
+  const vercel = await getVercelClient(deploymentId, payload.installationIds);
+  if (!vercel) {
+    return;
+  }
+
+  const checkId = await getCheckId(vercel, deploymentId);
+  if (!checkId) {
+    return;
+  }
+
+  await vercel.checks.updateCheck({
+    deploymentId,
+    checkId,
+    requestBody: { status: "running" },
+  });
+
+  await delay(8000);
+
+  await vercel.checks.updateCheck({
+    deploymentId,
+    checkId,
+    requestBody: { conclusion: "failed", status: "completed" },
+  });
+}
+
+async function handleCheckRerequested(payload: {
+  deployment: { id: string };
+  installationIds?: string[];
+}): Promise<void> {
+  const deploymentId = payload.deployment.id;
+  const vercel = await getVercelClient(deploymentId, payload.installationIds);
+  if (!vercel) {
+    return;
+  }
+
+  const checkId = await getCheckId(vercel, deploymentId);
+  if (!checkId) {
+    return;
+  }
+
+  await vercel.checks.updateCheck({
+    deploymentId,
+    checkId,
+    requestBody: { status: "running" },
+  });
+
+  await delay(8000);
+
+  await vercel.checks.updateCheck({
+    deploymentId,
+    checkId,
+    requestBody: { conclusion: "succeeded", status: "completed" },
+  });
+}
+
+async function getVercelClient(
+  deploymentId: string,
+  installationIds?: string[]
+): Promise<Vercel | null> {
+  const installationId = await getInstallationId(installationIds);
+
+  if (!installationId) {
+    console.error(`No installations found for deployment ${deploymentId}`);
+    return null;
+  }
+
+  const installation = await getInstallation(installationId);
+
+  if (!installation) {
+    console.error(`No installation found for deployment ${deploymentId}`);
+    return null;
+  }
+
+  return new Vercel({ bearerToken: installation.credentials.access_token });
+}
+
+async function getCheckId(
+  vercel: Vercel,
+  deploymentId: string
+): Promise<string | null> {
+  const checks = await vercel.checks.getAllChecks({ deploymentId });
+  const checkId = checks.checks.at(0)?.id;
+
+  if (!checkId) {
+    console.error(`No Check found for deployment ${deploymentId}`, checks);
+    return null;
+  }
+
+  return checkId;
+}
 
 function sha1(data: Buffer, secret: string): string {
   return crypto

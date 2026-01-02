@@ -49,18 +49,17 @@ export default async function ResourcePage({
         <form action={updateResourceAction}>
           <input name="resourceId" type="hidden" value={resource.id} />
           <div className="space-y-4">
-            <div className="flex flex-col">
-              <label>Name</label>
+            <label className="flex flex-col">
+              <span>Name</span>
               <input
                 className="border border-1 border-slate-400"
                 defaultValue={resource.name}
                 name="name"
                 type="text"
               />
-            </div>
-            <div className="flex flex-row gap-1">
-              <label>Status: </label>
-
+            </label>
+            <label className="flex flex-row gap-1">
+              <span>Status: </span>
               <select defaultValue={resource.status} name="status">
                 <option selected value="ready">
                   Ready
@@ -70,7 +69,7 @@ export default async function ResourcePage({
                 <option value="pending">Pending</option>
                 <option value="onboarding">Onboarding</option>
               </select>
-            </div>
+            </label>
             <div className="flex justify-end">
               <FormButton className="rounded bg-blue-500 px-2 py-1 text-white disabled:opacity-50">
                 Save
@@ -95,15 +94,15 @@ export default async function ResourcePage({
         <form action={addResourceBalance} className="p-2">
           <input name="resourceId" type="hidden" value={resource.id} />
           <div className="space-y-4">
-            <div className="flex flex-col">
-              <label>Add credit value in cents</label>
+            <label className="flex flex-col">
+              <span>Add credit value in cents</span>
               <input
                 className="border border-1 border-slate-400"
                 defaultValue={1000}
                 name="currencyValueInCents"
                 type="number"
               />
-            </div>
+            </label>
             <div className="flex justify-end">
               <FormButton className="rounded bg-blue-500 px-2 py-1 text-white disabled:opacity-50">
                 Add Balance
@@ -158,8 +157,8 @@ export default async function ResourcePage({
         <form action={updateResourceNotificationAction}>
           <input name="resourceId" type="hidden" value={resource.id} />
           <div className="space-y-4">
-            <div className="flex flex-col">
-              <label>Title</label>
+            <label className="flex flex-col">
+              <span>Title</span>
               <input
                 className="border border-1 border-slate-400"
                 defaultValue={resource.notification?.title}
@@ -167,35 +166,35 @@ export default async function ResourcePage({
                 required
                 type="text"
               />
-            </div>
-            <div className="flex flex-col">
-              <label>Message</label>
+            </label>
+            <label className="flex flex-col">
+              <span>Message</span>
               <input
                 className="border border-1 border-slate-400"
                 defaultValue={resource.notification?.message}
                 name="message"
                 type="text"
               />
-            </div>
-            <div className="flex flex-col">
-              <label>
+            </label>
+            <label className="flex flex-col">
+              <span>
                 URL (<code>href</code>)
-              </label>
+              </span>
               <input
                 className="border border-1 border-slate-400"
                 defaultValue={resource.notification?.href}
                 name="href"
                 type="text"
               />
-            </div>
-            <div>
-              <label>Level:</label>
+            </label>
+            <label>
+              <span>Level:</span>
               <select defaultValue={resource.notification?.level} name="level">
                 <option value="info">info</option>
                 <option value="warn">warn</option>
                 <option value="error">error</option>
               </select>
-            </div>
+            </label>
             <div className="flex justify-end">
               <FormButton className="rounded bg-blue-500 px-2 py-1 text-white disabled:opacity-50">
                 Save

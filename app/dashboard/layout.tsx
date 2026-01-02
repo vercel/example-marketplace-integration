@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { getInstallation } from "@/lib/partner";
 import { getAccountInfo } from "@/lib/vercel/marketplace-api";
 import { getSession } from "./auth";
@@ -18,9 +19,15 @@ export default async function DashboardLayout({
         <div className="flex items-center justify-between">
           <div className="flex flex-row items-center gap-4">
             <div className="flex flex-row items-center">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img alt="Logo" className="h-6" src="/logo.png" />
+              <Image
+                alt="Logo"
+                className="h-6"
+                height={24}
+                src="/logo.png"
+                width={24}
+              />
               <svg
+                aria-hidden="true"
                 className="h-6"
                 data-testid="geist-icon"
                 fill="none"
@@ -34,10 +41,16 @@ export default async function DashboardLayout({
                 viewBox="0 0 24 24"
                 width="24"
               >
+                <title>Separator</title>
                 <path d="M16.88 3.549L7.12 20.451" />
               </svg>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img alt="Logo" className="h-5" src="/vlogo.svg" />
+              <Image
+                alt="Vercel Logo"
+                className="h-5"
+                height={20}
+                src="/vlogo.svg"
+                width={20}
+              />
             </div>
             <h1 className="font-bold text-xl">
               {`${account.name}'s`} Dashboard
@@ -53,14 +66,15 @@ export default async function DashboardLayout({
             </h1>
           </div>
           <div className="flex items-center gap-2">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <span>{session.user_name || "Unknown"}</span>
-            <img
+            <Image
               alt="Avatar"
               className="h-7 w-7 rounded-full"
+              height={28}
               src={
                 session.user_avatar_url || "https://vercel.com/api/www/avatar"
               }
+              width={28}
             />
           </div>
         </div>

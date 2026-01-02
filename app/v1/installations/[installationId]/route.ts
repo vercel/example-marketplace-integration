@@ -13,10 +13,6 @@ import {
   updateInstallationRequestSchema,
 } from "@/lib/vercel/schemas";
 
-interface Params {
-  installationId: string;
-}
-
 export const PUT = withAuth(async (claims, request) => {
   const requestBody = await readRequestBodyWithSchema(
     request,

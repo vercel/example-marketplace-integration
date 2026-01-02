@@ -13,6 +13,6 @@ export function cronJob(
         return new Response("Unauthorized", { status: 401 });
       }
     }
-    return fn(req);
+    return await fn(req);
   };
 }

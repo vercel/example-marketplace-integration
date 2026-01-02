@@ -11,8 +11,8 @@ export default async function Page({
 }) {
   const session = await getSession();
 
-  let invoice;
-  let invoiceError;
+  let invoice: Awaited<ReturnType<typeof getInvoice>> | null = null;
+  let invoiceError: string | undefined;
   try {
     invoice = searchParams.id
       ? await getInvoice(session.installation_id, searchParams.id)
@@ -26,19 +26,19 @@ export default async function Page({
       <Section title="Submit Invoice">
         <form action={submitInvoiceAction}>
           <div className="space-y-4">
-            <div className="flex gap-2">
-              <label>Test</label>
+            <label className="flex gap-2">
+              <span>Test</span>
               <input defaultChecked={true} name="test" type="checkbox" />
-            </div>
-            <div className="flex gap-2">
-              <label>Max amount</label>
+            </label>
+            <label className="flex gap-2">
+              <span>Max amount</span>
               <input
                 className="border"
                 defaultValue="5"
                 name="maxAmount"
                 type="text"
               />
-            </div>
+            </label>
             <div className="flex justify-end">
               <FormButton className="rounded bg-blue-500 px-2 py-1 text-white disabled:opacity-50">
                 Submit Invoice
@@ -96,14 +96,14 @@ export default async function Page({
             name="id"
             type="text"
           />
-          <div className="flex gap-2">
-            <label>Refund amount</label>
+          <label className="flex gap-2">
+            <span>Refund amount</span>
             <input className="border" name="refundAmount" type="text" />
-          </div>
-          <div className="flex gap-2">
-            <label>Refund reason</label>
+          </label>
+          <label className="flex gap-2">
+            <span>Refund reason</span>
             <input className="border" name="refundReason" type="text" />
-          </div>
+          </label>
           <div className="flex justify-end">
             <FormButton className="rounded bg-blue-500 px-2 py-1 text-white disabled:opacity-50">
               Refund Invoice

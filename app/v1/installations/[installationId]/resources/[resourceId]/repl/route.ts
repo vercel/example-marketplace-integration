@@ -33,7 +33,7 @@ interface TableBlock {
 type Block = ParagraphBlock | TableBlock;
 
 // https://developer.mozilla.org/docs/Web/API/ReadableStream#convert_async_iterator_to_stream
-function iteratorToStream(iterator: any) {
+function iteratorToStream(iterator: AsyncIterator<unknown>) {
   return new ReadableStream({
     async pull(controller) {
       const { value, done } = await iterator.next();
@@ -108,7 +108,7 @@ async function* makeIterator() {
 }
 
 export const POST = withAuth(
-  async (_claims, request, { params }: { params: Params }) => {
+  async (_claims, request, { params: _params }: { params: Params }) => {
     const body: PostResourceREPLRequestBody = await request.json();
 
     if (body.input.includes("throw")) {

@@ -7,6 +7,8 @@ const JWKS = createRemoteJWKSet(
   new URL("https://marketplace.vercel.com/.well-known/jwks")
 );
 
+const BEARER_TOKEN_REGEX = /^bearer (.+)$/i;
+
 export interface OidcClaims {
   sub: string;
   aud: string;
@@ -25,10 +27,10 @@ export function withAuth(
   callback: (
     claims: OidcClaims,
     req: NextRequest,
-    ...rest: any[]
+    ...rest: unknown[]
   ) => Promise<Response>
-): (req: NextRequest, ...rest: any[]) => Promise<Response> {
-  return async (req: NextRequest, ...rest: any[]): Promise<Response> => {
+): (req: NextRequest, ...rest: unknown[]) => Promise<Response> {
+  return async (req: NextRequest, ...rest: unknown[]): Promise<Response> => {
     try {
       const token = getAuthorizationToken(req);
       const claims = await verifyToken(token);
@@ -72,7 +74,7 @@ export async function verifyToken(token: string): Promise<OidcClaims> {
 
 function getAuthorizationToken(req: Request): string {
   const authHeader = req.headers.get("Authorization");
-  const match = authHeader?.match(/^bearer (.+)$/i);
+  const match = authHeader?.match(BEARER_TOKEN_REGEX);
 
   if (!match) {
     throw new AuthError("Invalid Authorization header");

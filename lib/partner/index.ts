@@ -479,10 +479,10 @@ function deserializeResource(serializedResource: SerializedResource): Resource {
   return { ...serializedResource, billingPlan };
 }
 
-export async function getAllBillingPlans(
+export function getAllBillingPlans(
   _installationId: string,
   _experimental_metadata?: Record<string, unknown>
-): Promise<GetBillingPlansResponse> {
+): GetBillingPlansResponse {
   return {
     plans: billingPlans,
   };
@@ -515,10 +515,10 @@ export async function getProductBillingPlans(
   };
 }
 
-export async function getResourceBillingPlans(
+export function getResourceBillingPlans(
   _installationId: string,
   _resourceId: string
-): Promise<GetBillingPlansResponse> {
+): GetBillingPlansResponse {
   return { plans: billingPlans };
 }
 
@@ -583,7 +583,7 @@ export async function getTransferRequest(
 export async function setTransferRequest(
   transferRequest: TransferRequest
 ): Promise<"OK" | TransferRequest | null> {
-  return kv.set<TransferRequest>(
+  return await kv.set<TransferRequest>(
     `transfer-request:${transferRequest.transferId}`,
     transferRequest
   );
@@ -592,5 +592,5 @@ export async function setTransferRequest(
 export async function deleteTransferRequest(
   transferRequest: TransferRequest
 ): Promise<number> {
-  return kv.del(`transfer-request:${transferRequest.transferId}`);
+  return await kv.del(`transfer-request:${transferRequest.transferId}`);
 }
