@@ -38,7 +38,7 @@ const InvoicesPage = async (props: PageProps<"/dashboard/invoices">) => {
               />
             </label>
             <div className="flex justify-end">
-              <FormButton className="rounded bg-blue-500 px-2 py-1 text-white disabled:opacity-50">
+              <FormButton className="rounded bg-primary px-2 py-1 text-primary-foreground disabled:opacity-50">
                 Submit Invoice
               </FormButton>
             </div>
@@ -47,7 +47,7 @@ const InvoicesPage = async (props: PageProps<"/dashboard/invoices">) => {
 
         {submitError ? (
           <div
-            className="relative mt-4 rounded border border-pink-400 bg-pink-100 px-4 py-3 text-pink-700"
+            className="relative mt-4 rounded border border-destructive bg-destructive/10 px-4 py-3 text-destructive"
             role="alert"
           >
             <strong className="font-bold">Error! </strong>
@@ -76,7 +76,7 @@ const InvoicesPage = async (props: PageProps<"/dashboard/invoices">) => {
         ) : null}
         {invoiceError ? (
           <div
-            className="relative mt-4 rounded border border-pink-400 bg-pink-100 px-4 py-3 text-pink-700"
+            className="relative mt-4 rounded border border-destructive bg-destructive/10 px-4 py-3 text-destructive"
             role="alert"
           >
             <strong className="font-bold">Error! </strong>
@@ -103,7 +103,7 @@ const InvoicesPage = async (props: PageProps<"/dashboard/invoices">) => {
             <input className="border" name="refundReason" type="text" />
           </label>
           <div className="flex justify-end">
-            <FormButton className="rounded bg-blue-500 px-2 py-1 text-white disabled:opacity-50">
+            <FormButton className="rounded bg-primary px-2 py-1 text-primary-foreground disabled:opacity-50">
               Refund Invoice
             </FormButton>
           </div>

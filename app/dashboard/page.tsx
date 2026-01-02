@@ -14,7 +14,7 @@ const DashboardPage = async () => {
 
         {resources.length === 0 ? (
           <div className="flex h-[100px] items-center justify-center">
-            <span className="text-slate-500">No resources</span>
+            <span className="text-muted-foreground">No resources</span>
           </div>
         ) : (
           <div className="flex flex-col gap-4">
@@ -46,26 +46,26 @@ const ResourceCard = async ({
       href={`/dashboard/resources/${resource.id}`}
     >
       <div className="mb-2 flex items-center justify-between">
-        <span className="text-gray-600 text-sm">ID: {resource.id}</span>
+        <span className="text-muted-foreground text-sm">ID: {resource.id}</span>
         <span
           className={`rounded-full px-2 py-1 text-xs ${
             resource.status === "ready"
-              ? "bg-green-200 text-green-800"
-              : "bg-red-200 text-red-800"
+              ? "bg-emerald-500/15 text-emerald-700"
+              : "bg-destructive/15 text-destructive"
           }`}
         >
           {resource.status}
         </span>
       </div>
       <h2 className="mb-2 font-medium text-lg">{resource.name}</h2>
-      <p className="mb-2 text-gray-600 text-sm">
+      <p className="mb-2 text-muted-foreground text-sm">
         Product: {resource.productId}
       </p>
-      <p className="text-gray-600 text-sm">
+      <p className="text-muted-foreground text-sm">
         Billing Plan: {resource.billingPlan?.name}
       </p>
       {balance ? (
-        <p className="text-gray-600 text-sm">
+        <p className="text-muted-foreground text-sm">
           Balance: {balance.currencyValueInCents} cents
         </p>
       ) : null}

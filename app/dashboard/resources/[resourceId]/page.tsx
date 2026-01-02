@@ -33,7 +33,7 @@ const ResourcePage = async (
   return (
     <main className="space-y-8">
       <h1 className="font-bold text-xl">
-        <Link className="text-blue-500 underline" href="/dashboard">
+        <Link className="text-primary underline" href="/dashboard">
           Dashboard
         </Link>{" "}
         &gt; {resource.name}
@@ -48,7 +48,7 @@ const ResourcePage = async (
             <label className="flex flex-col">
               <span>Name</span>
               <input
-                className="border border-slate-400"
+                className="border"
                 defaultValue={resource.name}
                 name="name"
                 type="text"
@@ -65,7 +65,7 @@ const ResourcePage = async (
               </select>
             </label>
             <div className="flex justify-end">
-              <FormButton className="rounded bg-blue-500 px-2 py-1 text-white disabled:opacity-50">
+              <FormButton className="rounded bg-primary px-2 py-1 text-primary-foreground disabled:opacity-50">
                 Save
               </FormButton>
             </div>
@@ -91,14 +91,14 @@ const ResourcePage = async (
             <label className="flex flex-col">
               <span>Add credit value in cents</span>
               <input
-                className="border border-slate-400"
+                className="border"
                 defaultValue={1000}
                 name="currencyValueInCents"
                 type="number"
               />
             </label>
             <div className="flex justify-end">
-              <FormButton className="rounded bg-blue-500 px-2 py-1 text-white disabled:opacity-50">
+              <FormButton className="rounded bg-primary px-2 py-1 text-primary-foreground disabled:opacity-50">
                 Add Balance
               </FormButton>
             </div>
@@ -109,19 +109,19 @@ const ResourcePage = async (
       <Section title="Actions">
         <form action={cloneResourceAction} className="p-2">
           <input name="resourceId" type="hidden" value={resource.id} />
-          <FormButton className="rounded bg-blue-500 px-2 py-1 text-white disabled:opacity-50">
+          <FormButton className="rounded bg-primary px-2 py-1 text-primary-foreground disabled:opacity-50">
             Clone Resource
           </FormButton>
         </form>
         <form action={rotateCredentialsAction} className="p-2">
           <input name="resourceId" type="hidden" value={resource.id} />
-          <FormButton className="rounded bg-blue-500 px-2 py-1 text-white disabled:opacity-50">
+          <FormButton className="rounded bg-primary px-2 py-1 text-primary-foreground disabled:opacity-50">
             Rotate Credentials
           </FormButton>
         </form>
         <form action={importResourceToVercelAction} className="p-2">
           <input name="resourceId" type="hidden" value={resource.id} />
-          <FormButton className="rounded bg-blue-500 px-2 py-1 text-white disabled:opacity-50">
+          <FormButton className="rounded bg-primary px-2 py-1 text-primary-foreground disabled:opacity-50">
             Import Resource to Vercel
           </FormButton>
         </form>
@@ -132,14 +132,14 @@ const ResourcePage = async (
           <div className="flex gap-2">
             <form action={setExampleNotificationAction}>
               <input name="resourceId" type="hidden" value={resource.id} />
-              <FormButton className="rounded bg-blue-500 px-2 py-1 text-white disabled:opacity-50">
+              <FormButton className="rounded bg-primary px-2 py-1 text-primary-foreground disabled:opacity-50">
                 Example
               </FormButton>
             </form>
             <form action={clearResourceNotificationAction}>
               <input name="resourceId" type="hidden" value={resource.id} />
               <FormButton
-                className="rounded bg-red-500 px-2 py-1 text-white disabled:opacity-50"
+                className="rounded bg-destructive px-2 py-1 text-destructive-foreground disabled:opacity-50"
                 disabled={!resource.notification}
               >
                 Clear
@@ -154,7 +154,7 @@ const ResourcePage = async (
             <label className="flex flex-col">
               <span>Title</span>
               <input
-                className="border border-slate-400"
+                className="border"
                 defaultValue={resource.notification?.title}
                 name="title"
                 required
@@ -164,7 +164,7 @@ const ResourcePage = async (
             <label className="flex flex-col">
               <span>Message</span>
               <input
-                className="border border-slate-400"
+                className="border"
                 defaultValue={resource.notification?.message}
                 name="message"
                 type="text"
@@ -175,7 +175,7 @@ const ResourcePage = async (
                 URL (<code>href</code>)
               </span>
               <input
-                className="border border-slate-400"
+                className="border"
                 defaultValue={resource.notification?.href}
                 name="href"
                 type="text"
@@ -190,7 +190,7 @@ const ResourcePage = async (
               </select>
             </label>
             <div className="flex justify-end">
-              <FormButton className="rounded bg-blue-500 px-2 py-1 text-white disabled:opacity-50">
+              <FormButton className="rounded bg-primary px-2 py-1 text-primary-foreground disabled:opacity-50">
                 Save
               </FormButton>
             </div>
@@ -204,20 +204,20 @@ const ResourcePage = async (
 const ResourceCard = ({ resource }: { resource: Resource }) => (
   <div className="rounded-lg bg-white p-4 shadow-md">
     <div className="mb-2 flex items-center justify-between">
-      <span className="text-gray-600 text-sm">ID: {resource.id}</span>
+      <span className="text-muted-foreground text-sm">ID: {resource.id}</span>
       <span
         className={`rounded-full px-2 py-1 text-xs ${
           resource.status === "ready"
-            ? "bg-green-200 text-green-800"
-            : "bg-red-200 text-red-800"
+            ? "bg-emerald-500/15 text-emerald-700"
+            : "bg-destructive/15 text-destructive"
         }`}
       >
         {resource.status}
       </span>
     </div>
     <h2 className="mb-2 font-medium text-lg">{resource.name}</h2>
-    <p className="mb-2 text-gray-600 text-sm">Product: {resource.productId}</p>
-    <p className="text-gray-600 text-sm">
+    <p className="mb-2 text-muted-foreground text-sm">Product: {resource.productId}</p>
+    <p className="text-muted-foreground text-sm">
       Billing Plan: {resource.billingPlan?.name}
     </p>
     <details className="mt-4">

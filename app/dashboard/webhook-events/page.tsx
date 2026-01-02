@@ -13,7 +13,7 @@ const WebhookEventsPage = async () => {
       <h1 className="mb-4 font-bold text-2xl">Webhook Events</h1>
       {events.length === 0 ? (
         <div className="flex h-[100px] items-center justify-center">
-          <span className="text-slate-500">No events</span>
+          <span className="text-muted-foreground">No events</span>
         </div>
       ) : (
         <div className="flex flex-col gap-4">
@@ -29,7 +29,7 @@ const WebhookEventsPage = async () => {
 const EventCard = ({ event }: { event: WebhookEvent }) => (
   <div className="rounded-lg bg-white p-4 shadow-md">
     <div className="mb-2 flex items-center justify-between">
-      <span className="text-gray-600 text-sm">ID: {event.id}</span>
+      <span className="text-muted-foreground text-sm">ID: {event.id}</span>
     </div>
     <h2 className="mb-2 font-medium text-lg">
       {event.type} {event.unknown ? "(unknown)" : ""} (

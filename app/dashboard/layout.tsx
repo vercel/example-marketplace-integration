@@ -11,7 +11,7 @@ const DashboardLayout = async ({ children }: LayoutProps<"/dashboard">) => {
 
   return (
     <div className="mx-auto w-[800px]">
-      <header className="bg-blue-100 p-4">
+      <header className="bg-muted p-4">
         <div className="flex items-center justify-between">
           <div className="flex flex-row items-center gap-4">
             <div className="flex flex-row items-center">
@@ -53,7 +53,7 @@ const DashboardLayout = async ({ children }: LayoutProps<"/dashboard">) => {
               {installation?.deletedAt ? (
                 <>
                   {" "}
-                  <span className="text-red-500">
+                  <span className="text-destructive">
                     (deleted on{" "}
                     {new Date(installation.deletedAt).toLocaleString()})
                   </span>

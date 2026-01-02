@@ -65,7 +65,7 @@ const Page = async (props: PageProps<"/connect/callback">) => {
     <div className="space-y-10 p-10 text-center">
       <h1 className="font-medium text-lg">Account is connected. ✅</h1>
       <h3>
-        <a className="text-blue-500 underline" href={next}>
+        <a className="text-primary underline" href={next}>
           Redirect me back to Vercel
         </a>
       </h3>

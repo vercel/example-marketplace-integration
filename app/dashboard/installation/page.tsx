@@ -58,14 +58,14 @@ const InstallationPage = async () => {
             <label className="flex flex-col">
               <span>Add credit value in cents</span>
               <input
-                className="border border-slate-400"
+                className="border"
                 defaultValue={1000}
                 name="currencyValueInCents"
                 type="number"
               />
             </label>
             <div className="flex justify-end">
-              <FormButton className="rounded bg-blue-500 px-2 py-1 text-white disabled:opacity-50">
+              <FormButton className="rounded bg-primary px-2 py-1 text-primary-foreground disabled:opacity-50">
                 Add Balance
               </FormButton>
             </div>
@@ -75,7 +75,7 @@ const InstallationPage = async () => {
 
       <Section title="Submit Billing Data">
         <form action={sendBillingDataAction} className="p-2">
-          <FormButton className="rounded bg-blue-500 px-2 py-1 text-white disabled:opacity-50">
+          <FormButton className="rounded bg-primary px-2 py-1 text-primary-foreground disabled:opacity-50">
             Submit
           </FormButton>
         </form>
@@ -85,13 +85,13 @@ const InstallationPage = async () => {
         <div>
           <div className="flex gap-2">
             <form action={setExampleNotificationAction}>
-              <FormButton className="rounded bg-blue-500 px-2 py-1 text-white disabled:opacity-50">
+              <FormButton className="rounded bg-primary px-2 py-1 text-primary-foreground disabled:opacity-50">
                 Example
               </FormButton>
             </form>
             <form action={clearResourceNotificationAction}>
               <FormButton
-                className="rounded bg-red-500 px-2 py-1 text-white disabled:opacity-50"
+                className="rounded bg-destructive px-2 py-1 text-destructive-foreground disabled:opacity-50"
                 disabled={!installation.notification}
               >
                 Clear
@@ -105,7 +105,7 @@ const InstallationPage = async () => {
             <label className="flex flex-col">
               <span>Title</span>
               <input
-                className="border border-slate-400"
+                className="border"
                 defaultValue={installation.notification?.title}
                 name="title"
                 required
@@ -115,7 +115,7 @@ const InstallationPage = async () => {
             <label className="flex flex-col">
               <span>Message</span>
               <input
-                className="border border-slate-400"
+                className="border"
                 defaultValue={installation.notification?.message}
                 name="message"
                 type="text"
@@ -126,7 +126,7 @@ const InstallationPage = async () => {
                 URL (<code>href</code>)
               </span>
               <input
-                className="border border-slate-400"
+                className="border"
                 defaultValue={installation.notification?.href}
                 name="href"
                 type="text"
@@ -144,7 +144,7 @@ const InstallationPage = async () => {
               </select>
             </label>
             <div className="flex justify-end">
-              <FormButton className="rounded bg-blue-500 px-2 py-1 text-white disabled:opacity-50">
+              <FormButton className="rounded bg-primary px-2 py-1 text-primary-foreground disabled:opacity-50">
                 Save
               </FormButton>
             </div>
