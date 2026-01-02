@@ -15,9 +15,7 @@ import { dispatchEvent, updateSecrets } from "@/lib/vercel/marketplace-api";
 import type { Notification, Resource } from "@/lib/vercel/schemas";
 import { getSession } from "../../auth";
 
-export const updateResourceAction = async (
-  formData: FormData
-): Promise<void> => {
+export const updateResourceAction = async (formData: FormData) => {
   const session = await getSession();
   const resource = await getResource(
     session.installation_id,
@@ -43,9 +41,7 @@ export const updateResourceAction = async (
   revalidatePath(`/dashboard/resources/${resource.id}`);
 };
 
-export const rotateCredentialsAction = async (
-  formData: FormData
-): Promise<void> => {
+export const rotateCredentialsAction = async (formData: FormData) => {
   const session = await getSession();
   const resource = await getResource(
     session.installation_id,
@@ -73,9 +69,7 @@ export const rotateCredentialsAction = async (
   ]);
 };
 
-export const clearResourceNotificationAction = async (
-  formData: FormData
-): Promise<void> => {
+export const clearResourceNotificationAction = async (formData: FormData) => {
   const session = await getSession();
 
   const resourceId = formData.get("resourceId") as string;

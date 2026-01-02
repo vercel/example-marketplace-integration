@@ -73,7 +73,7 @@ export const setExampleNotificationAction = async (_formData: FormData) => {
 
 export const clearResourceNotificationAction = async (
   _formData: FormData
-): Promise<void> => {
+) => {
   const session = await getSession();
 
   await setInstallationNotification(session.installation_id, undefined);

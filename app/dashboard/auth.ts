@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { type OidcClaims, verifyToken } from "@/lib/vercel/auth";
 
-export const getSession = async (): Promise<OidcClaims> => {
+export const getSession = async () => {
   const idToken = (await cookies()).get("id-token");
 
   if (!idToken) {

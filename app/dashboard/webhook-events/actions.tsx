@@ -13,7 +13,7 @@ import { getSession } from "../auth";
 
 export const succeedAction = async (
   event: DeploymentIntegrationActionStartEvent
-): Promise<void> => {
+) => {
   await getSession();
 
   const { payload } = event;
@@ -47,7 +47,7 @@ export const succeedAction = async (
 
 export const failAction = async (
   event: DeploymentIntegrationActionStartEvent
-): Promise<void> => {
+) => {
   await getSession();
 
   const { payload } = event;
@@ -63,7 +63,7 @@ export const failAction = async (
 
 export const succeedCheck = async (
   event: DeploymentCheckrunStartEventSchema
-): Promise<void> => {
+) => {
   await getSession();
 
   const { payload } = event;
@@ -84,7 +84,7 @@ export const succeedCheck = async (
 
 export const failCheck = async (
   event: DeploymentCheckrunStartEventSchema
-): Promise<void> => {
+) => {
   await getSession();
 
   const { payload } = event;

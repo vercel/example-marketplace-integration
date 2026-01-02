@@ -15,7 +15,7 @@ import {
 
 export const dynamic = "force-dynamic";
 
-export const POST = async (req: Request): Promise<Response> => {
+export const POST = async (req: Request) => {
   const rawBody = await req.text();
   const rawBodyBuffer = Buffer.from(rawBody, "utf-8");
   const bodySignature = sha1(rawBodyBuffer, env.INTEGRATION_CLIENT_SECRET);
@@ -55,9 +55,7 @@ export const POST = async (req: Request): Promise<Response> => {
   return new Response("", { status: 200 });
 };
 
-const parseWebhookBody = (
-  rawBody: string
-): { json: unknown; error?: never } | { json?: never; error: string } => {
+const parseWebhookBody = (rawBody: string) => {
   try {
     return { json: JSON.parse(rawBody) };
   } catch (error) {
@@ -68,11 +66,7 @@ const parseWebhookBody = (
   }
 };
 
-const parseWebhookEvent = async (
-  json: unknown
-): Promise<
-  { event: WebhookEvent; error?: never } | { event?: never; error: string }
-> => {
+const parseWebhookEvent = async (json: unknown) => {
   try {
     return { event: webhookEventSchema.parse(json) };
   } catch (error) {
@@ -84,7 +78,7 @@ const parseWebhookEvent = async (
   }
 };
 
-const handleWebhookEvent = async (event: WebhookEvent): Promise<void> => {
+const handleWebhookEvent = async (event: WebhookEvent) => {
   const { type, payload } = event;
 
   switch (type) {
@@ -114,7 +108,7 @@ const handleWebhookEvent = async (event: WebhookEvent): Promise<void> => {
 const handleDeploymentCreated = async (payload: {
   deployment: { id: string };
   installationIds?: string[];
-}): Promise<void> => {
+}) => {
   const deploymentId = payload.deployment.id;
   const vercel = await getVercelClient(deploymentId, payload.installationIds);
   if (!vercel) {
@@ -134,7 +128,7 @@ const handleDeploymentCreated = async (payload: {
 const handleDeploymentReady = async (payload: {
   deployment: { id: string };
   installationIds?: string[];
-}): Promise<void> => {
+}) => {
   const deploymentId = payload.deployment.id;
   const vercel = await getVercelClient(deploymentId, payload.installationIds);
   if (!vercel) {
@@ -164,7 +158,7 @@ const handleDeploymentReady = async (payload: {
 const handleCheckRerequested = async (payload: {
   deployment: { id: string };
   installationIds?: string[];
-}): Promise<void> => {
+}) => {
   const deploymentId = payload.deployment.id;
   const vercel = await getVercelClient(deploymentId, payload.installationIds);
   if (!vercel) {
@@ -194,7 +188,7 @@ const handleCheckRerequested = async (payload: {
 const getVercelClient = async (
   deploymentId: string,
   installationIds?: string[]
-): Promise<Vercel | null> => {
+) => {
   const installationId = await getInstallationId(installationIds);
 
   if (!installationId) {
@@ -212,10 +206,7 @@ const getVercelClient = async (
   return new Vercel({ bearerToken: installation.credentials.access_token });
 };
 
-const getCheckId = async (
-  vercel: Vercel,
-  deploymentId: string
-): Promise<string | null> => {
+const getCheckId = async (vercel: Vercel, deploymentId: string) => {
   const checks = await vercel.checks.getAllChecks({ deploymentId });
   const checkId = checks.checks.at(0)?.id;
 
@@ -227,7 +218,7 @@ const getCheckId = async (
   return checkId;
 };
 
-const sha1 = (data: Buffer, secret: string): string =>
+const sha1 = (data: Buffer, secret: string) =>
   crypto
     .createHmac("sha1", secret)
     .update(new Uint8Array(data))

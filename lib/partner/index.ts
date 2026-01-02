@@ -31,7 +31,7 @@ const billingPlanMap = new Map(billingPlans.map((plan) => [plan.id, plan]));
 export const installIntegration = async (
   installationId: string,
   request: InstallIntegrationRequest & { type: "marketplace" | "external" }
-): Promise<void> => {
+) => {
   const pipeline = kv.pipeline();
 
   pipeline.set(installationId, request);
@@ -45,7 +45,7 @@ export const installIntegration = async (
 export const updateInstallation = async (
   installationId: string,
   billingPlanId: string
-): Promise<void> => {
+) => {
   const installation = await getInstallation(installationId);
   const pipeline = kv.pipeline();
 
@@ -53,9 +53,7 @@ export const updateInstallation = async (
   pipeline.exec();
 };
 
-export const uninstallInstallation = async (
-  installationId: string
-): Promise<{ finalized: boolean } | undefined> => {
+export const uninstallInstallation = async (installationId: string) => {
   const installation = await getInstallation(installationId);
   if (!installation || installation.deletedAt) {
     return undefined;
@@ -75,7 +73,7 @@ export const uninstallInstallation = async (
   return { finalized: billingPlan?.paymentMethodRequired === false };
 };
 
-export const listInstallations = async (): Promise<string[]> => {
+export const listInstallations = async () => {
   const installationIds = await kv.lrange("installations", 0, -1);
   return installationIds;
 };
@@ -84,7 +82,7 @@ export const provisionResource = async (
   installationId: string,
   request: ProvisionResourceRequest,
   opts?: { status?: ResourceStatusType }
-): Promise<ProvisionResourceResponse> => {
+) => {
   const billingPlan = billingPlanMap.get(request.billingPlanId);
   if (!billingPlan) {
     throw new Error(`Unknown billing plan ${request.billingPlanId}`);
@@ -130,7 +128,7 @@ export const updateResource = async (
   installationId: string,
   resourceId: string,
   request: UpdateResourceRequest
-): Promise<UpdateResourceResponse> => {
+) => {
   const resource = await getResource(installationId, resourceId);
 
   if (!resource) {
@@ -159,7 +157,7 @@ export const transferResource = async (
   installationId: string,
   resourceId: string,
   targetInstallationId: string
-): Promise<void> => {
+) => {
   const resource = await getResource(installationId, resourceId);
 
   if (!resource) {
@@ -177,7 +175,7 @@ export const updateResourceNotification = async (
   installationId: string,
   resourceId: string,
   notification?: Notification
-): Promise<void> => {
+) => {
   const resource = await getResource(installationId, resourceId);
 
   if (!resource) {
@@ -196,14 +194,14 @@ export const updateResourceNotification = async (
 export const clearResourceNotification = async (
   installationId: string,
   resourceId: string
-): Promise<void> => {
+) => {
   await updateResourceNotification(installationId, resourceId);
 };
 
 export const deleteResource = async (
   installationId: string,
   resourceId: string
-): Promise<void> => {
+) => {
   const pipeline = kv.pipeline();
   pipeline.del(`${installationId}:resource:${resourceId}`);
   pipeline.lrem(`${installationId}:resources`, 0, resourceId);
@@ -213,7 +211,7 @@ export const deleteResource = async (
 export const listResources = async (
   installationId: string,
   targetResourceIds?: string[]
-): Promise<ListResourcesResponse> => {
+) => {
   const resourceIds = targetResourceIds?.length
     ? targetResourceIds
     : await kv.lrange(`${installationId}:resources`, 0, -1);
@@ -238,7 +236,7 @@ export const listResources = async (
 export const getResource = async (
   installationId: string,
   resourceId: string
-): Promise<GetResourceResponse | null> => {
+) => {
   const resource = await kv.get<SerializedResource>(
     `${installationId}:resource:${resourceId}`
   );
@@ -274,7 +272,7 @@ export const cloneResource = async (
 export const importResourceToVercel = async (
   installationId: string,
   resourceId: string
-): Promise<void> => {
+) => {
   const resource = await getResource(installationId, resourceId);
 
   if (!resource) {
@@ -304,7 +302,7 @@ export const importResourceToVercel = async (
 export const provisionPurchase = async (
   installationId: string,
   request: ProvisionPurchaseRequest
-): Promise<ProvisionPurchaseResponse> => {
+) => {
   const invoice = await getInvoice(installationId, request.invoiceId);
   if (invoice.state !== "paid") {
     throw new Error(`Invoice ${request.invoiceId} is not paid`);
@@ -339,7 +337,7 @@ export const provisionPurchase = async (
 export const addInstallationBalanceInternal = async (
   installationId: string,
   currencyValueInCents: number
-): Promise<Balances> => {
+) => {
   const result = await kv.incrby(
     `${installationId}:balance`,
     currencyValueInCents
@@ -351,9 +349,7 @@ export const addInstallationBalanceInternal = async (
   };
 };
 
-export const getInstallationBalance = async (
-  installationId: string
-): Promise<Balances | null> => {
+export const getInstallationBalance = async (installationId: string) => {
   const result = await kv.get<number>(`${installationId}:balance`);
   if (result === null) {
     return null;
@@ -369,7 +365,7 @@ export const addResourceBalanceInternal = async (
   installationId: string,
   resourceId: string,
   currencyValueInCents: number
-): Promise<Balances> => {
+) => {
   const result = await kv.incrby(
     `${installationId}:${resourceId}:balance`,
     currencyValueInCents
@@ -385,7 +381,7 @@ export const addResourceBalanceInternal = async (
 export const getResourceBalance = async (
   installationId: string,
   resourceId: string
-): Promise<Balances | null> => {
+) => {
   const result = await kv.get<number>(
     `${installationId}:${resourceId}:balance`
   );
@@ -404,14 +400,12 @@ type SerializedResource = Omit<Resource, "billingPlan"> & {
   billingPlan: string;
 };
 
-const serializeResource = (resource: Resource): SerializedResource => ({
+const serializeResource = (resource: Resource) => ({
   ...resource,
   billingPlan: resource.billingPlan.id,
 });
 
-const deserializeResource = (
-  serializedResource: SerializedResource
-): Resource => {
+const deserializeResource = (serializedResource: SerializedResource) => {
   const billingPlan = billingPlanMap.get(serializedResource.billingPlan) ?? {
     id: serializedResource.billingPlan,
     scope: "resource",
@@ -426,14 +420,14 @@ const deserializeResource = (
 export const getAllBillingPlans = async (
   _installationId: string,
   _experimental_metadata?: Record<string, unknown>
-): Promise<GetBillingPlansResponse> => {
+) => {
   return await Promise.resolve({ plans: billingPlans });
 };
 
 export const getInstallationBillingPlans = async (
   installationId: string,
   _experimental_metadata?: Record<string, unknown>
-): Promise<GetBillingPlansResponse> => {
+) => {
   const resources = await listResources(installationId);
   return {
     plans:
@@ -447,7 +441,7 @@ export const getProductBillingPlans = async (
   _productId: string,
   installationId: string,
   _experimental_metadata?: Record<string, unknown>
-): Promise<GetBillingPlansResponse> => {
+) => {
   const resources = await listResources(installationId);
   return {
     plans:
@@ -460,20 +454,11 @@ export const getProductBillingPlans = async (
 export const getResourceBillingPlans = async (
   _installationId: string,
   _resourceId: string
-): Promise<GetBillingPlansResponse> => {
+) => {
   return await Promise.resolve({ plans: billingPlans });
 };
 
-export const getInstallation = async (
-  installationId: string
-): Promise<
-  InstallIntegrationRequest & {
-    type: "marketplace" | "external";
-    billingPlanId: string;
-    deletedAt?: number;
-    notification?: Notification;
-  }
-> => {
+export const getInstallation = async (installationId: string) => {
   const installation = await kv.get<
     InstallIntegrationRequest & {
       type: "marketplace" | "external";
@@ -493,7 +478,7 @@ export const getInstallation = async (
 export const setInstallationNotification = async (
   installationId: string,
   notification: Notification | undefined | null
-): Promise<void> => {
+) => {
   const installation = await getInstallation(installationId);
   const pipeline = kv.pipeline();
 
@@ -507,7 +492,7 @@ export const setInstallationNotification = async (
 
 export const storeWebhookEvent = async (
   event: WebhookEvent | UnknownWebhookEvent
-): Promise<void> => {
+) => {
   const pipeline = kv.pipeline();
 
   pipeline.lpush("webhook_events", event);
@@ -516,23 +501,17 @@ export const storeWebhookEvent = async (
   await pipeline.exec();
 };
 
-export const getWebhookEvents = async (
-  limit = 100
-): Promise<WebhookEvent[]> => {
+export const getWebhookEvents = async (limit = 100) => {
   return (await kv.lrange<WebhookEvent>("webhook_events", 0, limit)).sort(
     (a, b) => b.createdAt - a.createdAt
   );
 };
 
-export const getTransferRequest = async (
-  transferId: string
-): Promise<TransferRequest | null> => {
+export const getTransferRequest = async (transferId: string) => {
   return await kv.get<TransferRequest>(`transfer-request:${transferId}`);
 };
 
-export const setTransferRequest = async (
-  transferRequest: TransferRequest
-): Promise<"OK" | TransferRequest | null> => {
+export const setTransferRequest = async (transferRequest: TransferRequest) => {
   return await kv.set<TransferRequest>(
     `transfer-request:${transferRequest.transferId}`,
     transferRequest
@@ -541,6 +520,6 @@ export const setTransferRequest = async (
 
 export const deleteTransferRequest = async (
   transferRequest: TransferRequest
-): Promise<number> => {
+) => {
   return await kv.del(`transfer-request:${transferRequest.transferId}`);
 };

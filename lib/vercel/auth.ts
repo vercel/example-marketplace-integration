@@ -29,8 +29,8 @@ export const withAuth = (
     req: NextRequest,
     ...rest: unknown[]
   ) => Promise<Response>
-): ((req: NextRequest, ...rest: unknown[]) => Promise<Response>) => {
-  return async (req: NextRequest, ...rest: unknown[]): Promise<Response> => {
+) => {
+  return async (req: NextRequest, ...rest: unknown[]) => {
     try {
       const token = getAuthorizationToken(req);
       const claims = await verifyToken(token);
@@ -46,7 +46,7 @@ export const withAuth = (
   };
 };
 
-export const verifyToken = async (token: string): Promise<OidcClaims> => {
+export const verifyToken = async (token: string) => {
   try {
     const { payload: claims } = await jwtVerify<OidcClaims>(token, JWKS);
 
@@ -72,7 +72,7 @@ export const verifyToken = async (token: string): Promise<OidcClaims> => {
   }
 };
 
-const getAuthorizationToken = (req: Request): string => {
+const getAuthorizationToken = (req: Request) => {
   const authHeader = req.headers.get("Authorization");
   const match = authHeader?.match(BEARER_TOKEN_REGEX);
 

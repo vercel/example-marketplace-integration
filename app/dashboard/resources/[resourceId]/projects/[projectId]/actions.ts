@@ -3,9 +3,7 @@
 import { getSession } from "@/app/dashboard/auth";
 import { createCheck } from "@/lib/vercel/marketplace-api";
 
-export const createCheckFormSubmit = async (
-  formData: FormData
-): Promise<void> => {
+export const createCheckFormSubmit = async (formData: FormData) => {
   const session = await getSession();
   const deploymentId = formData.get("deploymentId") as string;
   const name = formData.get("name") as string;

@@ -4,9 +4,7 @@ import { redirect } from "next/navigation";
 import { refundInvoice, submitInvoice } from "@/lib/vercel/marketplace-api";
 import { getSession } from "../auth";
 
-export const submitInvoiceAction = async (
-  formData: FormData
-): Promise<void> => {
+export const submitInvoiceAction = async (formData: FormData) => {
   const session = await getSession();
 
   const test = formData.get("test") === "on";
