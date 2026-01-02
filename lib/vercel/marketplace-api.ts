@@ -1,6 +1,9 @@
 import { Vercel } from "@vercel/sdk";
 import type { ImportResourceRequestBody } from "@vercel/sdk/models/importresourceop.js";
-import type { SubmitBillingDataRequestBody } from "@vercel/sdk/models/submitbillingdataop.js";
+import type {
+  Billing1,
+  SubmitBillingDataRequestBody,
+} from "@vercel/sdk/models/submitbillingdataop.js";
 import type {
   SubmitInvoiceDiscounts,
   SubmitInvoiceRequestBody,
@@ -286,15 +289,20 @@ export async function submitInvoice(
 
   const billingData = await mockBillingData(installationId);
 
-  let items = billingData.billing.filter((item) => Boolean(item.resourceId));
+  // Normalize billing to always be an array of Billing1
+  const billingArray: Billing1[] = Array.isArray(billingData.billing)
+    ? billingData.billing
+    : billingData.billing.items;
+
+  let items = billingArray.filter((item) => Boolean(item.resourceId));
   if (maxAmount !== undefined) {
     const total = items.reduce(
-      (acc, item) => acc + Number.parseFloat(item.total),
+      (acc: number, item: Billing1) => acc + Number.parseFloat(item.total),
       0
     );
     if (total > maxAmount) {
       const ratio = maxAmount / total;
-      items = items.map((item) => ({
+      items = items.map((item: Billing1) => ({
         ...item,
         quantity: item.quantity * ratio,
         total: (Number.parseFloat(item.total) * ratio).toFixed(2),
@@ -305,7 +313,7 @@ export async function submitInvoice(
   const discounts: SubmitInvoiceDiscounts[] = [];
   if (opts?.discountPercent !== undefined && opts.discountPercent > 0) {
     const total = items.reduce(
-      (acc, item) => acc + Number.parseFloat(item.total),
+      (acc: number, item: Billing1) => acc + Number.parseFloat(item.total),
       0
     );
     if (total > 0) {
@@ -329,7 +337,7 @@ export async function submitInvoice(
     },
     items:
       items.length > 0
-        ? items.map((item) => ({
+        ? items.map((item: Billing1) => ({
             resourceId: item.resourceId,
             billingPlanId: item.billingPlanId,
             name: item.name,
