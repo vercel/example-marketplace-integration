@@ -1,6 +1,6 @@
 import type { Balances } from "@vercel/sdk/models/submitprepaymentbalancesop.js";
 import { mockBillingData } from "@/data/mock-billing-data";
-import { cronJob } from "@/lib/cron";
+import { env } from "@/lib/env";
 import {
   getInstallationBalance,
   getResourceBalance,
@@ -18,7 +18,17 @@ export const dynamic = "force-dynamic";
  * Scheduled job to submit billing/usage data to Vercel.
  * @see https://vercel.com/docs/integrations/create-integration/native-integration#billing-and-usage
  */
-export const GET = cronJob(async (request: Request) => {
+export const GET = async (request: Request) => {
+  if (process.env.NODE_ENV !== "development") {
+    const authHeader = request.headers.get("authorization");
+    if (
+      !authHeader ||
+      authHeader.replace("Bearer ", "").trim() !== env.CRON_SECRET
+    ) {
+      return new Response("Unauthorized", { status: 401 });
+    }
+  }
+
   const dryRun = new URL(request.url).searchParams.get("dryrun") === "1";
   const installationIds = await listInstallations();
 
@@ -62,4 +72,4 @@ export const GET = cronJob(async (request: Request) => {
   const results = await Promise.all(promises);
 
   return Response.json(results);
-});
+};
