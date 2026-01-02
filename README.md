@@ -1,6 +1,6 @@
 # Example Marketplace Integration
 
-Welcome to the Example Marketplace Integration. This repository contains a reference implementation for a Vercel Marketplace Integration.
+This repository contains a reference implementation for a Vercel Marketplace Integration.
 
 ## Getting Started
 
