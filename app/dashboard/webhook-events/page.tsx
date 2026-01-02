@@ -26,25 +26,23 @@ const WebhookEventsPage = async () => {
   );
 };
 
-function EventCard({ event }: { event: WebhookEvent }) {
-  return (
-    <div className="rounded-lg bg-white p-4 shadow-md">
-      <div className="mb-2 flex items-center justify-between">
-        <span className="text-gray-600 text-sm">ID: {event.id}</span>
-      </div>
-      <h2 className="mb-2 font-medium text-lg">
-        {event.type} {event.unknown ? "(unknown)" : ""} (
-        {new Date(event.createdAt).toISOString()})
-      </h2>
-      <details className="mt-4">
-        <summary>Payload</summary>
-        <pre className="overflow-scroll">
-          <code>{JSON.stringify(event.payload, null, 2)}</code>
-        </pre>
-      </details>
-      <EventActions event={event} />
+const EventCard = ({ event }: { event: WebhookEvent }) => (
+  <div className="rounded-lg bg-white p-4 shadow-md">
+    <div className="mb-2 flex items-center justify-between">
+      <span className="text-gray-600 text-sm">ID: {event.id}</span>
     </div>
-  );
-}
+    <h2 className="mb-2 font-medium text-lg">
+      {event.type} {event.unknown ? "(unknown)" : ""} (
+      {new Date(event.createdAt).toISOString()})
+    </h2>
+    <details className="mt-4">
+      <summary>Payload</summary>
+      <pre className="overflow-scroll">
+        <code>{JSON.stringify(event.payload, null, 2)}</code>
+      </pre>
+    </details>
+    <EventActions event={event} />
+  </div>
+);
 
 export default WebhookEventsPage;

@@ -3,7 +3,7 @@
 import type { WebhookEvent } from "@/lib/vercel/schemas";
 import { failAction, failCheck, succeedAction, succeedCheck } from "./actions";
 
-export function EventActions({ event }: { event: WebhookEvent }) {
+export const EventActions = ({ event }: { event: WebhookEvent }) => {
   if (event.type === "deployment.integration.action.start") {
     return (
       <div className="mt-4 flex gap-2">
@@ -45,4 +45,4 @@ export function EventActions({ event }: { event: WebhookEvent }) {
     );
   }
   return null;
-}
+};

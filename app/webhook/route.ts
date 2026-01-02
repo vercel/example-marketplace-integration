@@ -55,9 +55,9 @@ export const POST = async (req: Request): Promise<Response> => {
   return new Response("", { status: 200 });
 };
 
-function parseWebhookBody(
+const parseWebhookBody = (
   rawBody: string
-): { json: unknown; error?: never } | { json?: never; error: string } {
+): { json: unknown; error?: never } | { json?: never; error: string } => {
   try {
     return { json: JSON.parse(rawBody) };
   } catch (error) {
@@ -66,13 +66,13 @@ function parseWebhookBody(
     console.error(response);
     return { error: response };
   }
-}
+};
 
-async function parseWebhookEvent(
+const parseWebhookEvent = async (
   json: unknown
 ): Promise<
   { event: WebhookEvent; error?: never } | { event?: never; error: string }
-> {
+> => {
   try {
     return { event: webhookEventSchema.parse(json) };
   } catch (error) {
@@ -82,9 +82,9 @@ async function parseWebhookEvent(
     await storeWebhookEvent(unknownWebhookEventSchema.parse(json));
     return { error: response };
   }
-}
+};
 
-async function handleWebhookEvent(event: WebhookEvent): Promise<void> {
+const handleWebhookEvent = async (event: WebhookEvent): Promise<void> => {
   const { type, payload } = event;
 
   switch (type) {
@@ -109,12 +109,12 @@ async function handleWebhookEvent(event: WebhookEvent): Promise<void> {
       break;
     }
   }
-}
+};
 
-async function handleDeploymentCreated(payload: {
+const handleDeploymentCreated = async (payload: {
   deployment: { id: string };
   installationIds?: string[];
-}): Promise<void> {
+}): Promise<void> => {
   const deploymentId = payload.deployment.id;
   const vercel = await getVercelClient(deploymentId, payload.installationIds);
   if (!vercel) {
@@ -129,12 +129,12 @@ async function handleDeploymentCreated(payload: {
       name: "Test Check",
     },
   });
-}
+};
 
-async function handleDeploymentReady(payload: {
+const handleDeploymentReady = async (payload: {
   deployment: { id: string };
   installationIds?: string[];
-}): Promise<void> {
+}): Promise<void> => {
   const deploymentId = payload.deployment.id;
   const vercel = await getVercelClient(deploymentId, payload.installationIds);
   if (!vercel) {
@@ -159,12 +159,12 @@ async function handleDeploymentReady(payload: {
     checkId,
     requestBody: { conclusion: "failed", status: "completed" },
   });
-}
+};
 
-async function handleCheckRerequested(payload: {
+const handleCheckRerequested = async (payload: {
   deployment: { id: string };
   installationIds?: string[];
-}): Promise<void> {
+}): Promise<void> => {
   const deploymentId = payload.deployment.id;
   const vercel = await getVercelClient(deploymentId, payload.installationIds);
   if (!vercel) {
@@ -189,12 +189,12 @@ async function handleCheckRerequested(payload: {
     checkId,
     requestBody: { conclusion: "succeeded", status: "completed" },
   });
-}
+};
 
-async function getVercelClient(
+const getVercelClient = async (
   deploymentId: string,
   installationIds?: string[]
-): Promise<Vercel | null> {
+): Promise<Vercel | null> => {
   const installationId = await getInstallationId(installationIds);
 
   if (!installationId) {
@@ -210,12 +210,12 @@ async function getVercelClient(
   }
 
   return new Vercel({ bearerToken: installation.credentials.access_token });
-}
+};
 
-async function getCheckId(
+const getCheckId = async (
   vercel: Vercel,
   deploymentId: string
-): Promise<string | null> {
+): Promise<string | null> => {
   const checks = await vercel.checks.getAllChecks({ deploymentId });
   const checkId = checks.checks.at(0)?.id;
 
@@ -225,21 +225,20 @@ async function getCheckId(
   }
 
   return checkId;
-}
+};
 
-function sha1(data: Buffer, secret: string): string {
-  return crypto
+const sha1 = (data: Buffer, secret: string): string =>
+  crypto
     .createHmac("sha1", secret)
     .update(new Uint8Array(data))
     .digest("hex");
-}
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-async function getInstallationId(installationIds: string[] | undefined) {
+const getInstallationId = async (installationIds: string[] | undefined) => {
   const installations = await listInstallations();
   const installationId = installationIds?.find((id) =>
     installations.includes(id)
   );
   return installationId;
-}
+};

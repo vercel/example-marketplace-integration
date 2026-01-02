@@ -11,9 +11,9 @@ import type {
 } from "@/lib/vercel/schemas";
 import { getSession } from "../auth";
 
-export async function succeedAction(
+export const succeedAction = async (
   event: DeploymentIntegrationActionStartEvent
-): Promise<void> {
+): Promise<void> => {
   await getSession();
 
   const { payload } = event;
@@ -43,11 +43,11 @@ export async function succeedAction(
       },
     ],
   });
-}
+};
 
-export async function failAction(
+export const failAction = async (
   event: DeploymentIntegrationActionStartEvent
-): Promise<void> {
+): Promise<void> => {
   await getSession();
 
   const { payload } = event;
@@ -59,11 +59,11 @@ export async function failAction(
     status: "failed",
     statusText: "Failed somehow",
   });
-}
+};
 
-export async function succeedCheck(
+export const succeedCheck = async (
   event: DeploymentCheckrunStartEventSchema
-): Promise<void> {
+): Promise<void> => {
   await getSession();
 
   const { payload } = event;
@@ -80,11 +80,11 @@ export async function succeedCheck(
     conclusion: "succeeded",
     detailsUrl: `sso:/checks/${checkRun.id}`,
   });
-}
+};
 
-export async function failCheck(
+export const failCheck = async (
   event: DeploymentCheckrunStartEventSchema
-): Promise<void> {
+): Promise<void> => {
   await getSession();
 
   const { payload } = event;
@@ -96,4 +96,4 @@ export async function failCheck(
     conclusion: "failed",
     detailsUrl: `sso:/checks/${checkRun.id}`,
   });
-}
+};

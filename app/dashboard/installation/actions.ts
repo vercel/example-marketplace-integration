@@ -18,7 +18,7 @@ import {
 import type { Notification } from "@/lib/vercel/schemas";
 import { getSession } from "../auth";
 
-export async function addInstallationBalance(formData: FormData) {
+export const addInstallationBalance = async (formData: FormData) => {
   const session = await getSession();
 
   await addInstallationBalanceInternal(
@@ -28,9 +28,9 @@ export async function addInstallationBalance(formData: FormData) {
 
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/installation");
-}
+};
 
-export async function sendBillingDataAction() {
+export const sendBillingDataAction = async () => {
   const session = await getSession();
 
   const installationId = session.installation_id;
@@ -51,9 +51,9 @@ export async function sendBillingDataAction() {
 
   await sendBillingData(installationId, billingData);
   await submitPrepaymentBalances(installationId, balances);
-}
+};
 
-export async function setExampleNotificationAction(_formData: FormData) {
+export const setExampleNotificationAction = async (_formData: FormData) => {
   const session = await getSession();
 
   await setInstallationNotification(session.installation_id, {
@@ -69,11 +69,11 @@ export async function setExampleNotificationAction(_formData: FormData) {
 
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/installation");
-}
+};
 
-export async function clearResourceNotificationAction(
+export const clearResourceNotificationAction = async (
   _formData: FormData
-): Promise<void> {
+): Promise<void> => {
   const session = await getSession();
 
   await setInstallationNotification(session.installation_id, undefined);
@@ -83,9 +83,9 @@ export async function clearResourceNotificationAction(
 
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/installation");
-}
+};
 
-export async function updateNotificationAction(formData: FormData) {
+export const updateNotificationAction = async (formData: FormData) => {
   const session = await getSession();
 
   await setInstallationNotification(session.installation_id, {
@@ -100,4 +100,4 @@ export async function updateNotificationAction(formData: FormData) {
 
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/installation");
-}
+};

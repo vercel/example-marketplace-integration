@@ -27,10 +27,10 @@ interface ResourceUpdatedEvent {
 
 type IntegrationEvent = InstallationUpdatedEvent | ResourceUpdatedEvent;
 
-export async function dispatchEvent(
+export const dispatchEvent = async (
   installationId: string,
   event: IntegrationEvent
-) {
+) => {
   const installation = await getInstallation(installationId);
 
   const vercel = new Vercel({
@@ -43,9 +43,9 @@ export async function dispatchEvent(
       event,
     },
   });
-}
+};
 
-export async function getAccountInfo(installationId: string) {
+export const getAccountInfo = async (installationId: string) => {
   const installation = await getInstallation(installationId);
 
   const vercel = new Vercel({
@@ -55,7 +55,7 @@ export async function getAccountInfo(installationId: string) {
   return await vercel.marketplace.getAccountInfo({
     integrationConfigurationId: installationId,
   });
-}
+};
 
 export interface Project {
   id: string;
@@ -63,7 +63,7 @@ export interface Project {
   accountId: string;
 }
 
-export async function getProject(installationId: string, projectId: string) {
+export const getProject = async (installationId: string, projectId: string) => {
   const installation = await getInstallation(installationId);
 
   const vercel = new Vercel({
@@ -79,9 +79,9 @@ export async function getProject(installationId: string, projectId: string) {
   }
 
   return project;
-}
+};
 
-export async function createCheck(
+export const createCheck = async (
   installationId: string,
   deploymentId: string,
   name: string,
@@ -90,7 +90,7 @@ export async function createCheck(
     rerequestable?: boolean;
     detailsUrl?: string;
   }
-) {
+) => {
   const installation = await getInstallation(installationId);
 
   const vercel = new Vercel({
@@ -106,9 +106,9 @@ export async function createCheck(
       detailsUrl: options?.detailsUrl,
     },
   });
-}
+};
 
-export async function updateCheck(
+export const updateCheck = async (
   installationId: string,
   deploymentId: string,
   checkId: string,
@@ -117,7 +117,7 @@ export async function updateCheck(
     conclusion?: "canceled" | "skipped" | "failed" | "neutral" | "succeeded";
     detailsUrl?: string;
   }
-) {
+) => {
   const installation = await getInstallation(installationId);
 
   const vercel = new Vercel({
@@ -129,12 +129,12 @@ export async function updateCheck(
     checkId,
     requestBody: updates,
   });
-}
+};
 
-export async function getDeploymentChecks(
+export const getDeploymentChecks = async (
   installationId: string,
   deploymentId: string
-) {
+) => {
   const installation = await getInstallation(installationId);
 
   const vercel = new Vercel({
@@ -146,9 +146,9 @@ export async function getDeploymentChecks(
   });
 
   return result.checks;
-}
+};
 
-export async function updateSecrets(
+export const updateSecrets = async (
   installationId: string,
   resourceId: string,
   secrets: {
@@ -156,7 +156,7 @@ export async function updateSecrets(
     value: string;
     environmentOverrides?: Record<string, string>;
   }[]
-) {
+) => {
   const resource = await getResource(installationId, resourceId);
 
   if (!resource) {
@@ -180,12 +180,12 @@ export async function updateSecrets(
       secrets,
     },
   });
-}
+};
 
-export async function exchangeCodeForToken(
+export const exchangeCodeForToken = async (
   code: string,
   state: string | null | undefined
-) {
+) => {
   const vercel = new Vercel();
 
   const result = await vercel.marketplace.exchangeSsoToken({
@@ -196,13 +196,13 @@ export async function exchangeCodeForToken(
   });
 
   return result.idToken;
-}
+};
 
-export async function importResource(
+export const importResource = async (
   installationId: string,
   resourceId: string,
   request: ImportResourceRequestBody
-) {
+) => {
   const installation = await getInstallation(installationId);
 
   if (!installation) {
@@ -218,12 +218,12 @@ export async function importResource(
     resourceId,
     requestBody: request,
   });
-}
+};
 
-export async function submitPrepaymentBalances(
+export const submitPrepaymentBalances = async (
   installationId: string,
   balances: Balances[]
-) {
+) => {
   const installation = await getInstallation(installationId);
 
   if (!installation) {
@@ -241,12 +241,12 @@ export async function submitPrepaymentBalances(
       balances,
     },
   });
-}
+};
 
-export async function sendBillingData(
+export const sendBillingData = async (
   installationId: string,
   data: SubmitBillingDataRequestBody
-) {
+) => {
   const installation = await getInstallation(installationId);
 
   if (!installation) {
@@ -261,9 +261,9 @@ export async function sendBillingData(
     integrationConfigurationId: installationId,
     requestBody: data,
   });
-}
+};
 
-export async function getInvoice(installationId: string, invoiceId: string) {
+export const getInvoice = async (installationId: string, invoiceId: string) => {
   const installation = await getInstallation(installationId);
 
   if (!installation) {
@@ -278,12 +278,12 @@ export async function getInvoice(installationId: string, invoiceId: string) {
     integrationConfigurationId: installationId,
     invoiceId,
   });
-}
+};
 
-export async function submitInvoice(
+export const submitInvoice = async (
   installationId: string,
   opts?: { test?: boolean; maxAmount?: number; discountPercent?: number }
-) {
+) => {
   const test = opts?.test ?? false;
   const maxAmount = opts?.maxAmount ?? undefined;
 
@@ -377,14 +377,14 @@ export async function submitInvoice(
   });
 
   return invoice;
-}
+};
 
-export async function refundInvoice(
+export const refundInvoice = async (
   installationId: string,
   invoiceId: string,
   total: string,
   reason: string
-) {
+) => {
   const installation = await getInstallation(installationId);
 
   if (!installation) {
@@ -406,9 +406,9 @@ export async function refundInvoice(
   });
 
   return invoice;
-}
+};
 
-export async function updateDeploymentAction({
+export const updateDeploymentAction = async ({
   deploymentId,
   installationId,
   resourceId,
@@ -424,7 +424,7 @@ export async function updateDeploymentAction({
   status: "succeeded" | "failed";
   statusText?: string;
   outcomes?: Outcomes[];
-}) {
+}) => {
   const installation = await getInstallation(installationId);
 
   if (!installation) {
@@ -446,12 +446,12 @@ export async function updateDeploymentAction({
       outcomes,
     },
   });
-}
+};
 
-export async function getDeployment(
+export const getDeployment = async (
   installationId: string,
   deploymentId: string
-) {
+) => {
   const installation = await getInstallation(installationId);
 
   if (!installation) {
@@ -466,4 +466,4 @@ export async function getDeployment(
     idOrUrl: deploymentId,
     withGitRepoInfo: "true",
   });
-}
+};

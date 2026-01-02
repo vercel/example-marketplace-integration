@@ -81,36 +81,32 @@ const ResourceProjectPage = async (
   );
 };
 
-function ResourceCard({ resource }: { resource: Resource }) {
-  return (
-    <div className="rounded-lg bg-white p-4 shadow-md">
-      <div className="mb-2 flex items-center justify-between">
-        <span className="text-gray-600 text-sm">ID: {resource.id}</span>
-        <span
-          className={`rounded-full px-2 py-1 text-xs ${
-            resource.status === "ready"
-              ? "bg-green-200 text-green-800"
-              : "bg-red-200 text-red-800"
-          }`}
-        >
-          {resource.status}
-        </span>
-      </div>
-      <h2 className="mb-2 font-medium text-lg">{resource.name}</h2>
-      <p className="mb-2 text-gray-600 text-sm">
-        Product: {resource.productId}
-      </p>
-      <p className="text-gray-600 text-sm">
-        Billing Plan: {resource.billingPlan?.name}
-      </p>
-      <details className="mt-4">
-        <summary>JSON</summary>
-        <pre className="overflow-scroll">
-          <code>{JSON.stringify(resource, null, 2)}</code>
-        </pre>
-      </details>
+const ResourceCard = ({ resource }: { resource: Resource }) => (
+  <div className="rounded-lg bg-white p-4 shadow-md">
+    <div className="mb-2 flex items-center justify-between">
+      <span className="text-gray-600 text-sm">ID: {resource.id}</span>
+      <span
+        className={`rounded-full px-2 py-1 text-xs ${
+          resource.status === "ready"
+            ? "bg-green-200 text-green-800"
+            : "bg-red-200 text-red-800"
+        }`}
+      >
+        {resource.status}
+      </span>
     </div>
-  );
-}
+    <h2 className="mb-2 font-medium text-lg">{resource.name}</h2>
+    <p className="mb-2 text-gray-600 text-sm">Product: {resource.productId}</p>
+    <p className="text-gray-600 text-sm">
+      Billing Plan: {resource.billingPlan?.name}
+    </p>
+    <details className="mt-4">
+      <summary>JSON</summary>
+      <pre className="overflow-scroll">
+        <code>{JSON.stringify(resource, null, 2)}</code>
+      </pre>
+    </details>
+  </div>
+);
 
 export default ResourceProjectPage;

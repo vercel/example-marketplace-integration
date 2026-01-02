@@ -15,7 +15,9 @@ import { dispatchEvent, updateSecrets } from "@/lib/vercel/marketplace-api";
 import type { Notification, Resource } from "@/lib/vercel/schemas";
 import { getSession } from "../../auth";
 
-export async function updateResourceAction(formData: FormData): Promise<void> {
+export const updateResourceAction = async (
+  formData: FormData
+): Promise<void> => {
   const session = await getSession();
   const resource = await getResource(
     session.installation_id,
@@ -39,11 +41,11 @@ export async function updateResourceAction(formData: FormData): Promise<void> {
 
   revalidatePath("/dashboard");
   revalidatePath(`/dashboard/resources/${resource.id}`);
-}
+};
 
-export async function rotateCredentialsAction(
+export const rotateCredentialsAction = async (
   formData: FormData
-): Promise<void> {
+): Promise<void> => {
   const session = await getSession();
   const resource = await getResource(
     session.installation_id,
@@ -69,11 +71,11 @@ export async function rotateCredentialsAction(
           : undefined,
     },
   ]);
-}
+};
 
-export async function clearResourceNotificationAction(
+export const clearResourceNotificationAction = async (
   formData: FormData
-): Promise<void> {
+): Promise<void> => {
   const session = await getSession();
 
   const resourceId = formData.get("resourceId") as string;
@@ -91,9 +93,11 @@ export async function clearResourceNotificationAction(
 
   revalidatePath("/dashboard");
   revalidatePath(`/dashboard/resources/${resource.id}`);
-}
+};
 
-export async function updateResourceNotificationAction(formData: FormData) {
+export const updateResourceNotificationAction = async (
+  formData: FormData
+) => {
   const session = await getSession();
 
   const resourceId = formData.get("resourceId") as string;
@@ -116,9 +120,9 @@ export async function updateResourceNotificationAction(formData: FormData) {
 
   revalidatePath("/dashboard");
   revalidatePath(`/dashboard/resources/${resource.id}`);
-}
+};
 
-export async function setExampleNotificationAction(formData: FormData) {
+export const setExampleNotificationAction = async (formData: FormData) => {
   const session = await getSession();
 
   const resourceId = formData.get("resourceId") as string;
@@ -142,9 +146,9 @@ export async function setExampleNotificationAction(formData: FormData) {
 
   revalidatePath("/dashboard");
   revalidatePath(`/dashboard/resources/${resource.id}`);
-}
+};
 
-export async function cloneResourceAction(formData: FormData) {
+export const cloneResourceAction = async (formData: FormData) => {
   const session = await getSession();
   const resourceId = formData.get("resourceId") as string;
   const clonedResource = await cloneResource(
@@ -153,15 +157,15 @@ export async function cloneResourceAction(formData: FormData) {
   );
   revalidatePath("/dashboard");
   redirect(`/dashboard/resources/${clonedResource.id}`);
-}
+};
 
-export async function importResourceToVercelAction(formData: FormData) {
+export const importResourceToVercelAction = async (formData: FormData) => {
   const session = await getSession();
   const resourceId = formData.get("resourceId") as string;
   await importResourceToVercel(session.installation_id, resourceId);
-}
+};
 
-export async function addResourceBalance(formData: FormData) {
+export const addResourceBalance = async (formData: FormData) => {
   const session = await getSession();
 
   await addResourceBalanceInternal(
@@ -172,4 +176,4 @@ export async function addResourceBalance(formData: FormData) {
 
   revalidatePath("/dashboard");
   revalidatePath(`/dashboard/resources/${formData.get("resourceId")}`);
-}
+};

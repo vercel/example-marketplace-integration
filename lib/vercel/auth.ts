@@ -23,13 +23,13 @@ export interface OidcClaims {
   user_avatar_url?: string;
 }
 
-export function withAuth(
+export const withAuth = (
   callback: (
     claims: OidcClaims,
     req: NextRequest,
     ...rest: unknown[]
   ) => Promise<Response>
-): (req: NextRequest, ...rest: unknown[]) => Promise<Response> {
+): ((req: NextRequest, ...rest: unknown[]) => Promise<Response>) => {
   return async (req: NextRequest, ...rest: unknown[]): Promise<Response> => {
     try {
       const token = getAuthorizationToken(req);
@@ -44,9 +44,9 @@ export function withAuth(
       throw err;
     }
   };
-}
+};
 
-export async function verifyToken(token: string): Promise<OidcClaims> {
+export const verifyToken = async (token: string): Promise<OidcClaims> => {
   try {
     const { payload: claims } = await jwtVerify<OidcClaims>(token, JWKS);
 
@@ -70,9 +70,9 @@ export async function verifyToken(token: string): Promise<OidcClaims> {
 
     throw err;
   }
-}
+};
 
-function getAuthorizationToken(req: Request): string {
+const getAuthorizationToken = (req: Request): string => {
   const authHeader = req.headers.get("Authorization");
   const match = authHeader?.match(BEARER_TOKEN_REGEX);
 
@@ -81,6 +81,6 @@ function getAuthorizationToken(req: Request): string {
   }
 
   return match[1];
-}
+};
 
 class AuthError extends Error {}

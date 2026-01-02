@@ -71,7 +71,10 @@ export const POST = withAuth(async (_claims, request, ...rest: unknown[]) => {
   );
 });
 
-async function rotateSecretsAsync(installationId: string, resourceId: string) {
+const rotateSecretsAsync = async (
+  installationId: string,
+  resourceId: string
+) => {
   const delayMs = 5000 + Math.random() * 5000;
   await new Promise((resolve) => setTimeout(resolve, delayMs));
 
@@ -90,4 +93,4 @@ async function rotateSecretsAsync(installationId: string, resourceId: string) {
       value: `updated for rotation (${currentDate})`,
     },
   ]);
-}
+};

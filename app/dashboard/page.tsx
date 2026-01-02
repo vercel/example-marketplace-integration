@@ -32,13 +32,13 @@ const DashboardPage = async () => {
   );
 };
 
-async function ResourceCard({
+const ResourceCard = async ({
   installationId,
   resource,
 }: {
   installationId: string;
   resource: Resource;
-}) {
+}) => {
   const balance = await getResourceBalance(installationId, resource.id);
   return (
     <a
@@ -71,6 +71,6 @@ async function ResourceCard({
       ) : null}
     </a>
   );
-}
+};
 
 export default DashboardPage;

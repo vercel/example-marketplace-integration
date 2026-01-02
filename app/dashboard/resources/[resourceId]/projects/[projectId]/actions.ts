@@ -3,7 +3,9 @@
 import { getSession } from "@/app/dashboard/auth";
 import { createCheck } from "@/lib/vercel/marketplace-api";
 
-export async function createCheckFormSubmit(formData: FormData): Promise<void> {
+export const createCheckFormSubmit = async (
+  formData: FormData
+): Promise<void> => {
   const session = await getSession();
   const deploymentId = formData.get("deploymentId") as string;
   const name = formData.get("name") as string;
@@ -14,4 +16,4 @@ export async function createCheckFormSubmit(formData: FormData): Promise<void> {
     blocking,
     rerequestable,
   });
-}
+};

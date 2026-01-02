@@ -33,8 +33,8 @@ interface TableBlock {
 type Block = ParagraphBlock | TableBlock;
 
 // https://developer.mozilla.org/docs/Web/API/ReadableStream#convert_async_iterator_to_stream
-function iteratorToStream(iterator: AsyncIterator<unknown>) {
-  return new ReadableStream({
+const iteratorToStream = (iterator: AsyncIterator<unknown>) =>
+  new ReadableStream({
     async pull(controller) {
       const { value, done } = await iterator.next();
 
@@ -45,13 +45,11 @@ function iteratorToStream(iterator: AsyncIterator<unknown>) {
       }
     },
   });
-}
 
-function sleep(time: number) {
-  return new Promise((resolve) => {
+const sleep = (time: number) =>
+  new Promise((resolve) => {
     setTimeout(resolve, time);
   });
-}
 
 const encoder = new TextEncoder();
 

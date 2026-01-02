@@ -6,9 +6,9 @@ import type {
   ResourceUsage,
 } from "@/lib/vercel/schemas";
 
-export async function mockBillingData(
+export const mockBillingData = async (
   installationId: string
-): Promise<SubmitBillingDataRequestBody> {
+): Promise<SubmitBillingDataRequestBody> => {
   const timestamp = new Date();
   const year = timestamp.getUTCFullYear();
   const month = timestamp.getUTCMonth();
@@ -113,13 +113,12 @@ export async function mockBillingData(
     billing,
     usage,
   };
-}
+};
 
-function isNotNull<T>(value: T | undefined | null): value is T {
-  return value !== undefined && value !== null;
-}
+const isNotNull = <T>(value: T | undefined | null): value is T =>
+  value !== undefined && value !== null;
 
-function mockUsageData(
+const mockUsageData = (
   resource: {
     id: string;
     billingPlan: BillingPlan;
@@ -127,7 +126,7 @@ function mockUsageData(
   timestamp: Date,
   periodStart: Date,
   dayStart: Date
-): ResourceUsage[] {
+): ResourceUsage[] => {
   // May 1, 2024
   const baseTimestamp = Date.UTC(2024, 4, 1);
   const minutesSinceBase = (timestamp.getTime() - baseTimestamp) / 1000 / 60;
@@ -168,4 +167,4 @@ function mockUsageData(
       planValue: 2_000_000,
     },
   ];
-}
+};

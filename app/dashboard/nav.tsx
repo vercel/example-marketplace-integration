@@ -26,7 +26,7 @@ const links = [
   },
 ] as const;
 
-export function Nav() {
+export const Nav = () => {
   const segment = useSelectedLayoutSegment() ?? "";
   return (
     <ul className="flex space-x-4">
@@ -44,4 +44,4 @@ export function Nav() {
       ))}
     </ul>
   );
-}
+};

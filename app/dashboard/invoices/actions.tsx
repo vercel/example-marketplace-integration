@@ -4,7 +4,9 @@ import { redirect } from "next/navigation";
 import { refundInvoice, submitInvoice } from "@/lib/vercel/marketplace-api";
 import { getSession } from "../auth";
 
-export async function submitInvoiceAction(formData: FormData): Promise<void> {
+export const submitInvoiceAction = async (
+  formData: FormData
+): Promise<void> => {
   const session = await getSession();
 
   const test = formData.get("test") === "on";
@@ -33,9 +35,9 @@ export async function submitInvoiceAction(formData: FormData): Promise<void> {
     );
   }
   redirect(`/dashboard/invoices?id=${encodeURIComponent(invoiceId)}`);
-}
+};
 
-export async function refundInvoiceAction(formData: FormData) {
+export const refundInvoiceAction = async (formData: FormData) => {
   const session = await getSession();
 
   const invoiceId = formData.get("id") as string;
@@ -49,4 +51,4 @@ export async function refundInvoiceAction(formData: FormData) {
     refundReason
   );
   redirect(`/dashboard/invoices?id=${encodeURIComponent(invoiceId)}`);
-}
+};

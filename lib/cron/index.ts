@@ -1,8 +1,8 @@
 import { env } from "../env";
 
-export function cronJob(
+export const cronJob = (
   fn: (req: Request) => Response | Promise<Response>
-): (req: Request) => Promise<Response> {
+): ((req: Request) => Promise<Response>) => {
   return async (req) => {
     if (process.env.NODE_ENV !== "development") {
       const authHeader = req.headers.get("authorization");
@@ -15,4 +15,4 @@ export function cronJob(
     }
     return await fn(req);
   };
-}
+};

@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { type OidcClaims, verifyToken } from "@/lib/vercel/auth";
 
-export async function getSession(): Promise<OidcClaims> {
+export const getSession = async (): Promise<OidcClaims> => {
   const idToken = (await cookies()).get("id-token");
 
   if (!idToken) {
@@ -9,8 +9,8 @@ export async function getSession(): Promise<OidcClaims> {
   }
 
   return await verifyToken(idToken.value);
-}
+};
 
-export async function createSession(token: string) {
+export const createSession = async (token: string) => {
   (await cookies()).set("id-token", token);
-}
+};
