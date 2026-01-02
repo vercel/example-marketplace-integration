@@ -1,3 +1,4 @@
+import type { Balances } from "@vercel/sdk/models/submitprepaymentbalancesop.js";
 import { getSession } from "@/app/dashboard/auth";
 import { mockBillingData } from "@/data/mock-billing-data";
 import {
@@ -5,7 +6,6 @@ import {
   getResourceBalance,
   listResources,
 } from "@/lib/partner";
-import type { Balances } from "@vercel/sdk/models/submitprepaymentbalancesop.js";
 
 export const dynamic = "force-dynamic";
 

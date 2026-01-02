@@ -1,5 +1,6 @@
 "use server";
 
+import type { Balances } from "@vercel/sdk/models/submitprepaymentbalancesop.js";
 import { revalidatePath } from "next/cache";
 import { mockBillingData } from "@/data/mock-billing-data";
 import {
@@ -14,7 +15,6 @@ import {
   sendBillingData,
   submitPrepaymentBalances,
 } from "@/lib/vercel/marketplace-api";
-import type { Balances } from "@vercel/sdk/models/submitprepaymentbalancesop.js";
 import type { Notification } from "@/lib/vercel/schemas";
 import { getSession } from "../auth";
 

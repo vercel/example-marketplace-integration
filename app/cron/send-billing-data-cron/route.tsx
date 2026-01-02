@@ -1,3 +1,4 @@
+import type { Balances } from "@vercel/sdk/models/submitprepaymentbalancesop.js";
 import { mockBillingData } from "@/data/mock-billing-data";
 import { cronJob } from "@/lib/cron";
 import {
@@ -10,7 +11,6 @@ import {
   sendBillingData,
   submitPrepaymentBalances,
 } from "@/lib/vercel/marketplace-api";
-import type { Balances } from "@vercel/sdk/models/submitprepaymentbalancesop.js";
 
 export const dynamic = "force-dynamic";
 
