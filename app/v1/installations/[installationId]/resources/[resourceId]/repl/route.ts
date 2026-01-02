@@ -105,6 +105,9 @@ async function* makeIterator() {
   );
 }
 
+/**
+ * Create a new resource REPL
+ */
 export const POST = withAuth(async (_claims, request) => {
   const body: PostResourceREPLRequestBody = await request.json();
 

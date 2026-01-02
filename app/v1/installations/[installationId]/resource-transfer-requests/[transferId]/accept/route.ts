@@ -8,6 +8,9 @@ import { buildError } from "@/lib/utils";
 import { withAuth } from "@/lib/vercel/auth";
 import { type Params, validateTransferId } from "../../utils";
 
+/**
+ * Accept a resource transfer request
+ */
 export const POST = withAuth(
   async (_oidcClaims, _request, ...rest: unknown[]) => {
     const [{ params }] = rest as [{ params: Params }];
@@ -27,7 +30,7 @@ export const POST = withAuth(
       );
     }
 
-    // does the target installation ID match?
+    // Check if the target installation ID matches
     if (
       !matchingClaim.targetInstallationIds.some(
         (id) => id === params.installationId
@@ -39,7 +42,7 @@ export const POST = withAuth(
       );
     }
 
-    // idemoptentcy - no need to re-complete
+    // Check if the claim has already been completed
     if (
       matchingClaim.status === "complete" &&
       params.installationId === matchingClaim.claimedByInstallationId
@@ -47,8 +50,7 @@ export const POST = withAuth(
       return new NextResponse(null, { status: 200 });
     }
 
-    // is the claim in a state that can be completed?
-    const now = Date.now();
+    // Check if the claim is in a state that can be completed
     if (matchingClaim.status !== "verified") {
       return NextResponse.json(
         buildError(
@@ -58,13 +60,16 @@ export const POST = withAuth(
         { status: 409 }
       );
     }
-    if (matchingClaim.expiration < now) {
+
+    // Check if the claim has expired
+    if (matchingClaim.expiration < Date.now()) {
       return NextResponse.json(
         buildError("conflict", "The provided transfer request has expired"),
         { status: 409 }
       );
     }
 
+    // Transfer the resources
     for (const resourceId of matchingClaim.resourceIds) {
       transferResource(
         matchingClaim.sourceInstallationId,

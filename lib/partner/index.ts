@@ -298,14 +298,16 @@ export const provisionPurchase = async (
   request: ProvisionPurchaseRequest
 ) => {
   const invoice = await getInvoice(installationId, request.invoiceId);
+
   if (invoice.state !== "paid") {
     throw new Error(`Invoice ${request.invoiceId} is not paid`);
   }
 
   const balances: Record<string, Balances> = {};
 
-  for (const item of invoice.items ?? []) {
+  for (const item of invoice.items) {
     const amountInCents = Math.floor(Number.parseFloat(item.total) * 100);
+
     if (item.resourceId) {
       const balance = await addResourceBalanceInternal(
         installationId,

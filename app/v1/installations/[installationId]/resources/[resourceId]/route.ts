@@ -8,6 +8,9 @@ interface Params {
   resourceId: string;
 }
 
+/**
+ * Get the resource details
+ */
 export const GET = withAuth(async (claims, _request, ...rest: unknown[]) => {
   const [{ params }] = rest as [{ params: Params }];
   const resource = await getResource(claims.installation_id, params.resourceId);
@@ -25,6 +28,9 @@ export const GET = withAuth(async (claims, _request, ...rest: unknown[]) => {
   return Response.json(resource);
 });
 
+/**
+ * Update the resource details
+ */
 export const PATCH = withAuth(async (claims, request, ...rest: unknown[]) => {
   const [{ params }] = rest as [{ params: Params }];
   const requestBody = await readRequestBodyWithSchema(
@@ -47,6 +53,9 @@ export const PATCH = withAuth(async (claims, request, ...rest: unknown[]) => {
   });
 });
 
+/**
+ * Delete the resource
+ */
 export const DELETE = withAuth(async (claims, _request, ...rest: unknown[]) => {
   const [{ params }] = rest as [{ params: Params }];
   await deleteResource(claims.installation_id, params.resourceId);

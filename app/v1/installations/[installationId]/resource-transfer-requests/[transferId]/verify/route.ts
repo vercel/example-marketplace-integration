@@ -16,7 +16,7 @@ export const POST = withAuth(
 
     const matchingClaim = await getTransferRequest(params.transferId);
 
-    // does claim exist?
+    // Check if the claim exists
     if (!matchingClaim) {
       return NextResponse.json(
         buildError("not_found", "Transfer request not found"),
@@ -24,8 +24,7 @@ export const POST = withAuth(
       );
     }
 
-    // is the claim in a state that can be verified?
-    const now = Date.now();
+    // Check if the claim is in a state that can be verified
     if (matchingClaim.status === "complete") {
       return NextResponse.json(
         buildError(
@@ -35,16 +34,20 @@ export const POST = withAuth(
         { status: 409 }
       );
     }
-    if (matchingClaim.expiration < now) {
+
+    // Check if the claim has expired
+    if (matchingClaim.expiration < Date.now()) {
       return NextResponse.json(
         buildError("conflict", "The provided transfer request has expired"),
         { status: 409 }
       );
     }
 
+    // Add the target installation ID to the claim
     const targetInstallations = new Set(matchingClaim.targetInstallationIds);
     targetInstallations.add(params.installationId);
 
+    // Update the claim status to verified
     await setTransferRequest({
       ...matchingClaim,
       status: "verified",

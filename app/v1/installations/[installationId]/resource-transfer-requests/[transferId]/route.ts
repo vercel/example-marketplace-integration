@@ -9,6 +9,9 @@ import { withAuth } from "@/lib/vercel/auth";
 import { type Claim, createClaimRequestSchema } from "@/lib/vercel/schemas";
 import type { Params } from "../utils";
 
+/**
+ * Create a new resource transfer request
+ */
 export const PUT = withAuth(async (oidcClaims, request, ...rest: unknown[]) => {
   const [{ params }] = rest as [{ params: Params }];
   const matchingClaim = await getTransferRequest(params.transferId);
@@ -29,6 +32,7 @@ export const PUT = withAuth(async (oidcClaims, request, ...rest: unknown[]) => {
   );
 
   const { data } = requestBody;
+
   if (!(requestBody.success && data)) {
     return NextResponse.json(
       buildError("bad_request", "Input has failed validation"),
