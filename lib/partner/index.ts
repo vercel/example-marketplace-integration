@@ -2,7 +2,6 @@ import type { Balances } from "@vercel/sdk/models/submitprepaymentbalancesop.js"
 import { compact } from "lodash";
 import { nanoid } from "nanoid";
 import type {
-  BillingPlan,
   GetBillingPlansResponse,
   GetResourceResponse,
   InstallIntegrationRequest,
@@ -25,67 +24,7 @@ import {
   getInvoice,
   importResource as importResourceToVercelApi,
 } from "../vercel/marketplace-api";
-
-const billingPlans: BillingPlan[] = [
-  {
-    id: "default",
-    scope: "resource",
-    name: "Hobby",
-    cost: "Free",
-    description: "Use all you want up to 20G",
-    type: "subscription",
-    paymentMethodRequired: false,
-    details: [
-      { label: "Max storage size", value: "20G" },
-      { label: "Max queries per day", value: "100K" },
-    ],
-    highlightedDetails: [
-      { label: "High availability", value: "Single zone" },
-      { label: "Dataset size", value: "100Mb" },
-    ],
-    maxResources: 3,
-    requiredPolicies: [
-      { id: "1", name: "Terms of Service", url: "https://partner/toc" },
-    ],
-    effectiveDate: "2021-01-01T00:00:00Z",
-  },
-  {
-    id: "pro200",
-    scope: "resource",
-    name: "Pro",
-    cost: "$10 every Gb",
-    type: "subscription",
-    description: "$10 every Gb",
-    paymentMethodRequired: true,
-    preauthorizationAmount: 5,
-    highlightedDetails: [
-      { label: "High availability", value: "Multi zone" },
-      { label: "Dataset size", value: "500Mb" },
-    ],
-    details: [
-      { label: "20G storage and 200K queries", value: "$25.00" },
-      { label: "Extra storage", value: "$10.00 per 10G" },
-      { label: "Unlimited daily Command Limit" },
-    ],
-    requiredPolicies: [
-      { id: "1", name: "Terms of Service", url: "https://partner/toc" },
-    ],
-    effectiveDate: "2021-01-01T00:00:00Z",
-  },
-  {
-    id: "prepay10",
-    scope: "resource",
-    name: "Prepay 10",
-    cost: "$10 for 1,000 tokens",
-    type: "prepayment",
-    description: "$10 for 1,000 tokens",
-    paymentMethodRequired: true,
-    minimumAmount: "10.00",
-    highlightedDetails: [{ label: "Token types", value: "input/output" }],
-    details: [{ label: "Token types", value: "input/output" }],
-    effectiveDate: "2021-01-01T00:00:00Z",
-  },
-];
+import { billingPlans } from "./billing";
 
 const billingPlanMap = new Map(billingPlans.map((plan) => [plan.id, plan]));
 
@@ -94,10 +33,13 @@ export async function installIntegration(
   request: InstallIntegrationRequest & { type: "marketplace" | "external" }
 ): Promise<void> {
   const pipeline = kv.pipeline();
-  await pipeline.set(installationId, request);
-  await pipeline.lrem("installations", 0, installationId);
-  await pipeline.lpush("installations", installationId);
-  await pipeline.exec();
+
+  pipeline.set(installationId, request);
+  pipeline.lrem("installations", 0, installationId);
+  pipeline.lpush("installations", installationId);
+  pipeline.exec();
+
+  return await Promise.resolve();
 }
 
 export async function updateInstallation(
@@ -106,8 +48,9 @@ export async function updateInstallation(
 ): Promise<void> {
   const installation = await getInstallation(installationId);
   const pipeline = kv.pipeline();
-  await pipeline.set(installationId, { ...installation, billingPlanId });
-  await pipeline.exec();
+
+  pipeline.set(installationId, { ...installation, billingPlanId });
+  pipeline.exec();
 }
 
 export async function uninstallInstallation(
@@ -118,11 +61,13 @@ export async function uninstallInstallation(
     return undefined;
   }
   const pipeline = kv.pipeline();
-  await pipeline.set(installationId, {
+
+  pipeline.set(installationId, {
     ...installation,
     deletedAt: Date.now(),
   });
-  await pipeline.lrem("installations", 0, installationId);
+  pipeline.lrem("installations", 0, installationId);
+
   await pipeline.exec();
 
   // Installation is finalized immediately if it's on a free plan.
@@ -336,28 +281,24 @@ export async function importResourceToVercel(
     throw new Error(`Cannot find resource ${resourceId}`);
   }
 
-  const _response = await importResourceToVercelApi(
-    installationId,
-    resource.id,
-    {
-      name: resource.name,
-      productId: resource.productId,
-      status: resource.status,
-      metadata: resource.metadata,
-      billingPlan: resource.billingPlan,
-      notification: resource.notification,
-      secrets: [
-        {
-          name: "TOP_SECRET",
-          value: `birds aren't real (${new Date().toISOString()})`,
-        },
-        {
-          name: "TOP_SECRET_CLONED",
-          value: `birds aren't real (${new Date().toISOString()})`,
-        },
-      ],
-    }
-  );
+  await importResourceToVercelApi(installationId, resource.id, {
+    name: resource.name,
+    productId: resource.productId,
+    status: resource.status,
+    metadata: resource.metadata,
+    billingPlan: resource.billingPlan,
+    notification: resource.notification,
+    secrets: [
+      {
+        name: "TOP_SECRET",
+        value: `birds aren't real (${new Date().toISOString()})`,
+      },
+      {
+        name: "TOP_SECRET_CLONED",
+        value: `birds aren't real (${new Date().toISOString()})`,
+      },
+    ],
+  });
 }
 
 export async function provisionPurchase(
@@ -561,8 +502,10 @@ export async function storeWebhookEvent(
   event: WebhookEvent | UnknownWebhookEvent
 ): Promise<void> {
   const pipeline = kv.pipeline();
-  await pipeline.lpush("webhook_events", event);
-  await pipeline.ltrim("webhook_events", 0, 100);
+
+  pipeline.lpush("webhook_events", event);
+  pipeline.ltrim("webhook_events", 0, 100);
+
   await pipeline.exec();
 }
 
