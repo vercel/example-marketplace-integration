@@ -13,11 +13,17 @@ export async function submitInvoiceAction(formData: FormData): Promise<void> {
     : undefined;
 
   let invoiceId: string;
+
   try {
     const { invoiceId: resultInvoiceId } = await submitInvoice(
       session.installation_id,
       { test, maxAmount, discountPercent: 0.2 }
     );
+
+    if (!resultInvoiceId) {
+      throw new Error("Invoice ID is required");
+    }
+
     invoiceId = resultInvoiceId;
   } catch (e) {
     redirect(

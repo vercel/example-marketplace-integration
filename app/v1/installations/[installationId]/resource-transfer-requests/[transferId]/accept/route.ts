@@ -9,7 +9,8 @@ import { withAuth } from "@/lib/vercel/auth";
 import { type Params, validateTransferId } from "../../utils";
 
 export const POST = withAuth(
-  async (_oidcClaims, _request, { params }: { params: Params }) => {
+  async (_oidcClaims, _request, ...rest: unknown[]) => {
+    const [{ params }] = rest as [{ params: Params }];
     if (!validateTransferId(params.transferId)) {
       return NextResponse.json(buildError("bad_request", "Invalid ID"), {
         status: 400,

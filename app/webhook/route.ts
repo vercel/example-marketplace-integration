@@ -28,16 +28,23 @@ export const POST = async (req: Request): Promise<Response> => {
   }
 
   const parseResult = parseWebhookBody(rawBody);
+
   if (parseResult.error) {
     return new Response(parseResult.error, { status: 400 });
   }
 
   const eventResult = await parseWebhookEvent(parseResult.json);
+
   if (eventResult.error) {
     return new Response(eventResult.error, { status: 400 });
   }
 
   const event = eventResult.event;
+
+  if (!event) {
+    return new Response("Invalid webhook event", { status: 400 });
+  }
+
   const { id, type, createdAt, payload } = event;
 
   console.log("webhook event:", id, type, new Date(createdAt), payload);
