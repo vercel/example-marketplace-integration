@@ -1,19 +1,17 @@
 import Link from "next/link";
-import { Resource } from "@/lib/vercel/schemas";
+import { getResource } from "@/lib/partner";
+import { getSession } from "../auth";
 import { FormButton } from "../components/form-button";
 import { Section } from "../components/section";
-import { getResource } from "@/lib/partner";
-import { getAccountInfo } from "@/lib/vercel/marketplace-api";
-import { getSession } from "../auth";
 
-export default async function SupportPage({
-  searchParams: { resourceId },
-}: {
-  searchParams: { resourceId?: string };
-}) {
+export const dynamic = "force-dynamic";
+
+const SupportPage = async (props: PageProps<"/dashboard/support">) => {
+  const { resourceId } = await props.searchParams;
   let resourceName = "";
   const session = await getSession();
-  if (resourceId) {
+
+  if (typeof resourceId === "string") {
     const resource = await getResource(session.installation_id, resourceId);
     if (resource) {
       resourceName = resource.name;
@@ -22,8 +20,8 @@ export default async function SupportPage({
 
   return (
     <main className="space-y-8">
-      <h1 className="text-xl font-bold">
-        <Link href="/dashboard" className="text-blue-500 underline">
+      <h1 className="font-bold text-xl">
+        <Link className="text-primary underline" href="/dashboard">
           Dashboard
         </Link>{" "}
         &gt; Support {resourceName}
@@ -32,17 +30,17 @@ export default async function SupportPage({
       <Section title="Suport">
         <form>
           <div className="space-y-4">
-            <div className="flex flex-col">
-              <label>Message</label>
+            <label className="flex flex-col">
+              <span>Message</span>
               <textarea
+                className="border"
                 name="name"
-                className="border border-1 border-slate-400"
                 rows={10}
               />
-            </div>
+            </label>
 
             <div className="flex justify-end">
-              <FormButton className="rounded bg-blue-500 text-white px-2 py-1 disabled:opacity-50">
+              <FormButton className="rounded bg-primary px-2 py-1 text-primary-foreground disabled:opacity-50">
                 Submit
               </FormButton>
             </div>
@@ -51,4 +49,6 @@ export default async function SupportPage({
       </Section>
     </main>
   );
-}
+};
+
+export default SupportPage;

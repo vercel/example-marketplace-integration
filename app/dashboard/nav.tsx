@@ -26,17 +26,17 @@ const links = [
   },
 ] as const;
 
-export function Nav() {
+export const Nav = () => {
   const segment = useSelectedLayoutSegment() ?? "";
   return (
     <ul className="flex space-x-4">
       {links.map((link) => (
         <li key={link.href}>
           <Link
-            href={link.href}
             className={`hover:underline ${
               link.segment === segment ? "font-bold" : ""
             }`}
+            href={link.href}
           >
             {link.label}
           </Link>
@@ -44,4 +44,4 @@ export function Nav() {
       ))}
     </ul>
   );
-}
+};

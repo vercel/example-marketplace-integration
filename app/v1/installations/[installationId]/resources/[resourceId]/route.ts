@@ -8,54 +8,57 @@ interface Params {
   resourceId: string;
 }
 
-export const GET = withAuth(
-  async (claims, _request, { params }: { params: Params }) => {
-    const resource = await getResource(
-      claims.installation_id,
-      params.resourceId,
+/**
+ * Get the resource details
+ */
+export const GET = withAuth(async (claims, _request, ...rest: unknown[]) => {
+  const [{ params }] = rest as [{ params: Params }];
+  const resource = await getResource(claims.installation_id, params.resourceId);
+
+  if (!resource) {
+    return Response.json(
+      {
+        error: true,
+        code: "not_found",
+      },
+      { status: 404 }
     );
+  }
 
-    if (!resource) {
-      return Response.json(
-        {
-          error: true,
-          code: "not_found",
-        },
-        { status: 404 },
-      );
-    }
+  return Response.json(resource);
+});
 
-    return Response.json(resource);
-  },
-);
+/**
+ * Update the resource details
+ */
+export const PATCH = withAuth(async (claims, request, ...rest: unknown[]) => {
+  const [{ params }] = rest as [{ params: Params }];
+  const requestBody = await readRequestBodyWithSchema(
+    request,
+    updateResourceRequestSchema
+  );
 
-export const PATCH = withAuth(
-  async (claims, request, { params }: { params: Params }) => {
-    const requestBody = await readRequestBodyWithSchema(
-      request,
-      updateResourceRequestSchema,
-    );
+  if (!requestBody.success) {
+    return new Response(null, { status: 400 });
+  }
 
-    if (!requestBody.success) {
-      return new Response(null, { status: 400 });
-    }
+  const updatedResource = await updateResource(
+    claims.installation_id,
+    params.resourceId,
+    requestBody.data
+  );
 
-    const updatedResource = await updateResource(
-      claims.installation_id,
-      params.resourceId,
-      requestBody.data,
-    );
+  return Response.json(updatedResource, {
+    status: 200,
+  });
+});
 
-    return Response.json(updatedResource, {
-      status: 200,
-    });
-  },
-);
+/**
+ * Delete the resource
+ */
+export const DELETE = withAuth(async (claims, _request, ...rest: unknown[]) => {
+  const [{ params }] = rest as [{ params: Params }];
+  await deleteResource(claims.installation_id, params.resourceId);
 
-export const DELETE = withAuth(
-  async (claims, _request, { params }: { params: Params }) => {
-    await deleteResource(claims.installation_id, params.resourceId);
-
-    return new Response(null, { status: 204 });
-  },
-);
+  return new Response(null, { status: 204 });
+});

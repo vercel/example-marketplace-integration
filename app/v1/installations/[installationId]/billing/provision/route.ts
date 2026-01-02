@@ -3,14 +3,13 @@ import { readRequestBodyWithSchema } from "@/lib/utils";
 import { withAuth } from "@/lib/vercel/auth";
 import { provisionPurchaseRequestSchema } from "@/lib/vercel/schemas";
 
-interface Params {
-  installationId: string;
-}
-
+/**
+ * Provision a new purchase
+ */
 export const POST = withAuth(async (claims, request) => {
   const requestBody = await readRequestBodyWithSchema(
     request,
-    provisionPurchaseRequestSchema,
+    provisionPurchaseRequestSchema
   );
 
   if (!requestBody.success) {
@@ -21,7 +20,7 @@ export const POST = withAuth(async (claims, request) => {
 
   const response = await provisionPurchase(
     claims.installation_id,
-    requestBody.data,
+    requestBody.data
   );
 
   return Response.json(response);

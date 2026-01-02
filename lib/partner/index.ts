@@ -1,145 +1,82 @@
+import type { Balances } from "@vercel/sdk/models/submitprepaymentbalancesop.js";
+import { compact } from "lodash";
 import { nanoid } from "nanoid";
 import type {
-  BillingPlan,
-  GetBillingPlansResponse,
-  GetResourceResponse,
   InstallIntegrationRequest,
-  ListResourcesResponse,
-  ProvisionResourceRequest,
-  ProvisionResourceResponse,
-  Resource,
-  UpdateResourceRequest,
-  UpdateResourceResponse,
   Notification,
-  WebhookEvent,
-  UnknownWebhookEvent,
   ProvisionPurchaseRequest,
-  ProvisionPurchaseResponse,
-  Balance,
-  Claim as TransferRequest,
+  ProvisionResourceRequest,
+  Resource,
   ResourceStatusType,
+  Claim as TransferRequest,
+  UnknownWebhookEvent,
+  UpdateResourceRequest,
+  WebhookEvent,
 } from "@/lib/vercel/schemas";
-import { compact } from "lodash";
 import { kv } from "../redis";
 import {
   getInvoice,
   importResource as importResourceToVercelApi,
 } from "../vercel/marketplace-api";
-
-const billingPlans: BillingPlan[] = [
-  {
-    id: "default",
-    scope: "resource",
-    name: "Hobby",
-    cost: "Free",
-    description: "Use all you want up to 20G",
-    type: "subscription",
-    paymentMethodRequired: false,
-    details: [
-      { label: "Max storage size", value: "20G" },
-      { label: "Max queries per day", value: "100K" },
-    ],
-    highlightedDetails: [
-      { label: "High availability", value: "Single zone" },
-      { label: "Dataset size", value: "100Mb" },
-    ],
-    maxResources: 3,
-    requiredPolicies: [
-      { id: "1", name: "Terms of Service", url: "https://partner/toc" },
-    ],
-    effectiveDate: "2021-01-01T00:00:00Z",
-  },
-  {
-    id: "pro200",
-    scope: "resource",
-    name: "Pro",
-    cost: "$10 every Gb",
-    type: "subscription",
-    description: "$10 every Gb",
-    paymentMethodRequired: true,
-    preauthorizationAmount: 5,
-    highlightedDetails: [
-      { label: "High availability", value: "Multi zone" },
-      { label: "Dataset size", value: "500Mb" },
-    ],
-    details: [
-      { label: "20G storage and 200K queries", value: "$25.00" },
-      { label: "Extra storage", value: "$10.00 per 10G" },
-      { label: "Unlimited daily Command Limit" },
-    ],
-    requiredPolicies: [
-      { id: "1", name: "Terms of Service", url: "https://partner/toc" },
-    ],
-    effectiveDate: "2021-01-01T00:00:00Z",
-  },
-  {
-    id: "prepay10",
-    scope: "resource",
-    name: "Prepay 10",
-    cost: "$10 for 1,000 tokens",
-    type: "prepayment",
-    description: "$10 for 1,000 tokens",
-    paymentMethodRequired: true,
-    minimumAmount: "10.00",
-    highlightedDetails: [{ label: "Token types", value: "input/output" }],
-    details: [{ label: "Token types", value: "input/output" }],
-    effectiveDate: "2021-01-01T00:00:00Z",
-  },
-];
+import { billingPlans } from "./billing";
 
 const billingPlanMap = new Map(billingPlans.map((plan) => [plan.id, plan]));
 
-export async function installIntegration(
+export const installIntegration = async (
   installationId: string,
-  request: InstallIntegrationRequest & { type: "marketplace" | "external" },
-): Promise<void> {
+  request: InstallIntegrationRequest & { type: "marketplace" | "external" }
+) => {
   const pipeline = kv.pipeline();
-  await pipeline.set(installationId, request);
-  await pipeline.lrem("installations", 0, installationId);
-  await pipeline.lpush("installations", installationId);
-  await pipeline.exec();
-}
 
-export async function updateInstallation(
+  pipeline.set(installationId, request);
+  pipeline.lrem("installations", 0, installationId);
+  pipeline.lpush("installations", installationId);
+  pipeline.exec();
+
+  return await Promise.resolve();
+};
+
+export const updateInstallation = async (
   installationId: string,
-  billingPlanId: string,
-): Promise<void> {
+  billingPlanId: string
+) => {
   const installation = await getInstallation(installationId);
   const pipeline = kv.pipeline();
-  await pipeline.set(installationId, { ...installation, billingPlanId });
-  await pipeline.exec();
-}
 
-export async function uninstallInstallation(
-  installationId: string,
-): Promise<{ finalized: boolean } | undefined> {
+  pipeline.set(installationId, { ...installation, billingPlanId });
+  pipeline.exec();
+};
+
+export const uninstallInstallation = async (installationId: string) => {
   const installation = await getInstallation(installationId);
   if (!installation || installation.deletedAt) {
     return undefined;
   }
   const pipeline = kv.pipeline();
-  await pipeline.set(installationId, {
+
+  pipeline.set(installationId, {
     ...installation,
     deletedAt: Date.now(),
   });
-  await pipeline.lrem("installations", 0, installationId);
+  pipeline.lrem("installations", 0, installationId);
+
   await pipeline.exec();
 
   // Installation is finalized immediately if it's on a free plan.
   const billingPlan = billingPlanMap.get(installation.billingPlanId);
   return { finalized: billingPlan?.paymentMethodRequired === false };
-}
+};
 
-export async function listInstallations(): Promise<string[]> {
+export const listInstallations = async () => {
   const installationIds = await kv.lrange("installations", 0, -1);
   return installationIds;
-}
+};
 
-export async function provisionResource(
+export const provisionResource = async (
   installationId: string,
   request: ProvisionResourceRequest,
-  opts?: { status?: ResourceStatusType },
-): Promise<ProvisionResourceResponse> {
+  opts?: { status?: ResourceStatusType }
+) => {
   const billingPlan = billingPlanMap.get(request.billingPlanId);
   if (!billingPlan) {
     throw new Error(`Unknown billing plan ${request.billingPlanId}`);
@@ -155,7 +92,7 @@ export async function provisionResource(
 
   await kv.set(
     `${installationId}:resource:${resource.id}`,
-    serializeResource(resource),
+    serializeResource(resource)
   );
   await kv.lpush(`${installationId}:resources`, resource.id);
   await updateInstallation(installationId, request.billingPlanId);
@@ -179,13 +116,13 @@ export async function provisionResource(
       },
     ],
   };
-}
+};
 
-export async function updateResource(
+export const updateResource = async (
   installationId: string,
   resourceId: string,
-  request: UpdateResourceRequest,
-): Promise<UpdateResourceResponse> {
+  request: UpdateResourceRequest
+) => {
   const resource = await getResource(installationId, resourceId);
 
   if (!resource) {
@@ -204,17 +141,17 @@ export async function updateResource(
 
   await kv.set(
     `${installationId}:resource:${resourceId}`,
-    serializeResource(nextResource),
+    serializeResource(nextResource)
   );
 
   return nextResource;
-}
+};
 
-export async function transferResource(
+export const transferResource = async (
   installationId: string,
   resourceId: string,
-  targetInstallationId: string,
-): Promise<void> {
+  targetInstallationId: string
+) => {
   const resource = await getResource(installationId, resourceId);
 
   if (!resource) {
@@ -223,16 +160,16 @@ export async function transferResource(
 
   await kv.set(
     `${targetInstallationId}:resource:${resourceId}`,
-    serializeResource(resource),
+    serializeResource(resource)
   );
   await kv.del(`${installationId}:resource:${resourceId}`);
-}
+};
 
-export async function updateResourceNotification(
+export const updateResourceNotification = async (
   installationId: string,
   resourceId: string,
-  notification?: Notification,
-): Promise<void> {
+  notification?: Notification
+) => {
   const resource = await getResource(installationId, resourceId);
 
   if (!resource) {
@@ -244,31 +181,31 @@ export async function updateResourceNotification(
     serializeResource({
       ...resource,
       notification,
-    }),
+    })
   );
-}
+};
 
-export async function clearResourceNotification(
+export const clearResourceNotification = async (
   installationId: string,
-  resourceId: string,
-): Promise<void> {
+  resourceId: string
+) => {
   await updateResourceNotification(installationId, resourceId);
-}
+};
 
-export async function deleteResource(
+export const deleteResource = async (
   installationId: string,
-  resourceId: string,
-): Promise<void> {
+  resourceId: string
+) => {
   const pipeline = kv.pipeline();
   pipeline.del(`${installationId}:resource:${resourceId}`);
   pipeline.lrem(`${installationId}:resources`, 0, resourceId);
   await pipeline.exec();
-}
+};
 
-export async function listResources(
+export const listResources = async (
   installationId: string,
-  targetResourceIds?: string[],
-): Promise<ListResourcesResponse> {
+  targetResourceIds?: string[]
+) => {
   const resourceIds = targetResourceIds?.length
     ? targetResourceIds
     : await kv.lrange(`${installationId}:resources`, 0, -1);
@@ -288,14 +225,14 @@ export async function listResources(
   return {
     resources: compact(resources).map(deserializeResource),
   };
-}
+};
 
-export async function getResource(
+export const getResource = async (
   installationId: string,
-  resourceId: string,
-): Promise<GetResourceResponse | null> {
+  resourceId: string
+) => {
   const resource = await kv.get<SerializedResource>(
-    `${installationId}:resource:${resourceId}`,
+    `${installationId}:resource:${resourceId}`
   );
 
   if (resource) {
@@ -303,12 +240,12 @@ export async function getResource(
   }
 
   return null;
-}
+};
 
-export async function cloneResource(
+export const cloneResource = async (
   installationId: string,
-  resourceId: string,
-) {
+  resourceId: string
+) => {
   const resource = await getResource(installationId, resourceId);
 
   if (!resource) {
@@ -324,66 +261,64 @@ export async function cloneResource(
     billingPlanId: resource.billingPlan?.id || "",
   });
   return clonedResource;
-}
+};
 
-export async function importResourceToVercel(
+export const importResourceToVercel = async (
   installationId: string,
-  resourceId: string,
-): Promise<void> {
+  resourceId: string
+) => {
   const resource = await getResource(installationId, resourceId);
 
   if (!resource) {
     throw new Error(`Cannot find resource ${resourceId}`);
   }
 
-  const response = await importResourceToVercelApi(
-    installationId,
-    resource.id,
-    {
-      name: resource.name,
-      productId: resource.productId,
-      status: resource.status,
-      metadata: resource.metadata,
-      billingPlan: resource.billingPlan,
-      notification: resource.notification,
-      secrets: [
-        {
-          name: "TOP_SECRET",
-          value: `birds aren't real (${new Date().toISOString()})`,
-        },
-        {
-          name: "TOP_SECRET_CLONED",
-          value: `birds aren't real (${new Date().toISOString()})`,
-        },
-      ],
-    },
-  );
-}
+  await importResourceToVercelApi(installationId, resource.id, {
+    name: resource.name,
+    productId: resource.productId,
+    status: resource.status,
+    metadata: resource.metadata,
+    billingPlan: resource.billingPlan,
+    notification: resource.notification,
+    secrets: [
+      {
+        name: "TOP_SECRET",
+        value: `birds aren't real (${new Date().toISOString()})`,
+      },
+      {
+        name: "TOP_SECRET_CLONED",
+        value: `birds aren't real (${new Date().toISOString()})`,
+      },
+    ],
+  });
+};
 
-export async function provisionPurchase(
+export const provisionPurchase = async (
   installationId: string,
-  request: ProvisionPurchaseRequest,
-): Promise<ProvisionPurchaseResponse> {
+  request: ProvisionPurchaseRequest
+) => {
   const invoice = await getInvoice(installationId, request.invoiceId);
+
   if (invoice.state !== "paid") {
     throw new Error(`Invoice ${request.invoiceId} is not paid`);
   }
 
-  const balances: Record<string, Balance> = {};
+  const balances: Record<string, Balances> = {};
 
-  for (const item of invoice.items ?? []) {
+  for (const item of invoice.items) {
     const amountInCents = Math.floor(Number.parseFloat(item.total) * 100);
+
     if (item.resourceId) {
       const balance = await addResourceBalanceInternal(
         installationId,
         item.resourceId,
-        amountInCents,
+        amountInCents
       );
       balances[item.resourceId] = balance;
     } else {
       const balance = await addInstallationBalanceInternal(
         installationId,
-        amountInCents,
+        amountInCents
       );
       balances[""] = balance;
     }
@@ -393,81 +328,80 @@ export async function provisionPurchase(
     timestamp: new Date().toISOString(),
     balances: Object.values(balances),
   };
-}
+};
 
-export async function addInstallationBalanceInternal(
+export const addInstallationBalanceInternal = async (
   installationId: string,
-  currencyValueInCents: number,
-): Promise<Balance> {
+  currencyValueInCents: number
+) => {
   const result = await kv.incrby(
     `${installationId}:balance`,
-    currencyValueInCents,
+    currencyValueInCents
   );
   return {
     currencyValueInCents: result,
-    credit: String(result * 1_000),
+    credit: String(result * 1000),
     nameLabel: "Tokens",
   };
-}
+};
 
-export async function getInstallationBalance(
-  installationId: string,
-): Promise<Balance | null> {
+export const getInstallationBalance = async (installationId: string) => {
   const result = await kv.get<number>(`${installationId}:balance`);
   if (result === null) {
     return null;
   }
   return {
     currencyValueInCents: result,
-    credit: String(result * 1_000),
+    credit: String(result * 1000),
     nameLabel: "Tokens",
   };
-}
+};
 
-export async function addResourceBalanceInternal(
+export const addResourceBalanceInternal = async (
   installationId: string,
   resourceId: string,
-  currencyValueInCents: number,
-): Promise<Balance> {
+  currencyValueInCents: number
+) => {
   const result = await kv.incrby(
     `${installationId}:${resourceId}:balance`,
-    currencyValueInCents,
+    currencyValueInCents
   );
   return {
     currencyValueInCents: result,
-    credit: String(result * 1_000),
+    credit: String(result * 1000),
     nameLabel: "Tokens",
     resourceId,
   };
-}
+};
 
-export async function getResourceBalance(
+export const getResourceBalance = async (
   installationId: string,
-  resourceId: string,
-): Promise<Balance | null> {
+  resourceId: string
+) => {
   const result = await kv.get<number>(
-    `${installationId}:${resourceId}:balance`,
+    `${installationId}:${resourceId}:balance`
   );
   if (result === null) {
     return null;
   }
   return {
     currencyValueInCents: result,
-    credit: String(result * 1_000),
+    credit: String(result * 1000),
     nameLabel: "Tokens",
     resourceId,
   };
-}
+};
 
 type SerializedResource = Omit<Resource, "billingPlan"> & {
   billingPlan: string;
 };
 
-function serializeResource(resource: Resource): SerializedResource {
-  return { ...resource, billingPlan: resource.billingPlan.id };
-}
+const serializeResource = (resource: Resource) => ({
+  ...resource,
+  billingPlan: resource.billingPlan.id,
+});
 
-function deserializeResource(serializedResource: SerializedResource): Resource {
+const deserializeResource = (serializedResource: SerializedResource) => {
   const billingPlan = billingPlanMap.get(serializedResource.billingPlan) ?? {
     id: serializedResource.billingPlan,
     scope: "resource",
@@ -477,21 +411,19 @@ function deserializeResource(serializedResource: SerializedResource): Resource {
     paymentMethodRequired: false,
   };
   return { ...serializedResource, billingPlan };
-}
+};
 
-export async function getAllBillingPlans(
+export const getAllBillingPlans = async (
   _installationId: string,
-  _experimental_metadata?: Record<string, unknown>,
-): Promise<GetBillingPlansResponse> {
-  return {
-    plans: billingPlans,
-  };
-}
+  _experimental_metadata?: Record<string, unknown>
+) => {
+  return await Promise.resolve({ plans: billingPlans });
+};
 
-export async function getInstallationBillingPlans(
+export const getInstallationBillingPlans = async (
   installationId: string,
-  _experimental_metadata?: Record<string, unknown>,
-): Promise<GetBillingPlansResponse> {
+  _experimental_metadata?: Record<string, unknown>
+) => {
   const resources = await listResources(installationId);
   return {
     plans:
@@ -499,13 +431,13 @@ export async function getInstallationBillingPlans(
         ? billingPlans.filter((p) => p.paymentMethodRequired)
         : billingPlans,
   };
-}
+};
 
-export async function getProductBillingPlans(
+export const getProductBillingPlans = async (
   _productId: string,
   installationId: string,
-  _experimental_metadata?: Record<string, unknown>,
-): Promise<GetBillingPlansResponse> {
+  _experimental_metadata?: Record<string, unknown>
+) => {
   const resources = await listResources(installationId);
   return {
     plans:
@@ -513,23 +445,16 @@ export async function getProductBillingPlans(
         ? billingPlans.filter((p) => p.paymentMethodRequired)
         : billingPlans,
   };
-}
+};
 
-export async function getResourceBillingPlans(
+export const getResourceBillingPlans = async (
   _installationId: string,
-  _resourceId: string,
-): Promise<GetBillingPlansResponse> {
-  return { plans: billingPlans };
-}
+  _resourceId: string
+) => {
+  return await Promise.resolve({ plans: billingPlans });
+};
 
-export async function getInstallation(installationId: string): Promise<
-  InstallIntegrationRequest & {
-    type: "marketplace" | "external";
-    billingPlanId: string;
-    deletedAt?: number;
-    notification?: Notification;
-  }
-> {
+export const getInstallation = async (installationId: string) => {
   const installation = await kv.get<
     InstallIntegrationRequest & {
       type: "marketplace" | "external";
@@ -544,53 +469,53 @@ export async function getInstallation(installationId: string): Promise<
   }
 
   return installation;
-}
+};
 
-export async function setInstallationNotification(
+export const setInstallationNotification = async (
   installationId: string,
-  notification: Notification | undefined | null,
-): Promise<void> {
+  notification: Notification | undefined | null
+) => {
   const installation = await getInstallation(installationId);
   const pipeline = kv.pipeline();
-  await pipeline.set(installationId, {
+
+  pipeline.set(installationId, {
     ...installation,
     notification: notification ?? undefined,
   });
-  await pipeline.exec();
-}
 
-export async function storeWebhookEvent(
-  event: WebhookEvent | UnknownWebhookEvent,
-): Promise<void> {
+  await pipeline.exec();
+};
+
+export const storeWebhookEvent = async (
+  event: WebhookEvent | UnknownWebhookEvent
+) => {
   const pipeline = kv.pipeline();
-  await pipeline.lpush("webhook_events", event);
-  await pipeline.ltrim("webhook_events", 0, 100);
+
+  pipeline.lpush("webhook_events", event);
+  pipeline.ltrim("webhook_events", 0, 100);
+
   await pipeline.exec();
-}
+};
 
-export async function getWebhookEvents(limit = 100): Promise<WebhookEvent[]> {
+export const getWebhookEvents = async (limit = 100) => {
   return (await kv.lrange<WebhookEvent>("webhook_events", 0, limit)).sort(
-    (a, b) => b.createdAt - a.createdAt,
+    (a, b) => b.createdAt - a.createdAt
   );
-}
+};
 
-export async function getTransferRequest(
-  transferId: string,
-): Promise<TransferRequest | null> {
+export const getTransferRequest = async (transferId: string) => {
   return await kv.get<TransferRequest>(`transfer-request:${transferId}`);
-}
+};
 
-export async function setTransferRequest(
-  transferRequest: TransferRequest,
-): Promise<"OK" | TransferRequest | null> {
-  return kv.set<TransferRequest>(
+export const setTransferRequest = async (transferRequest: TransferRequest) => {
+  return await kv.set<TransferRequest>(
     `transfer-request:${transferRequest.transferId}`,
-    transferRequest,
+    transferRequest
   );
-}
+};
 
-export async function deleteTransferRequest(
-  transferRequest: TransferRequest,
-): Promise<number> {
-  return kv.del(`transfer-request:${transferRequest.transferId}`);
-}
+export const deleteTransferRequest = async (
+  transferRequest: TransferRequest
+) => {
+  return await kv.del(`transfer-request:${transferRequest.transferId}`);
+};

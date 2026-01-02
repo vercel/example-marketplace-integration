@@ -1,13 +1,19 @@
 import { getInstallation, getInstallationBalance } from "@/lib/partner";
-import { getSession } from "../auth";
 import { getAccountInfo } from "@/lib/vercel/marketplace-api";
-import { Section } from "../components/section";
-import { addInstallationBalance, clearResourceNotificationAction, sendBillingDataAction, setExampleNotificationAction, updateNotificationAction } from "./actions";
+import { getSession } from "../auth";
 import { FormButton } from "../components/form-button";
+import { Section } from "../components/section";
+import {
+  addInstallationBalance,
+  clearResourceNotificationAction,
+  sendBillingDataAction,
+  setExampleNotificationAction,
+  updateNotificationAction,
+} from "./actions";
 
 export const dynamic = "force-dynamic";
 
-export default async function IntallationPage() {
+const InstallationPage = async () => {
   const session = await getSession();
 
   const [installation, account] = await Promise.all([
@@ -49,17 +55,17 @@ export default async function IntallationPage() {
         </div>
         <form action={addInstallationBalance} className="p-2">
           <div className="space-y-4">
-            <div className="flex flex-col">
-              <label>Add credit value in cents</label>
+            <label className="flex flex-col">
+              <span>Add credit value in cents</span>
               <input
-                type="number"
+                className="border"
+                defaultValue={1000}
                 name="currencyValueInCents"
-                className="border border-1 border-slate-400"
-                defaultValue={10_00}
+                type="number"
               />
-            </div>
+            </label>
             <div className="flex justify-end">
-              <FormButton className="rounded bg-blue-500 text-white px-2 py-1 disabled:opacity-50">
+              <FormButton className="rounded bg-primary px-2 py-1 text-primary-foreground disabled:opacity-50">
                 Add Balance
               </FormButton>
             </div>
@@ -69,7 +75,7 @@ export default async function IntallationPage() {
 
       <Section title="Submit Billing Data">
         <form action={sendBillingDataAction} className="p-2">
-          <FormButton className="rounded bg-blue-500 text-white px-2 py-1 disabled:opacity-50">
+          <FormButton className="rounded bg-primary px-2 py-1 text-primary-foreground disabled:opacity-50">
             Submit
           </FormButton>
         </form>
@@ -79,13 +85,13 @@ export default async function IntallationPage() {
         <div>
           <div className="flex gap-2">
             <form action={setExampleNotificationAction}>
-              <FormButton className="rounded bg-blue-500 text-white px-2 py-1 disabled:opacity-50">
+              <FormButton className="rounded bg-primary px-2 py-1 text-primary-foreground disabled:opacity-50">
                 Example
               </FormButton>
             </form>
             <form action={clearResourceNotificationAction}>
               <FormButton
-                className="rounded bg-red-500 text-white px-2 py-1 disabled:opacity-50"
+                className="rounded bg-destructive px-2 py-1 text-destructive-foreground disabled:opacity-50"
                 disabled={!installation.notification}
               >
                 Clear
@@ -96,46 +102,49 @@ export default async function IntallationPage() {
 
         <form action={updateNotificationAction}>
           <div className="space-y-4">
-            <div className="flex flex-col">
-              <label>Title</label>
+            <label className="flex flex-col">
+              <span>Title</span>
               <input
-                type="text"
-                name="title"
-                className="border border-1 border-slate-400"
+                className="border"
                 defaultValue={installation.notification?.title}
+                name="title"
                 required
-              />
-            </div>
-            <div className="flex flex-col">
-              <label>Message</label>
-              <input
                 type="text"
-                name="message"
-                className="border border-1 border-slate-400"
+              />
+            </label>
+            <label className="flex flex-col">
+              <span>Message</span>
+              <input
+                className="border"
                 defaultValue={installation.notification?.message}
-              />
-            </div>
-            <div className="flex flex-col">
-              <label>
-                URL (<code>href</code>)
-              </label>
-              <input
+                name="message"
                 type="text"
-                name="href"
-                className="border border-1 border-slate-400"
-                defaultValue={installation.notification?.href}
               />
-            </div>
-            <div>
-              <label>Level:</label>
-              <select name="level" defaultValue={installation.notification?.level}>
+            </label>
+            <label className="flex flex-col">
+              <span>
+                URL (<code>href</code>)
+              </span>
+              <input
+                className="border"
+                defaultValue={installation.notification?.href}
+                name="href"
+                type="text"
+              />
+            </label>
+            <label>
+              <span>Level:</span>
+              <select
+                defaultValue={installation.notification?.level}
+                name="level"
+              >
                 <option value="info">info</option>
                 <option value="warn">warn</option>
                 <option value="error">error</option>
               </select>
-            </div>
+            </label>
             <div className="flex justify-end">
-              <FormButton className="rounded bg-blue-500 text-white px-2 py-1 disabled:opacity-50">
+              <FormButton className="rounded bg-primary px-2 py-1 text-primary-foreground disabled:opacity-50">
                 Save
               </FormButton>
             </div>
@@ -144,4 +153,6 @@ export default async function IntallationPage() {
       </Section>
     </main>
   );
-}
+};
+
+export default InstallationPage;

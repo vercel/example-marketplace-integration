@@ -1,5 +1,6 @@
+import type { Balances } from "@vercel/sdk/models/submitprepaymentbalancesop.js";
 import { mockBillingData } from "@/data/mock-billing-data";
-import { cronJob } from "@/lib/cron";
+import { env } from "@/lib/env";
 import {
   getInstallationBalance,
   getResourceBalance,
@@ -10,29 +11,53 @@ import {
   sendBillingData,
   submitPrepaymentBalances,
 } from "@/lib/vercel/marketplace-api";
-import { Balance } from "@/lib/vercel/schemas";
 
 export const dynamic = "force-dynamic";
 
-export const GET = cronJob(async (request: Request) => {
+/**
+ * Scheduled job to submit billing/usage data to Vercel.
+ * @see https://vercel.com/docs/integrations/create-integration/native-integration#billing-and-usage
+ */
+export const GET = async (request: Request) => {
+  if (process.env.NODE_ENV !== "development") {
+    const authHeader = request.headers.get("authorization");
+    if (
+      !authHeader ||
+      authHeader.replace("Bearer ", "").trim() !== env.CRON_SECRET
+    ) {
+      return new Response("Unauthorized", { status: 401 });
+    }
+  }
+
   const dryRun = new URL(request.url).searchParams.get("dryrun") === "1";
   const installationIds = await listInstallations();
+
   const promises = installationIds.map(async (installationId) => {
     const data = await mockBillingData(installationId);
     const { resources } = await listResources(installationId);
-    const balances = (
-      await Promise.all(
-        [
-          getInstallationBalance(installationId),
-          ...resources.map((resource) =>
-            getResourceBalance(installationId, resource.id),
-          ),
-        ].filter((x) => x !== null),
+    const balances: Balances[] = [];
+    const installationBalance = await getInstallationBalance(installationId);
+
+    if (installationBalance) {
+      balances.push(installationBalance);
+    }
+
+    const resourceBalances = await Promise.all(
+      resources.map((resource) =>
+        getResourceBalance(installationId, resource.id)
       )
-    ).filter((x) => x !== null) as Balance[];
+    );
+
+    for (const resourceBalance of resourceBalances) {
+      if (resourceBalance) {
+        balances.push(resourceBalance);
+      }
+    }
+
     console.log("Sending billing data: ", installationId, data);
     console.log("Sending balances: ", installationId, balances);
     let error: string | undefined;
+
     if (!dryRun) {
       try {
         await sendBillingData(installationId, data);
@@ -43,6 +68,8 @@ export const GET = cronJob(async (request: Request) => {
     }
     return { installationId, data, error };
   });
+
   const results = await Promise.all(promises);
+
   return Response.json(results);
-});
+};

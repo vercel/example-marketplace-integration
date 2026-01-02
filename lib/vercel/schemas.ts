@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v3";
 
 // Types
 
@@ -87,7 +87,7 @@ export const billingPlanSchema = z.object({
       z.object({
         label: z.string().min(1),
         value: z.string().min(1).optional(),
-      }),
+      })
     )
     .optional()
     .describe("Highlighted plan's details"),
@@ -104,7 +104,7 @@ export const billingPlanSchema = z.object({
       z.object({
         label: z.string().min(1),
         value: z.string().min(1).optional(),
-      }),
+      })
     )
     .optional(),
 
@@ -119,7 +119,7 @@ export const billingPlanSchema = z.object({
         id: z.string().min(1),
         name: z.string().min(1),
         url: z.string().min(1),
-      }),
+      })
     )
     .optional(),
 
@@ -154,9 +154,9 @@ const ResourceSecretsSchema = z.array(
       })
       .optional()
       .describe(
-        "A map of environments to override values for the secret, used for setting different values across deployments in production, preview, and development environments. Note: the same value will be used for all deployments in the given environment.",
+        "A map of environments to override values for the secret, used for setting different values across deployments in production, preview, and development environments. Note: the same value will be used for all deployments in the given environment."
       ),
-  }),
+  })
 );
 
 // Account and Installation
@@ -198,14 +198,12 @@ export type GetBillingPlansResponse = z.infer<
 
 // Provisioning of direct purchases
 
-export const balanceSchema = z.object({
+const balanceSchema = z.object({
   currencyValueInCents: z.number(),
   credit: z.string().optional(),
   nameLabel: z.string().optional(),
   resourceId: z.string().optional(),
 });
-
-export type Balance = z.infer<typeof balanceSchema>;
 
 export const submitPrepaymentBalanceRequestSchema = z.object({
   timestamp: datetimeSchema,
@@ -276,7 +274,7 @@ export type ProvisionResourceRequest = z.infer<
   typeof provisionResourceRequestSchema
 >;
 
-const environmentOverrideTargets = z.enum([
+const _environmentOverrideTargets = z.enum([
   "production",
   "preview",
   "development",
@@ -318,18 +316,6 @@ export type ListResourcesResponse = z.infer<typeof listResourcesResponseSchema>;
 export const getResourceResponseSchema = resourceSchema;
 
 export type GetResourceResponse = z.infer<typeof getResourceResponseSchema>;
-
-export const importResourceRequestSchema = z.object({
-  productId: z.string().min(1),
-  name: z.string().min(1),
-  status: resourceStatusSchema,
-  metadata: metadataSchema.optional(),
-  billingPlan: billingPlanSchema.optional(),
-  notification: notificationSchema.optional(),
-  secrets: ResourceSecretsSchema.optional(),
-});
-
-export type ImportResourceRequest = z.infer<typeof importResourceRequestSchema>;
 
 export const importResourceResponseSchema = z.object({
   name: z.string().min(1),
@@ -484,7 +470,7 @@ export const invoiceSchema = z.object({
         details: z.string().optional(),
         start: datetimeSchema.optional(),
         end: datetimeSchema.optional(),
-      }),
+      })
     )
     .optional(),
   discounts: z
@@ -497,7 +483,7 @@ export const invoiceSchema = z.object({
         details: z.string().optional(),
         start: datetimeSchema.optional(),
         end: datetimeSchema.optional(),
-      }),
+      })
     )
     .optional(),
 });
@@ -526,7 +512,7 @@ export const invoiceItemSchema = z.object({
 
 export type InvoiceItem = z.infer<typeof invoiceItemSchema>;
 
-export const invoiceDiscountSchema = z.object({
+const invoiceDiscountSchema = z.object({
   // Partner's billing plan ID.
   billingPlanId: z.string(),
 
@@ -542,8 +528,6 @@ export const invoiceDiscountSchema = z.object({
   details: z.string().optional(),
   amount: currencySchema,
 });
-
-export type InvoiceDiscount = z.infer<typeof invoiceDiscountSchema>;
 
 export const createInvoiceRequest = z.object({
   // Test mode.
@@ -586,21 +570,13 @@ export const refundInvoiceRequestSchema = z.object({
 
 export type RefundInvoiceRequest = z.infer<typeof refundInvoiceRequestSchema>;
 
-export type UpdateDeploymentActionRequest = z.infer<
-  typeof updateDeploymentActionRequestSchema
->;
-
-export type DeploymentActionOutcome = z.infer<
-  typeof deploymentActionResourceSecretsOutcomeSchema
->;
-
-export const deploymentActionResourceSecretsOutcomeSchema = z.object({
+const deploymentActionResourceSecretsOutcomeSchema = z.object({
   kind: z.literal("resource-secrets"),
   secrets: z.array(
     z.object({
       name: z.string(),
       value: z.string(),
-    }),
+    })
   ),
 });
 
@@ -609,6 +585,10 @@ export const updateDeploymentActionRequestSchema = z.object({
   statusText: z.string().optional(),
   outcomes: z.array(deploymentActionResourceSecretsOutcomeSchema).optional(),
 });
+
+export type UpdateDeploymentActionRequest = z.infer<
+  typeof updateDeploymentActionRequestSchema
+>;
 
 // Claims
 
@@ -663,23 +643,23 @@ export const RequestSecretsRotationResponseSchema = z.union([
     sync: z
       .literal(false)
       .describe(
-        "Indicates that the secrets rotation will be performed asynchronously. It's expected that the update-resource-secrets API will be called shortly after this response to complete the rotation.",
+        "Indicates that the secrets rotation will be performed asynchronously. It's expected that the update-resource-secrets API will be called shortly after this response to complete the rotation."
       ),
   }),
   z.object({
     sync: z
       .literal(true)
       .describe(
-        "Indicates that the secrets rotation is completed synchronously. The secrets can be used immediately after this response.",
+        "Indicates that the secrets rotation is completed synchronously. The secrets can be used immediately after this response."
       ),
     secrets: ResourceSecretsSchema.describe(
-      "New secrets rotated synchronously.",
+      "New secrets rotated synchronously."
     ),
     partial: z
       .boolean()
       .optional()
       .describe(
-        "Whether the rotated secrets only include a partial rotated set.",
+        "Whether the rotated secrets only include a partial rotated set."
       ),
   }),
 ]);

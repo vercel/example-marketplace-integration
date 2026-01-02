@@ -6,13 +6,15 @@ interface Params {
   resourceId: string;
 }
 
-export const GET = withAuth(
-  async (claims, _request, { params }: { params: Params }) => {
-    const response = await getResourceBillingPlans(
-      claims.installation_id,
-      params.resourceId,
-    );
+/**
+ * Get the billing plans for the resource
+ */
+export const GET = withAuth(async (claims, _request, ...rest: unknown[]) => {
+  const [{ params }] = rest as [{ params: Params }];
+  const response = await getResourceBillingPlans(
+    claims.installation_id,
+    params.resourceId
+  );
 
-    return Response.json(response);
-  },
-);
+  return Response.json(response);
+});

@@ -8,16 +8,22 @@ import {
 
 export const dynamic = "force-dynamic";
 
+/**
+ * Get the resources for the installation
+ */
 export const GET = withAuth(async (claims, request) => {
   const ids = request.nextUrl.searchParams.getAll("ids");
   const resources = await listResources(claims.installation_id, ids);
   return Response.json(resources);
 });
 
+/**
+ * Provision a new resource
+ */
 export const POST = withAuth(async (claims, request) => {
   const requestBody = await readRequestBodyWithSchema(
     request,
-    provisionResourceRequestSchema,
+    provisionResourceRequestSchema
   );
 
   if (!requestBody.success) {
@@ -41,7 +47,7 @@ export const POST = withAuth(async (claims, request) => {
       },
       {
         status: 400,
-      },
+      }
     );
   }
   if (requestBody.data.name === "conflict") {
@@ -54,7 +60,7 @@ export const POST = withAuth(async (claims, request) => {
       },
       {
         status: 409,
-      },
+      }
     );
   }
 
@@ -67,7 +73,7 @@ export const POST = withAuth(async (claims, request) => {
     requestBody.data,
     {
       status: initialStatus,
-    },
+    }
   );
 
   return Response.json(resource, {

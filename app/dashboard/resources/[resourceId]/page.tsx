@@ -1,43 +1,39 @@
-import { getResource, getResourceBalance } from "@/lib/partner";
 import Link from "next/link";
+import { notFound } from "next/navigation";
+import { getResource, getResourceBalance } from "@/lib/partner";
+import type { Resource } from "@/lib/vercel/schemas";
+import { getSession } from "../../auth";
+import { FormButton } from "../../components/form-button";
+import { Section } from "../../components/section";
 import {
+  addResourceBalance,
   clearResourceNotificationAction,
+  cloneResourceAction,
+  importResourceToVercelAction,
   rotateCredentialsAction,
   setExampleNotificationAction,
   updateResourceAction,
   updateResourceNotificationAction,
-  addResourceBalance,
-  importResourceToVercelAction,
-  cloneResourceAction,
 } from "./actions";
-import { getSession } from "../../auth";
-import { getAccountInfo } from "@/lib/vercel/marketplace-api";
-import { FormButton } from "../../components/form-button";
-import { Resource } from "@/lib/vercel/schemas";
-import { Section } from "../../components/section";
 
-export default async function ResourcePage({
-  params: { resourceId },
-}: {
-  params: { resourceId: string };
-}) {
+const ResourcePage = async (
+  props: PageProps<"/dashboard/resources/[resourceId]">
+) => {
+  const { resourceId } = await props.params;
   const session = await getSession();
   const installationId = session.installation_id;
-  const [resource, account] = await Promise.all([
-    await getResource(installationId, resourceId),
-    await getAccountInfo(installationId),
-  ]);
+  const resource = await getResource(installationId, resourceId);
 
   if (!resource) {
-    throw new Error(`Resource ${resourceId} not found`);
+    notFound();
   }
 
   const balance = await getResourceBalance(installationId, resource.id);
 
   return (
     <main className="space-y-8">
-      <h1 className="text-xl font-bold">
-        <Link href="/dashboard" className="text-blue-500 underline">
+      <h1 className="font-bold text-xl">
+        <Link className="text-primary underline" href="/dashboard">
           Dashboard
         </Link>{" "}
         &gt; {resource.name}
@@ -47,32 +43,29 @@ export default async function ResourcePage({
 
       <Section title="Edit Resource">
         <form action={updateResourceAction}>
-          <input type="hidden" name="resourceId" value={resource.id} />
+          <input name="resourceId" type="hidden" value={resource.id} />
           <div className="space-y-4">
-            <div className="flex flex-col">
-              <label>Name</label>
+            <label className="flex flex-col">
+              <span>Name</span>
               <input
-                type="text"
-                name="name"
-                className="border border-1 border-slate-400"
+                className="border"
                 defaultValue={resource.name}
+                name="name"
+                type="text"
               />
-            </div>
-            <div className="flex flex-row gap-1">
-              <label>Status: </label>
-
-              <select name="status" defaultValue={resource.status}>
-                <option selected value="ready">
-                  Ready
-                </option>
+            </label>
+            <label className="flex flex-row gap-1">
+              <span>Status: </span>
+              <select defaultValue={resource.status} name="status">
+                <option value="ready">Ready</option>
                 <option value="error">Error</option>
                 <option value="suspended">Suspended</option>
                 <option value="pending">Pending</option>
                 <option value="onboarding">Onboarding</option>
               </select>
-            </div>
+            </label>
             <div className="flex justify-end">
-              <FormButton className="rounded bg-blue-500 text-white px-2 py-1 disabled:opacity-50">
+              <FormButton className="rounded bg-primary px-2 py-1 text-primary-foreground disabled:opacity-50">
                 Save
               </FormButton>
             </div>
@@ -93,19 +86,19 @@ export default async function ResourcePage({
           )}
         </div>
         <form action={addResourceBalance} className="p-2">
-          <input type="hidden" name="resourceId" value={resource.id} />
+          <input name="resourceId" type="hidden" value={resource.id} />
           <div className="space-y-4">
-            <div className="flex flex-col">
-              <label>Add credit value in cents</label>
+            <label className="flex flex-col">
+              <span>Add credit value in cents</span>
               <input
-                type="number"
+                className="border"
+                defaultValue={1000}
                 name="currencyValueInCents"
-                className="border border-1 border-slate-400"
-                defaultValue={10_00}
+                type="number"
               />
-            </div>
+            </label>
             <div className="flex justify-end">
-              <FormButton className="rounded bg-blue-500 text-white px-2 py-1 disabled:opacity-50">
+              <FormButton className="rounded bg-primary px-2 py-1 text-primary-foreground disabled:opacity-50">
                 Add Balance
               </FormButton>
             </div>
@@ -115,20 +108,20 @@ export default async function ResourcePage({
 
       <Section title="Actions">
         <form action={cloneResourceAction} className="p-2">
-          <input type="hidden" name="resourceId" value={resource.id} />
-          <FormButton className="rounded bg-blue-500 text-white px-2 py-1 disabled:opacity-50">
+          <input name="resourceId" type="hidden" value={resource.id} />
+          <FormButton className="rounded bg-primary px-2 py-1 text-primary-foreground disabled:opacity-50">
             Clone Resource
           </FormButton>
         </form>
         <form action={rotateCredentialsAction} className="p-2">
-          <input type="hidden" name="resourceId" value={resource.id} />
-          <FormButton className="rounded bg-blue-500 text-white px-2 py-1 disabled:opacity-50">
+          <input name="resourceId" type="hidden" value={resource.id} />
+          <FormButton className="rounded bg-primary px-2 py-1 text-primary-foreground disabled:opacity-50">
             Rotate Credentials
           </FormButton>
         </form>
         <form action={importResourceToVercelAction} className="p-2">
-          <input type="hidden" name="resourceId" value={resource.id} />
-          <FormButton className="rounded bg-blue-500 text-white px-2 py-1 disabled:opacity-50">
+          <input name="resourceId" type="hidden" value={resource.id} />
+          <FormButton className="rounded bg-primary px-2 py-1 text-primary-foreground disabled:opacity-50">
             Import Resource to Vercel
           </FormButton>
         </form>
@@ -138,15 +131,15 @@ export default async function ResourcePage({
         <div>
           <div className="flex gap-2">
             <form action={setExampleNotificationAction}>
-              <input type="hidden" name="resourceId" value={resource.id} />
-              <FormButton className="rounded bg-blue-500 text-white px-2 py-1 disabled:opacity-50">
+              <input name="resourceId" type="hidden" value={resource.id} />
+              <FormButton className="rounded bg-primary px-2 py-1 text-primary-foreground disabled:opacity-50">
                 Example
               </FormButton>
             </form>
             <form action={clearResourceNotificationAction}>
-              <input type="hidden" name="resourceId" value={resource.id} />
+              <input name="resourceId" type="hidden" value={resource.id} />
               <FormButton
-                className="rounded bg-red-500 text-white px-2 py-1 disabled:opacity-50"
+                className="rounded bg-destructive px-2 py-1 text-destructive-foreground disabled:opacity-50"
                 disabled={!resource.notification}
               >
                 Clear
@@ -156,48 +149,48 @@ export default async function ResourcePage({
         </div>
 
         <form action={updateResourceNotificationAction}>
-          <input type="hidden" name="resourceId" value={resource.id} />
+          <input name="resourceId" type="hidden" value={resource.id} />
           <div className="space-y-4">
-            <div className="flex flex-col">
-              <label>Title</label>
+            <label className="flex flex-col">
+              <span>Title</span>
               <input
-                type="text"
-                name="title"
-                className="border border-1 border-slate-400"
+                className="border"
                 defaultValue={resource.notification?.title}
+                name="title"
                 required
-              />
-            </div>
-            <div className="flex flex-col">
-              <label>Message</label>
-              <input
                 type="text"
-                name="message"
-                className="border border-1 border-slate-400"
+              />
+            </label>
+            <label className="flex flex-col">
+              <span>Message</span>
+              <input
+                className="border"
                 defaultValue={resource.notification?.message}
-              />
-            </div>
-            <div className="flex flex-col">
-              <label>
-                URL (<code>href</code>)
-              </label>
-              <input
+                name="message"
                 type="text"
-                name="href"
-                className="border border-1 border-slate-400"
-                defaultValue={resource.notification?.href}
               />
-            </div>
-            <div>
-              <label>Level:</label>
-              <select name="level" defaultValue={resource.notification?.level}>
+            </label>
+            <label className="flex flex-col">
+              <span>
+                URL (<code>href</code>)
+              </span>
+              <input
+                className="border"
+                defaultValue={resource.notification?.href}
+                name="href"
+                type="text"
+              />
+            </label>
+            <label>
+              <span>Level:</span>
+              <select defaultValue={resource.notification?.level} name="level">
                 <option value="info">info</option>
                 <option value="warn">warn</option>
                 <option value="error">error</option>
               </select>
-            </div>
+            </label>
             <div className="flex justify-end">
-              <FormButton className="rounded bg-blue-500 text-white px-2 py-1 disabled:opacity-50">
+              <FormButton className="rounded bg-primary px-2 py-1 text-primary-foreground disabled:opacity-50">
                 Save
               </FormButton>
             </div>
@@ -206,36 +199,34 @@ export default async function ResourcePage({
       </Section>
     </main>
   );
-}
+};
 
-function ResourceCard({ resource }: { resource: Resource }) {
-  return (
-    <div className="bg-white rounded-lg shadow-md p-4">
-      <div className="flex justify-between items-center mb-2">
-        <span className="text-gray-600 text-sm">ID: {resource.id}</span>
-        <span
-          className={`px-2 py-1 text-xs rounded-full ${
-            resource.status === "ready"
-              ? " bg-green-200 text-green-800"
-              : " bg-red-200 text-red-800"
-          }`}
-        >
-          {resource.status}
-        </span>
-      </div>
-      <h2 className="text-lg font-medium mb-2">{resource.name}</h2>
-      <p className="text-gray-600 text-sm mb-2">
-        Product: {resource.productId}
-      </p>
-      <p className="text-gray-600 text-sm">
-        Billing Plan: {resource.billingPlan?.name}
-      </p>
-      <details className="mt-4">
-        <summary>JSON</summary>
-        <pre className="overflow-scroll">
-          <code>{JSON.stringify(resource, null, 2)}</code>
-        </pre>
-      </details>
+const ResourceCard = ({ resource }: { resource: Resource }) => (
+  <div className="rounded-lg bg-white p-4 shadow-md">
+    <div className="mb-2 flex items-center justify-between">
+      <span className="text-muted-foreground text-sm">ID: {resource.id}</span>
+      <span
+        className={`rounded-full px-2 py-1 text-xs ${
+          resource.status === "ready"
+            ? "bg-emerald-500/15 text-emerald-700"
+            : "bg-destructive/15 text-destructive"
+        }`}
+      >
+        {resource.status}
+      </span>
     </div>
-  );
-}
+    <h2 className="mb-2 font-medium text-lg">{resource.name}</h2>
+    <p className="mb-2 text-muted-foreground text-sm">Product: {resource.productId}</p>
+    <p className="text-muted-foreground text-sm">
+      Billing Plan: {resource.billingPlan?.name}
+    </p>
+    <details className="mt-4">
+      <summary>JSON</summary>
+      <pre className="overflow-scroll">
+        <code>{JSON.stringify(resource, null, 2)}</code>
+      </pre>
+    </details>
+  </div>
+);
+
+export default ResourcePage;

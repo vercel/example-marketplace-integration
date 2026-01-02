@@ -1,22 +1,22 @@
+import { getInvoice } from "@/lib/vercel/marketplace-api";
 import { getSession } from "../auth";
-import { getAccountInfo, getInvoice } from "@/lib/vercel/marketplace-api";
+import { FormButton } from "../components/form-button";
 import { Section } from "../components/section";
 import { refundInvoiceAction, submitInvoiceAction } from "./actions";
-import { FormButton } from "../components/form-button";
 
-export default async function Page({
-  searchParams,
-}: {
-  searchParams: { id?: string; submitError?: string };
-}) {
+export const dynamic = "force-dynamic";
+
+const InvoicesPage = async (props: PageProps<"/dashboard/invoices">) => {
+  const { id, submitError } = await props.searchParams;
   const session = await getSession();
 
-  let invoice;
-  let invoiceError;
+  let invoice: Awaited<ReturnType<typeof getInvoice>> | null = null;
+  let invoiceError: string | undefined;
   try {
-    invoice = searchParams.id
-      ? await getInvoice(session.installation_id, searchParams.id)
-      : null;
+    invoice =
+      typeof id === "string"
+        ? await getInvoice(session.installation_id, id)
+        : null;
   } catch (err) {
     invoiceError = err instanceof Error ? err.message : String(err);
   }
@@ -26,34 +26,34 @@ export default async function Page({
       <Section title="Submit Invoice">
         <form action={submitInvoiceAction}>
           <div className="space-y-4">
-            <div className="flex gap-2">
-              <label>Test</label>
-              <input type="checkbox" name="test" defaultChecked={true} />
-            </div>
-            <div className="flex gap-2">
-              <label>Max amount</label>
+            <label className="flex gap-2">
+              <span>Test</span>
+              <input defaultChecked={true} name="test" type="checkbox" />
+            </label>
+            <label className="flex gap-2">
+              <span>Max amount</span>
               <input
-                type="text"
-                name="maxAmount"
-                defaultValue="5"
                 className="border"
+                defaultValue="5"
+                name="maxAmount"
+                type="text"
               />
-            </div>
+            </label>
             <div className="flex justify-end">
-              <FormButton className="rounded bg-blue-500 text-white px-2 py-1 disabled:opacity-50">
+              <FormButton className="rounded bg-primary px-2 py-1 text-primary-foreground disabled:opacity-50">
                 Submit Invoice
               </FormButton>
             </div>
           </div>
         </form>
 
-        {searchParams.submitError ? (
+        {submitError ? (
           <div
-            className="bg-pink-100 border border-pink-400 text-pink-700 px-4 py-3 rounded relative mt-4"
+            className="relative mt-4 rounded border border-destructive bg-destructive/10 px-4 py-3 text-destructive"
             role="alert"
           >
             <strong className="font-bold">Error! </strong>
-            <span className="block sm:inline">{searchParams.submitError}</span>
+            <span className="block sm:inline">{submitError}</span>
           </div>
         ) : null}
       </Section>
@@ -63,14 +63,14 @@ export default async function Page({
           Look up by ID:{" "}
           <input
             className="border"
-            type="text"
+            defaultValue={id ?? ""}
             name="id"
-            defaultValue={searchParams.id ?? ""}
+            type="text"
           />
         </form>
         {invoice ? (
           <div>
-            <h2 className="text-xl font-bold">Invoice</h2>
+            <h2 className="font-bold text-xl">Invoice</h2>
             <pre className="overflow-scroll">
               <code>{JSON.stringify(invoice, null, 2)}</code>
             </pre>
@@ -78,7 +78,7 @@ export default async function Page({
         ) : null}
         {invoiceError ? (
           <div
-            className="bg-pink-100 border border-pink-400 text-pink-700 px-4 py-3 rounded relative mt-4"
+            className="relative mt-4 rounded border border-destructive bg-destructive/10 px-4 py-3 text-destructive"
             role="alert"
           >
             <strong className="font-bold">Error! </strong>
@@ -92,20 +92,20 @@ export default async function Page({
           Refund up by ID:{" "}
           <input
             className="border"
-            type="text"
+            defaultValue={id ?? ""}
             name="id"
-            defaultValue={searchParams.id ?? ""}
+            type="text"
           />
-          <div className="flex gap-2">
-            <label>Refund amount</label>
-            <input type="text" name="refundAmount" className="border" />
-          </div>
-          <div className="flex gap-2">
-            <label>Refund reason</label>
-            <input type="text" name="refundReason" className="border" />
-          </div>
+          <label className="flex gap-2">
+            <span>Refund amount</span>
+            <input className="border" name="refundAmount" type="text" />
+          </label>
+          <label className="flex gap-2">
+            <span>Refund reason</span>
+            <input className="border" name="refundReason" type="text" />
+          </label>
           <div className="flex justify-end">
-            <FormButton className="rounded bg-blue-500 text-white px-2 py-1 disabled:opacity-50">
+            <FormButton className="rounded bg-primary px-2 py-1 text-primary-foreground disabled:opacity-50">
               Refund Invoice
             </FormButton>
           </div>
@@ -113,4 +113,6 @@ export default async function Page({
       </Section>
     </main>
   );
-}
+};
+
+export default InvoicesPage;

@@ -1,43 +1,77 @@
+import { stringify } from "node:querystring";
+import { notFound } from "next/navigation";
+import { z } from "zod/v3";
 import { env } from "@/lib/env";
 import { installIntegration } from "@/lib/partner";
-import { exchangeExternalCodeForToken } from "@/lib/vercel/external-api";
+
+const IntegrationsExternalTokenResponse = z.object({
+  token_type: z.string(),
+  access_token: z.string(),
+  installation_id: z.string(),
+  user_id: z.string(),
+  team_id: z.string().nullable(),
+});
 
 export const dynamic = "force-dynamic";
 
-export default async function Page({
-  searchParams: { code, next },
-}: {
-  searchParams: { code: string; next: string };
-}) {
-  if (!env.VERCEL_EXTERNAL_REDIRECT_URI) {
+/**
+ * Callback page for the connect integration.
+ * This page is used to connect the installation to an existing partner account.
+ * @see https://vercel.com/docs/integrations/create-integration/marketplace-flows#open-in-provider-button-flow
+ */
+const Page = async (props: PageProps<"/connect/callback">) => {
+  const { code, next } = await props.searchParams;
+
+  if (typeof code !== "string" || typeof next !== "string") {
+    return notFound();
+  }
+
+  const res = await fetch("https://vercel.com/api/v2/oauth/access_token", {
+    method: "POST",
+    headers: {
+      "content-type": "application/x-www-form-urlencoded",
+    },
+    body: stringify({
+      code,
+      client_id: env.INTEGRATION_CLIENT_ID,
+      client_secret: env.INTEGRATION_CLIENT_SECRET,
+      redirect_uri: env.VERCEL_EXTERNAL_REDIRECT_URI,
+    }),
+  });
+
+  if (!res.ok) {
     throw new Error(
-      `VERCEL_EXTERNAL_REDIRECT_URI is not set, cannot connect account`,
+      `OAuth token exchange failed: ${res.status} ${res.statusText}`
     );
   }
 
-  const result = await exchangeExternalCodeForToken(
-    code,
-    env.VERCEL_EXTERNAL_REDIRECT_URI,
-  );
+  const json = await res.json();
+  const result = IntegrationsExternalTokenResponse.safeParse(json);
 
-  await installIntegration(result.installation_id, {
+  if (!result.success) {
+    notFound();
+  }
+
+  await installIntegration(result.data.installation_id, {
     type: "external",
     scopes: [],
     acceptedPolicies: {},
     credentials: {
-      access_token: result.access_token,
-      token_type: result.token_type,
+      access_token: result.data.access_token,
+      token_type: result.data.token_type,
     },
   });
 
   return (
-    <div className="space-y-10 text-center p-10">
-      <h1 className="text-lg font-medium">Account is connected. ✅</h1>
+    <div className="space-y-10 p-10 text-center">
+      <h1 className="font-medium text-lg">Account is connected. ✅</h1>
       <h3>
-        <a className="underline text-blue-500" href={next}>
+        <a className="text-primary underline" href={next}>
           Redirect me back to Vercel
         </a>
       </h3>
     </div>
   );
-}
+};
+
+export default Page;

@@ -1,23 +1,29 @@
-import { z, SafeParseReturnType, ZodSchema } from "zod";
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
+import type { ZodSchema } from "zod/v3";
 
-export async function readRequestBodyWithSchema<
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+
+export const readRequestBodyWithSchema = async <
   TRequestBodySchema extends ZodSchema,
 >(
   request: Request,
-  requestBodySchema: TRequestBodySchema,
-): Promise<
-  SafeParseReturnType<z.infer<TRequestBodySchema>, z.infer<TRequestBodySchema>>
-> {
+  requestBodySchema: TRequestBodySchema
+) => {
   const requestBodyRaw = await request.json();
   return requestBodySchema.safeParse(requestBodyRaw);
-}
+};
 
-export function buildError(code: string, message: string, user?: { message: string, url?: string}) {
-  return {
-    error: {
-      code,
-      message,
-      user,
-    },
-  };
-}
+export const buildError = (
+  code: string,
+  message: string,
+  user?: { message: string; url?: string }
+) => ({
+  error: {
+    code,
+    message,
+    user,
+  },
+});

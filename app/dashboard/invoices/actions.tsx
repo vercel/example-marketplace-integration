@@ -1,10 +1,10 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { getSession } from "../auth";
 import { refundInvoice, submitInvoice } from "@/lib/vercel/marketplace-api";
+import { getSession } from "../auth";
 
-export async function submitInvoiceAction(formData: FormData): Promise<void> {
+export const submitInvoiceAction = async (formData: FormData) => {
   const session = await getSession();
 
   const test = formData.get("test") === "on";
@@ -13,23 +13,29 @@ export async function submitInvoiceAction(formData: FormData): Promise<void> {
     : undefined;
 
   let invoiceId: string;
+
   try {
     const { invoiceId: resultInvoiceId } = await submitInvoice(
       session.installation_id,
-      { test, maxAmount, discountPercent: 0.2 },
+      { test, maxAmount, discountPercent: 0.2 }
     );
+
+    if (!resultInvoiceId) {
+      throw new Error("Invoice ID is required");
+    }
+
     invoiceId = resultInvoiceId;
   } catch (e) {
     redirect(
       `/dashboard/invoices?submitError=${encodeURIComponent(
-        e instanceof Error ? e.message : String(e),
-      )}`,
+        e instanceof Error ? e.message : String(e)
+      )}`
     );
   }
   redirect(`/dashboard/invoices?id=${encodeURIComponent(invoiceId)}`);
-}
+};
 
-export async function refundInvoiceAction(formData: FormData) {
+export const refundInvoiceAction = async (formData: FormData) => {
   const session = await getSession();
 
   const invoiceId = formData.get("id") as string;
@@ -40,7 +46,7 @@ export async function refundInvoiceAction(formData: FormData) {
     session.installation_id,
     invoiceId,
     refundAmount,
-    refundReason,
+    refundReason
   );
   redirect(`/dashboard/invoices?id=${encodeURIComponent(invoiceId)}`);
-}
+};

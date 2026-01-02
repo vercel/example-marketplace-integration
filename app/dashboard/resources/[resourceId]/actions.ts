@@ -1,5 +1,7 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import {
   addResourceBalanceInternal,
   clearResourceNotification,
@@ -9,17 +11,15 @@ import {
   updateResource,
   updateResourceNotification,
 } from "@/lib/partner";
-import { Notification, Resource } from "@/lib/vercel/schemas";
 import { dispatchEvent, updateSecrets } from "@/lib/vercel/marketplace-api";
+import type { Notification, Resource } from "@/lib/vercel/schemas";
 import { getSession } from "../../auth";
-import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 
-export async function updateResourceAction(formData: FormData): Promise<void> {
+export const updateResourceAction = async (formData: FormData) => {
   const session = await getSession();
   const resource = await getResource(
     session.installation_id,
-    formData.get("resourceId") as string,
+    formData.get("resourceId") as string
   );
 
   if (!resource) {
@@ -39,15 +39,13 @@ export async function updateResourceAction(formData: FormData): Promise<void> {
 
   revalidatePath("/dashboard");
   revalidatePath(`/dashboard/resources/${resource.id}`);
-}
+};
 
-export async function rotateCredentialsAction(
-  formData: FormData,
-): Promise<void> {
+export const rotateCredentialsAction = async (formData: FormData) => {
   const session = await getSession();
   const resource = await getResource(
     session.installation_id,
-    formData.get("resourceId") as string,
+    formData.get("resourceId") as string
   );
 
   if (!resource) {
@@ -69,26 +67,18 @@ export async function rotateCredentialsAction(
           : undefined,
     },
   ]);
-}
+};
 
-export async function clearResourceNotificationAction(
-  formData: FormData,
-): Promise<void> {
+export const clearResourceNotificationAction = async (formData: FormData) => {
   const session = await getSession();
 
   const resourceId = formData.get("resourceId") as string;
-  const resource = await getResource(
-    session.installation_id,
-    resourceId,
-  );
+  const resource = await getResource(session.installation_id, resourceId);
   if (!resource) {
     throw new Error(`Unknown resource '${resourceId}'`);
   }
 
-  await clearResourceNotification(
-    session.installation_id,
-    resource.id,
-  );
+  await clearResourceNotification(session.installation_id, resource.id);
   await dispatchEvent(session.installation_id, {
     type: "resource.updated",
     resourceId: resource.id,
@@ -97,30 +87,23 @@ export async function clearResourceNotificationAction(
 
   revalidatePath("/dashboard");
   revalidatePath(`/dashboard/resources/${resource.id}`);
-}
+};
 
-export async function updateResourceNotificationAction(formData: FormData) {
+export const updateResourceNotificationAction = async (formData: FormData) => {
   const session = await getSession();
 
   const resourceId = formData.get("resourceId") as string;
-  const resource = await getResource(
-    session.installation_id,
-    resourceId,
-  );
+  const resource = await getResource(session.installation_id, resourceId);
   if (!resource) {
     throw new Error(`Unknown resource '${resourceId}'`);
   }
 
-  await updateResourceNotification(
-    session.installation_id,
-    resource.id,
-    {
-      level: formData.get("level") as Notification["level"],
-      title: formData.get("title") as string,
-      message: formData.get("message") as string,
-      href: formData.get("href") as string,
-    },
-  );
+  await updateResourceNotification(session.installation_id, resource.id, {
+    level: formData.get("level") as Notification["level"],
+    title: formData.get("title") as string,
+    message: formData.get("message") as string,
+    href: formData.get("href") as string,
+  });
   await dispatchEvent(session.installation_id, {
     type: "resource.updated",
     resourceId: resource.id,
@@ -129,31 +112,24 @@ export async function updateResourceNotificationAction(formData: FormData) {
 
   revalidatePath("/dashboard");
   revalidatePath(`/dashboard/resources/${resource.id}`);
-}
+};
 
-export async function setExampleNotificationAction(formData: FormData) {
+export const setExampleNotificationAction = async (formData: FormData) => {
   const session = await getSession();
 
   const resourceId = formData.get("resourceId") as string;
-  const resource = await getResource(
-    session.installation_id,
-    resourceId,
-  );
+  const resource = await getResource(session.installation_id, resourceId);
   if (!resource) {
     throw new Error(`Unknown resource '${resourceId}'`);
   }
 
-  await updateResourceNotification(
-    session.installation_id,
-    resource.id,
-    {
-      level: "error",
-      title: "Resource failed to provision",
-      message:
-        "Your resource failed to provision because of complicated technical reasons. Please reach out to help@acmecorp.com",
-      href: "https://acmecorp.com/help",
-    },
-  );
+  await updateResourceNotification(session.installation_id, resource.id, {
+    level: "error",
+    title: "Resource failed to provision",
+    message:
+      "Your resource failed to provision because of complicated technical reasons. Please reach out to help@acmecorp.com",
+    href: "https://acmecorp.com/help",
+  });
   await dispatchEvent(session.installation_id, {
     type: "resource.updated",
     resourceId: resource.id,
@@ -162,34 +138,34 @@ export async function setExampleNotificationAction(formData: FormData) {
 
   revalidatePath("/dashboard");
   revalidatePath(`/dashboard/resources/${resource.id}`);
-}
+};
 
-export async function cloneResourceAction(formData: FormData) {
+export const cloneResourceAction = async (formData: FormData) => {
   const session = await getSession();
   const resourceId = formData.get("resourceId") as string;
   const clonedResource = await cloneResource(
     session.installation_id,
-    resourceId,
+    resourceId
   );
   revalidatePath("/dashboard");
   redirect(`/dashboard/resources/${clonedResource.id}`);
-}
+};
 
-export async function importResourceToVercelAction(formData: FormData) {
+export const importResourceToVercelAction = async (formData: FormData) => {
   const session = await getSession();
   const resourceId = formData.get("resourceId") as string;
   await importResourceToVercel(session.installation_id, resourceId);
-}
+};
 
-export async function addResourceBalance(formData: FormData) {
+export const addResourceBalance = async (formData: FormData) => {
   const session = await getSession();
 
   await addResourceBalanceInternal(
     session.installation_id,
     formData.get("resourceId") as string,
-    Number(formData.get("currencyValueInCents") as string),
+    Number(formData.get("currencyValueInCents") as string)
   );
 
   revalidatePath("/dashboard");
   revalidatePath(`/dashboard/resources/${formData.get("resourceId")}`);
-}
+};

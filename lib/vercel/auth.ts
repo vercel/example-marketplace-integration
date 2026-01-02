@@ -1,11 +1,13 @@
-import { NextRequest, NextResponse } from "next/server";
 import { createRemoteJWKSet, jwtVerify } from "jose";
-import { env } from "../env";
 import { JWTExpired, JWTInvalid } from "jose/errors";
+import { type NextRequest, NextResponse } from "next/server";
+import { env } from "../env";
 
 const JWKS = createRemoteJWKSet(
-  new URL(`https://marketplace.vercel.com/.well-known/jwks`),
+  new URL("https://marketplace.vercel.com/.well-known/jwks")
 );
+
+const BEARER_TOKEN_REGEX = /^bearer (.+)$/i;
 
 export interface OidcClaims {
   sub: string;
@@ -21,14 +23,14 @@ export interface OidcClaims {
   user_avatar_url?: string;
 }
 
-export function withAuth(
+export const withAuth = (
   callback: (
     claims: OidcClaims,
     req: NextRequest,
-    ...rest: any[]
-  ) => Promise<Response>,
-): (req: NextRequest, ...rest: any[]) => Promise<Response> {
-  return async (req: NextRequest, ...rest: any[]): Promise<Response> => {
+    ...rest: unknown[]
+  ) => Promise<Response>
+) => {
+  return async (req: NextRequest, ...rest: unknown[]) => {
     try {
       const token = getAuthorizationToken(req);
       const claims = await verifyToken(token);
@@ -42,9 +44,9 @@ export function withAuth(
       throw err;
     }
   };
-}
+};
 
-export async function verifyToken(token: string): Promise<OidcClaims> {
+export const verifyToken = async (token: string) => {
   try {
     const { payload: claims } = await jwtVerify<OidcClaims>(token, JWKS);
 
@@ -68,17 +70,17 @@ export async function verifyToken(token: string): Promise<OidcClaims> {
 
     throw err;
   }
-}
+};
 
-function getAuthorizationToken(req: Request): string {
+const getAuthorizationToken = (req: Request) => {
   const authHeader = req.headers.get("Authorization");
-  const match = authHeader?.match(/^bearer (.+)$/i);
+  const match = authHeader?.match(BEARER_TOKEN_REGEX);
 
   if (!match) {
     throw new AuthError("Invalid Authorization header");
   }
 
   return match[1];
-}
+};
 
 class AuthError extends Error {}

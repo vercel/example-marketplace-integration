@@ -1,81 +1,78 @@
 import { getResourceBalance, listResources } from "@/lib/partner";
+import type { Resource } from "@/lib/vercel/schemas";
 import { getSession } from "./auth";
-import { Resource } from "@/lib/vercel/schemas";
 
-export default async function DashboardPage() {
-  return (
-    <main className="space-y-8">
-      <Resources />
-    </main>
-  );
-}
+export const dynamic = "force-dynamic";
 
-async function Resources() {
+const DashboardPage = async () => {
   const session = await getSession();
   const installationId = session.installation_id;
   const { resources } = await listResources(installationId);
 
-  // {/* grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 */}
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Resources</h1>
+    <main className="space-y-8">
+      <div className="container mx-auto p-4">
+        <h1 className="mb-4 font-bold text-2xl">Resources</h1>
 
-      {resources.length === 0 ? (
-        <div className="flex justify-center items-center h-[100px]">
-          <span className="text-slate-500">No resources</span>
-        </div>
-      ) : (
-        <div className="flex flex-col gap-4">
-          {resources.map((resource) => (
-            <ResourceCard
-              installationId={installationId}
-              key={resource.id}
-              resource={resource}
-            />
-          ))}
-        </div>
-      )}
-    </div>
+        {resources.length === 0 ? (
+          <div className="flex h-[100px] items-center justify-center">
+            <span className="text-muted-foreground">No resources</span>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-4">
+            {resources.map((resource) => (
+              <ResourceCard
+                installationId={installationId}
+                key={resource.id}
+                resource={resource}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </main>
   );
-}
+};
 
-async function ResourceCard({
+const ResourceCard = async ({
   installationId,
   resource,
 }: {
   installationId: string;
   resource: Resource;
-}) {
+}) => {
   const balance = await getResourceBalance(installationId, resource.id);
   return (
     <a
-      className="bg-white rounded-lg shadow-md p-4"
+      className="rounded-lg bg-white p-4 shadow-md"
       href={`/dashboard/resources/${resource.id}`}
     >
-      <div className="flex justify-between items-center mb-2">
-        <span className="text-gray-600 text-sm">ID: {resource.id}</span>
+      <div className="mb-2 flex items-center justify-between">
+        <span className="text-muted-foreground text-sm">ID: {resource.id}</span>
         <span
-          className={`px-2 py-1 text-xs rounded-full ${
+          className={`rounded-full px-2 py-1 text-xs ${
             resource.status === "ready"
-              ? " bg-green-200 text-green-800"
-              : " bg-red-200 text-red-800"
+              ? "bg-emerald-500/15 text-emerald-700"
+              : "bg-destructive/15 text-destructive"
           }`}
         >
           {resource.status}
         </span>
       </div>
-      <h2 className="text-lg font-medium mb-2">{resource.name}</h2>
-      <p className="text-gray-600 text-sm mb-2">
+      <h2 className="mb-2 font-medium text-lg">{resource.name}</h2>
+      <p className="mb-2 text-muted-foreground text-sm">
         Product: {resource.productId}
       </p>
-      <p className="text-gray-600 text-sm">
+      <p className="text-muted-foreground text-sm">
         Billing Plan: {resource.billingPlan?.name}
       </p>
       {balance ? (
-        <p className="text-gray-600 text-sm">
+        <p className="text-muted-foreground text-sm">
           Balance: {balance.currencyValueInCents} cents
         </p>
       ) : null}
     </a>
   );
-}
+};
+
+export default DashboardPage;

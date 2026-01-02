@@ -1,3 +1,4 @@
+import type { Balances } from "@vercel/sdk/models/submitprepaymentbalancesop.js";
 import { getSession } from "@/app/dashboard/auth";
 import { mockBillingData } from "@/data/mock-billing-data";
 import {
@@ -5,24 +6,36 @@ import {
   getResourceBalance,
   listResources,
 } from "@/lib/partner";
-import { Balance } from "@/lib/vercel/schemas";
 
 export const dynamic = "force-dynamic";
 
+/**
+ * Preview billing data without submitting (for testing).
+ * This is for individual users to preview what billing data
+ * would be submitted for their installation from the dashboard.
+ */
 export const GET = async () => {
   const session = await getSession();
   const installationId = session.installation_id;
   const { resources } = await listResources(installationId);
   const billingData = await mockBillingData(installationId);
-  const balances = (
-    await Promise.all(
-      [
-        getInstallationBalance(installationId),
-        ...resources.map((resource) =>
-          getResourceBalance(installationId, resource.id),
-        ),
-      ].filter((x) => x !== null),
-    )
-  ).filter((x) => x !== null) as Balance[];
+
+  const balances: Balances[] = [];
+
+  const installationBalance = await getInstallationBalance(installationId);
+  if (installationBalance) {
+    balances.push(installationBalance);
+  }
+
+  const resourceBalances = await Promise.all(
+    resources.map((resource) => getResourceBalance(installationId, resource.id))
+  );
+
+  for (const resourceBalance of resourceBalances) {
+    if (resourceBalance) {
+      balances.push(resourceBalance);
+    }
+  }
+
   return Response.json({ billingData, balances });
 };

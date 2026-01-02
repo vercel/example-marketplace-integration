@@ -1,14 +1,11 @@
 import { listResources } from "@/lib/partner";
 import type {
-  BillingData,
   BillingItem,
-  ResourceUsage,
   BillingPlan,
+  ResourceUsage,
 } from "@/lib/vercel/schemas";
 
-export async function mockBillingData(
-  installationId: string,
-): Promise<BillingData> {
+export const mockBillingData = async (installationId: string) => {
   const timestamp = new Date();
   const year = timestamp.getUTCFullYear();
   const month = timestamp.getUTCMonth();
@@ -21,11 +18,11 @@ export async function mockBillingData(
   const { resources } = await listResources(installationId);
   if (resources.length === 0) {
     return {
-      timestamp: timestamp.toISOString(),
-      eod: eod.toISOString(),
+      timestamp,
+      eod,
       period: {
-        start: startOfMoth.toISOString(),
-        end: endOfMonth.toISOString(),
+        start: startOfMoth,
+        end: endOfMonth,
       },
       billing: [],
       usage: [],
@@ -43,9 +40,9 @@ export async function mockBillingData(
     },
   } as const;
 
-  const resourceUsage = resources
-    .map((r) => mockUsageData(r, timestamp, startOfMoth, bod))
-    .flat();
+  const resourceUsage = resources.flatMap((r) =>
+    mockUsageData(r, timestamp, startOfMoth, bod)
+  );
 
   const installationUsage = Object.values(
     resourceUsage.reduce(
@@ -71,14 +68,16 @@ export async function mockBillingData(
             usage.dayValue = Math.max(usage.dayValue, resourceUsage.dayValue);
             usage.periodValue = Math.max(
               usage.periodValue,
-              resourceUsage.periodValue,
+              resourceUsage.periodValue
             );
             break;
+          default:
+            throw new Error(`Unknown usage type: ${usage.type}`);
         }
         return acc;
       },
-      {} as Record<string, ResourceUsage>,
-    ),
+      {} as Record<string, ResourceUsage>
+    )
   );
   const usage = [...installationUsage, ...resourceUsage];
 
@@ -86,7 +85,7 @@ export async function mockBillingData(
     .map((u) => {
       const resource = resources.find((r) => r.id === u.resourceId);
       const pricing = pricingModel[u.name];
-      if (!resource || !pricing) {
+      if (!(resource && pricing)) {
         return undefined;
       }
       return {
@@ -102,30 +101,29 @@ export async function mockBillingData(
     .filter(isNotNull);
 
   return {
-    timestamp: timestamp.toISOString(),
-    eod: eod.toISOString(),
+    timestamp,
+    eod,
     period: {
-      start: startOfMoth.toISOString(),
-      end: endOfMonth.toISOString(),
+      start: startOfMoth,
+      end: endOfMonth,
     },
     billing,
     usage,
   };
-}
+};
 
-function isNotNull<T>(value: T | undefined | null): value is T {
-  return value !== undefined && value !== null;
-}
+const isNotNull = <T>(value: T | undefined | null) =>
+  value !== undefined && value !== null;
 
-function mockUsageData(
+const mockUsageData = (
   resource: {
     id: string;
     billingPlan: BillingPlan;
   },
   timestamp: Date,
   periodStart: Date,
-  dayStart: Date,
-): ResourceUsage[] {
+  dayStart: Date
+) => {
   // May 1, 2024
   const baseTimestamp = Date.UTC(2024, 4, 1);
   const minutesSinceBase = (timestamp.getTime() - baseTimestamp) / 1000 / 60;
@@ -146,7 +144,7 @@ function mockUsageData(
     Math.floor(Math.max(minutes - 2, 0) / 3) * 100;
   const queriesTotal = queriesByMinutes(minutesSincePeriod) / 1000;
   const queriesToday = queriesByMinutes(minutesSinceToday) / 1000;
-  return [
+  const usage: ResourceUsage[] = [
     {
       resourceId: resource.id,
       name: "Storage",
@@ -163,7 +161,9 @@ function mockUsageData(
       units: "1k",
       dayValue: queriesToday,
       periodValue: queriesTotal,
-      planValue: 2000000,
+      planValue: 2_000_000,
     },
   ];
-}
+
+  return usage;
+};
