@@ -491,10 +491,12 @@ export async function setInstallationNotification(
 ): Promise<void> {
   const installation = await getInstallation(installationId);
   const pipeline = kv.pipeline();
-  await pipeline.set(installationId, {
+
+  pipeline.set(installationId, {
     ...installation,
     notification: notification ?? undefined,
   });
+
   await pipeline.exec();
 }
 
