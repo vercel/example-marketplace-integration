@@ -72,7 +72,7 @@ export const getProject = async (installationId: string, projectId: string) => {
 
   // Vercel SDK doesn't support getting a single project, so we get all projects and find the one we want
   const projects = await vercel.projects.getProjects({});
-  const project = projects.projects.find((project) => project.id === projectId);
+  const project = projects.find((p) => p.id === projectId);
 
   if (!project) {
     throw new Error(`Project ${projectId} not found`);
