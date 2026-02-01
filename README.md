@@ -2,6 +2,8 @@
 
 Welcome to the Example Marketplace Integration. This repository contains a reference implementation for a Vercel Marketplace Integration.
 
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fexample-marketplace-integration&env=INTEGRATION_CLIENT_ID,INTEGRATION_CLIENT_SECRET,CRON_SECRET&envDescription=Integration%20credentials%20from%20the%20Vercel%20Integrations%20Console&envLink=https%3A%2F%2Fvercel.com%2Fdocs%2Fintegrations%2Fcreate-integration)
+
 ## Getting Started
 
 1. Clone the code to your machine.
