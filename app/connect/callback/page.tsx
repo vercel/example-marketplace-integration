@@ -14,16 +14,17 @@ const IntegrationsExternalTokenResponse = z.object({
 
 export const dynamic = "force-dynamic";
 
-/**
- * Callback page for the connect integration.
- * This page is used to connect the installation to an existing partner account.
- * @see https://vercel.com/docs/integrations/create-integration/marketplace-flows#open-in-provider-button-flow
- */
 const Page = async (props: PageProps<"/connect/callback">) => {
   const { code, next } = await props.searchParams;
 
   if (typeof code !== "string" || typeof next !== "string") {
     return notFound();
+  }
+
+  if (!env.VERCEL_EXTERNAL_REDIRECT_URI) {
+    throw new Error(
+      "VERCEL_EXTERNAL_REDIRECT_URI is not set, cannot connect account"
+    );
   }
 
   const res = await fetch("https://vercel.com/api/v2/oauth/access_token", {
@@ -64,7 +65,7 @@ const Page = async (props: PageProps<"/connect/callback">) => {
 
   return (
     <div className="space-y-10 p-10 text-center">
-      <h1 className="font-medium text-lg">Account is connected. ✅</h1>
+      <h1 className="font-medium text-lg">Account is connected.</h1>
       <h3>
         <a className="text-primary underline" href={next}>
           Redirect me back to Vercel

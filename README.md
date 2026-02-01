@@ -8,9 +8,9 @@ This repository contains a reference implementation for a Vercel Marketplace Int
 2. Copy the example env vars file with `cp .env.example .env.local` and fill in the values.
 3. Deploy the example Marketplace integration to your Vercel team.
 
-## 🚀 Deploy to Vercel
+## Deploy to Vercel
 
-The easiest way to deploy Vectr is using the Vercel Marketplace:
+The easiest way to deploy this example is using the Vercel Marketplace:
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?demo-description=A%20reference%20implementation%20for%20a%20Vercel%20Marketplace%20Integration&demo-image=https%3A%2F%2Fexample-marketplace-integration.vercel.app%2Fopengraph-image.png&demo-title=Example%20Marketplace%20Integration&demo-url=https%3A%2F%2Fexample-marketplace-integration.vercel.app%2F&from=templates&project-name=Example%20Marketplace%20Integration&repository-name=example-marketplace-integration&repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fexample-marketplace-integration&products=%5B%7B%22type%22%3A%22integration%22%2C%22protocol%22%3A%22storage%22%2C%22productSlug%22%3A%22upstash-kv%22%2C%22integrationSlug%22%3A%22upstash%22%7D%2C%7B%22type%22%3A%22blob%22%7D%5D&skippable-integrations=0)
 

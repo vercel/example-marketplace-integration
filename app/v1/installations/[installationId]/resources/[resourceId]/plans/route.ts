@@ -6,9 +6,6 @@ interface Params {
   resourceId: string;
 }
 
-/**
- * Get the billing plans for the resource
- */
 export const GET = withAuth(async (claims, _request, ...rest: unknown[]) => {
   const [{ params }] = rest as [{ params: Params }];
   const response = await getResourceBillingPlans(

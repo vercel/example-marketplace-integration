@@ -14,10 +14,6 @@ import {
 
 export const dynamic = "force-dynamic";
 
-/**
- * Scheduled job to submit billing/usage data to Vercel.
- * @see https://vercel.com/docs/integrations/create-integration/native-integration#billing-and-usage
- */
 export const GET = async (request: Request) => {
   if (process.env.NODE_ENV !== "development") {
     const authHeader = request.headers.get("authorization");

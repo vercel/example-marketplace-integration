@@ -13,11 +13,6 @@ import {
   updateInstallationRequestSchema,
 } from "@/lib/vercel/schemas";
 
-/**
- * Upsert a new installation
- * Here we should upsert the requesting user and the installation itself.
- * @see https://vercel.com/docs/integrations/create-integration/marketplace-flows#select-storage-product
- */
 export const PUT = withAuth(async (claims, request) => {
   const requestBody = await readRequestBodyWithSchema(
     request,
@@ -38,9 +33,6 @@ export const PUT = withAuth(async (claims, request) => {
   return new Response(null, { status: 201 });
 });
 
-/**
- * Uninstall an existing integration
- */
 export const DELETE = withAuth(async (claims) => {
   const response = await uninstallInstallation(claims.installation_id);
 
@@ -51,9 +43,6 @@ export const DELETE = withAuth(async (claims) => {
   return Response.json(response);
 });
 
-/**
- * Get the installation details
- */
 export const GET = withAuth(async (claims) => {
   const installation = await getInstallation(claims.installation_id);
 
@@ -79,9 +68,6 @@ export const GET = withAuth(async (claims) => {
   return Response.json(response);
 });
 
-/**
- * Update the installation details
- */
 export const PATCH = withAuth(async (claims, request) => {
   const requestBody = await readRequestBodyWithSchema(
     request,

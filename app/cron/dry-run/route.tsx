@@ -9,11 +9,6 @@ import {
 
 export const dynamic = "force-dynamic";
 
-/**
- * Preview billing data without submitting (for testing).
- * This is for individual users to preview what billing data
- * would be submitted for their installation from the dashboard.
- */
 export const GET = async () => {
   const session = await getSession();
   const installationId = session.installation_id;

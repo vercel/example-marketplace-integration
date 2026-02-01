@@ -12,9 +12,6 @@ interface Params {
   resourceId: string;
 }
 
-/**
- * Rotate the secrets for the resource
- */
 export const POST = withAuth(async (_claims, request, ...rest: unknown[]) => {
   const [{ params }] = rest as [{ params: Params }];
   const requestBody = await readRequestBodyWithSchema(

@@ -3,10 +3,6 @@ import type { NextRequest } from "next/server";
 import { exchangeCodeForToken } from "@/lib/vercel/marketplace-api";
 import { createSession } from "../dashboard/auth";
 
-/**
- * Main OAuth callback
- * Exchanges auth code for token, creates session and redirects to dashboard
- */
 export const GET = async (request: NextRequest) => {
   const code = request.nextUrl.searchParams.get("code");
   const state = request.nextUrl.searchParams.get("state");

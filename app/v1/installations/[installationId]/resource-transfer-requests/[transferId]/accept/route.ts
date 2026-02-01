@@ -8,9 +8,6 @@ import { buildError } from "@/lib/utils";
 import { withAuth } from "@/lib/vercel/auth";
 import { type Params, validateTransferId } from "../../utils";
 
-/**
- * Accept a resource transfer request
- */
 export const POST = withAuth(
   async (_oidcClaims, _request, ...rest: unknown[]) => {
     const [{ params }] = rest as [{ params: Params }];

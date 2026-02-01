@@ -5,9 +5,6 @@ interface Params {
   productId: string;
 }
 
-/**
- * Get the billing plans for the product
- */
 export const GET = withAuth(async (claims, request, ...rest: unknown[]) => {
   const [{ params }] = rest as [{ params: Params }];
   const response = await getProductBillingPlans(
