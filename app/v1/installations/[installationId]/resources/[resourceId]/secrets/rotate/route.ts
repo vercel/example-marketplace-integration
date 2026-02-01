@@ -3,7 +3,7 @@ import { withAuth } from "@/lib/vercel/auth";
 import { updateSecrets } from "@/lib/vercel/marketplace-api";
 import {
   RequestSecretsRotationRequestSchema,
-  RequestSecretsRotationResponse,
+  type RequestSecretsRotationResponse,
 } from "@/lib/vercel/schemas";
 import { waitUntil } from "@vercel/functions";
 

@@ -1,7 +1,7 @@
+import { stringify } from "node:querystring";
 import { z } from "zod";
-import { stringify } from "querystring";
-import { fetchVercelApi } from "./api";
 import { env } from "../env";
+import { fetchVercelApi } from "./api";
 
 const IntegrationsExternalTokenResponse = z.object({
   token_type: z.string(),

@@ -1,16 +1,16 @@
-import crypto from "crypto";
+import crypto from "node:crypto";
 import { env } from "@/lib/env";
-import {
-  unknownWebhookEventSchema,
-  type WebhookEvent,
-  webhookEventSchema,
-} from "@/lib/vercel/schemas";
 import {
   listInstallations,
   storeWebhookEvent,
   uninstallInstallation,
 } from "@/lib/partner";
 import { fetchVercelApi } from "@/lib/vercel/api";
+import {
+  type WebhookEvent,
+  unknownWebhookEventSchema,
+  webhookEventSchema,
+} from "@/lib/vercel/schemas";
 
 export const dynamic = "force-dynamic";
 

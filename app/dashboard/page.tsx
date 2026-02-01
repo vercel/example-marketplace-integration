@@ -1,6 +1,6 @@
 import { getResourceBalance, listResources } from "@/lib/partner";
+import type { Resource } from "@/lib/vercel/schemas";
 import { getSession } from "./auth";
-import { Resource } from "@/lib/vercel/schemas";
 
 export default async function DashboardPage() {
   return (

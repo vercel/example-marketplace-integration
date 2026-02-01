@@ -24,6 +24,6 @@ export async function createCheckFormSubmit(formData: FormData): Promise<void> {
     requires,
     blocks,
     target,
-    Number(timeout)
+    Number(timeout),
   );
 }

@@ -1,6 +1,6 @@
-import { getSession } from "../auth";
 import { getWebhookEvents } from "@/lib/partner";
-import { WebhookEvent } from "@/lib/vercel/schemas";
+import type { WebhookEvent } from "@/lib/vercel/schemas";
+import { getSession } from "../auth";
 import { EventActions } from "./actions-ui";
 
 export default async function Page() {

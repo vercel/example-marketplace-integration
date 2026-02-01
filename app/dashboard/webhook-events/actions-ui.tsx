@@ -1,6 +1,6 @@
 "use client";
 
-import { WebhookEvent } from "@/lib/vercel/schemas";
+import type { WebhookEvent } from "@/lib/vercel/schemas";
 import { failAction, failCheck, succeedAction, succeedCheck } from "./actions";
 
 export function EventActions({ event }: { event: WebhookEvent }) {

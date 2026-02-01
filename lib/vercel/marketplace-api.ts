@@ -263,20 +263,26 @@ export async function submitInvoice(
 
   let items = billingData.billing.filter((item) => Boolean(item.resourceId));
   if (maxAmount !== undefined) {
-    const total = items.reduce((acc, item) => acc + parseFloat(item.total), 0);
+    const total = items.reduce(
+      (acc, item) => acc + Number.parseFloat(item.total),
+      0,
+    );
     if (total > maxAmount) {
       const ratio = maxAmount / total;
       items = items.map((item) => ({
         ...item,
         quantity: item.quantity * ratio,
-        total: (parseFloat(item.total) * ratio).toFixed(2),
+        total: (Number.parseFloat(item.total) * ratio).toFixed(2),
       }));
     }
   }
 
   const discounts: InvoiceDiscount[] = [];
   if (opts?.discountPercent !== undefined && opts.discountPercent > 0) {
-    const total = items.reduce((acc, item) => acc + parseFloat(item.total), 0);
+    const total = items.reduce(
+      (acc, item) => acc + Number.parseFloat(item.total),
+      0,
+    );
     if (total > 0) {
       const discount = total * opts.discountPercent;
       discounts.push({

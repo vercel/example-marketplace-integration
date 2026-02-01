@@ -2,8 +2,8 @@ import { listResources } from "@/lib/partner";
 import type {
   BillingData,
   BillingItem,
-  ResourceUsage,
   BillingPlan,
+  ResourceUsage,
 } from "@/lib/vercel/schemas";
 
 export async function mockBillingData(
@@ -43,9 +43,9 @@ export async function mockBillingData(
     },
   } as const;
 
-  const resourceUsage = resources
-    .map((r) => mockUsageData(r, timestamp, startOfMoth, bod))
-    .flat();
+  const resourceUsage = resources.flatMap((r) =>
+    mockUsageData(r, timestamp, startOfMoth, bod),
+  );
 
   const installationUsage = Object.values(
     resourceUsage.reduce(

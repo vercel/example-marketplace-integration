@@ -1,4 +1,4 @@
-import { z, SafeParseReturnType, ZodSchema } from "zod";
+import type { SafeParseReturnType, ZodSchema, z } from "zod";
 
 export async function readRequestBodyWithSchema<
   TRequestBodySchema extends ZodSchema,
@@ -12,7 +12,11 @@ export async function readRequestBodyWithSchema<
   return requestBodySchema.safeParse(requestBodyRaw);
 }
 
-export function buildError(code: string, message: string, user?: { message: string, url?: string}) {
+export function buildError(
+  code: string,
+  message: string,
+  user?: { message: string; url?: string },
+) {
   return {
     error: {
       code,

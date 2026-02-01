@@ -5,7 +5,7 @@ import {
   getResourceBalance,
   listResources,
 } from "@/lib/partner";
-import { Balance } from "@/lib/vercel/schemas";
+import type { Balance } from "@/lib/vercel/schemas";
 
 export const dynamic = "force-dynamic";
 

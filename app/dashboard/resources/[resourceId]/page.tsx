@@ -1,20 +1,20 @@
 import { getResource, getResourceBalance } from "@/lib/partner";
+import { getAccountInfo } from "@/lib/vercel/marketplace-api";
+import type { Resource } from "@/lib/vercel/schemas";
 import Link from "next/link";
+import { getSession } from "../../auth";
+import { FormButton } from "../../components/form-button";
+import { Section } from "../../components/section";
 import {
+  addResourceBalance,
   clearResourceNotificationAction,
+  cloneResourceAction,
+  importResourceToVercelAction,
   rotateCredentialsAction,
   setExampleNotificationAction,
   updateResourceAction,
   updateResourceNotificationAction,
-  addResourceBalance,
-  importResourceToVercelAction,
-  cloneResourceAction,
 } from "./actions";
-import { getSession } from "../../auth";
-import { getAccountInfo } from "@/lib/vercel/marketplace-api";
-import { FormButton } from "../../components/form-button";
-import { Resource } from "@/lib/vercel/schemas";
-import { Section } from "../../components/section";
 
 export default async function ResourcePage({
   params: { resourceId },

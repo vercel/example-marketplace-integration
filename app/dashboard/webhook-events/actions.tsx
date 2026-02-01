@@ -1,12 +1,15 @@
 "use server";
 
-import { DeploymentCheckrunStartEventSchema, DeploymentIntegrationActionStartEvent } from "@/lib/vercel/schemas";
-import { getSession } from "../auth";
 import {
-  updateDeploymentAction,
   getDeployment,
   updateCheckRun,
+  updateDeploymentAction,
 } from "@/lib/vercel/marketplace-api";
+import type {
+  DeploymentCheckrunStartEventSchema,
+  DeploymentIntegrationActionStartEvent,
+} from "@/lib/vercel/schemas";
+import { getSession } from "../auth";
 
 export async function succeedAction(
   event: DeploymentIntegrationActionStartEvent,
@@ -67,21 +70,13 @@ export async function succeedCheck(
   const { checkRun } = payload;
   const installationId = checkRun.source.integrationConfigurationId;
 
-  const deployment = await getDeployment(
-    installationId,
-    payload.deployment.id,
-  );
+  const deployment = await getDeployment(installationId, payload.deployment.id);
 
-  await updateCheckRun(
-    installationId,
-    checkRun.id,
-    payload.deployment.id,
-    {
-      status: "completed",
-      conclusion: "succeeded",
-      externalUrl: `sso:/checks/${checkRun.id}`,
-    },
-  );
+  await updateCheckRun(installationId, checkRun.id, payload.deployment.id, {
+    status: "completed",
+    conclusion: "succeeded",
+    externalUrl: `sso:/checks/${checkRun.id}`,
+  });
 }
 
 export async function failCheck(
@@ -93,14 +88,9 @@ export async function failCheck(
   const { checkRun } = payload;
   const installationId = checkRun.source.integrationConfigurationId;
 
-  await updateCheckRun(
-    installationId,
-    checkRun.id,
-    payload.deployment.id,
-    {
-      status: "completed",
-      conclusion: "failed",
-      externalUrl: `sso:/checks/${checkRun.id}`,
-    },
-  );
+  await updateCheckRun(installationId, checkRun.id, payload.deployment.id, {
+    status: "completed",
+    conclusion: "failed",
+    externalUrl: `sso:/checks/${checkRun.id}`,
+  });
 }

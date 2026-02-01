@@ -10,7 +10,7 @@ import {
   sendBillingData,
   submitPrepaymentBalances,
 } from "@/lib/vercel/marketplace-api";
-import { Balance } from "@/lib/vercel/schemas";
+import type { Balance } from "@/lib/vercel/schemas";
 
 export const dynamic = "force-dynamic";
 

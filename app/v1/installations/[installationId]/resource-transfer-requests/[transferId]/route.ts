@@ -1,13 +1,13 @@
-import { NextResponse } from "next/server";
 import {
   deleteTransferRequest,
   getTransferRequest,
   setTransferRequest,
 } from "@/lib/partner";
-import { Claim, createClaimRequestSchema } from "@/lib/vercel/schemas";
-import { Params } from "../utils";
-import { withAuth } from "@/lib/vercel/auth";
 import { buildError, readRequestBodyWithSchema } from "@/lib/utils";
+import { withAuth } from "@/lib/vercel/auth";
+import { type Claim, createClaimRequestSchema } from "@/lib/vercel/schemas";
+import { NextResponse } from "next/server";
+import type { Params } from "../utils";
 
 export const PUT = withAuth(
   async (oidcClaims, request, { params }: { params: Params }) => {
@@ -36,7 +36,7 @@ export const PUT = withAuth(
       );
     }
 
-    var expirationDate = new Date();
+    const expirationDate = new Date();
     expirationDate.setDate(expirationDate.getDate() + 7);
     const newClaim: Claim = {
       transferId: params.transferId,
