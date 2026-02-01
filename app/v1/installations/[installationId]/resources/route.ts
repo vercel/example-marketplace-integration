@@ -2,8 +2,8 @@ import { listResources, provisionResource } from "@/lib/partner";
 import { readRequestBodyWithSchema } from "@/lib/utils";
 import { withAuth } from "@/lib/vercel/auth";
 import {
-  provisionResourceRequestSchema,
   type ResourceStatusType,
+  provisionResourceRequestSchema,
 } from "@/lib/vercel/schemas";
 
 export const dynamic = "force-dynamic";

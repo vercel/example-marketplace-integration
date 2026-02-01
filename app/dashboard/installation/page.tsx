@@ -1,9 +1,15 @@
 import { getInstallation, getInstallationBalance } from "@/lib/partner";
-import { getSession } from "../auth";
 import { getAccountInfo } from "@/lib/vercel/marketplace-api";
-import { Section } from "../components/section";
-import { addInstallationBalance, clearResourceNotificationAction, sendBillingDataAction, setExampleNotificationAction, updateNotificationAction } from "./actions";
+import { getSession } from "../auth";
 import { FormButton } from "../components/form-button";
+import { Section } from "../components/section";
+import {
+  addInstallationBalance,
+  clearResourceNotificationAction,
+  sendBillingDataAction,
+  setExampleNotificationAction,
+  updateNotificationAction,
+} from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -128,7 +134,10 @@ export default async function IntallationPage() {
             </div>
             <div>
               <label>Level:</label>
-              <select name="level" defaultValue={installation.notification?.level}>
+              <select
+                name="level"
+                defaultValue={installation.notification?.level}
+              >
                 <option value="info">info</option>
                 <option value="warn">warn</option>
                 <option value="error">error</option>

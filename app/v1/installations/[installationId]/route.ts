@@ -9,7 +9,7 @@ import {
 import { readRequestBodyWithSchema } from "@/lib/utils";
 import { withAuth } from "@/lib/vercel/auth";
 import {
-  InstallationResponse,
+  type InstallationResponse,
   installIntegrationRequestSchema,
   updateInstallationRequestSchema,
 } from "@/lib/vercel/schemas";

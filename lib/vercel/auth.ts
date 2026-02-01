@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
 import { createRemoteJWKSet, jwtVerify } from "jose";
-import { env } from "../env";
 import { JWTExpired, JWTInvalid } from "jose/errors";
+import { type NextRequest, NextResponse } from "next/server";
+import { env } from "../env";
 
 const JWKS = createRemoteJWKSet(
-  new URL(`https://marketplace.vercel.com/.well-known/jwks`),
+  new URL("https://marketplace.vercel.com/.well-known/jwks"),
 );
 
 export interface OidcClaims {

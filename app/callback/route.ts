@@ -1,6 +1,6 @@
 import { exchangeCodeForToken } from "@/lib/vercel/marketplace-api";
 import { redirect } from "next/navigation";
-import { NextRequest } from "next/server";
+import type { NextRequest } from "next/server";
 import { createSession } from "../dashboard/auth";
 
 export async function GET(request: NextRequest) {
@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
 
   if (request.nextUrl.searchParams.get("support")) {
     return redirect(
-      `/dashboard/support${resourceId ? "?resource_id=" + resourceId : ""}`
+      `/dashboard/support${resourceId ? `?resource_id=${resourceId}` : ""}`,
     );
   }
 
@@ -37,12 +37,12 @@ export async function GET(request: NextRequest) {
     if (projectId) {
       if (checkId) {
         return redirect(
-          `/dashboard/resources/${resourceId}/projects/${projectId}?checkId=${encodeURIComponent(checkId)}`
+          `/dashboard/resources/${resourceId}/projects/${projectId}?checkId=${encodeURIComponent(checkId)}`,
         );
       }
 
       return redirect(
-        `/dashboard/resources/${resourceId}/projects/${projectId}`
+        `/dashboard/resources/${resourceId}/projects/${projectId}`,
       );
     }
 
@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
 function getHost(request: NextRequest): string {
   return request.headers.get("x-forwarded-host")
     ? `${request.headers.get("x-forwarded-proto")}://${request.headers.get(
-        "x-forwarded-host"
+        "x-forwarded-host",
       )}`
     : request.nextUrl.host;
 }

@@ -1,5 +1,5 @@
-import { getAccountInfo } from "@/lib/vercel/marketplace-api";
 import { getInstallation } from "@/lib/partner";
+import { getAccountInfo } from "@/lib/vercel/marketplace-api";
 import { getSession } from "./auth";
 import { Nav } from "./nav";
 
@@ -34,7 +34,7 @@ export default async function DashboardLayout({
                 width="24"
                 style={{ color: "", width: 22, height: 22 }}
               >
-                <path d="M16.88 3.549L7.12 20.451"></path>
+                <path d="M16.88 3.549L7.12 20.451" />
               </svg>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/vlogo.svg" alt="Logo" className="h-5" />
