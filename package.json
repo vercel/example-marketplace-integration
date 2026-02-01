@@ -13,7 +13,7 @@
     "@tailwindcss/postcss": "^4.1.18",
     "@upstash/redis": "^1.36.0",
     "@vercel/functions": "^3.3.4",
-    "@vercel/sdk": "^1.18.5",
+    "@vercel/sdk": "^1.18.9",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "jose": "^6.1.3",
