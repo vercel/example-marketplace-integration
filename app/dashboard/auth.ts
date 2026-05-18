@@ -1,3 +1,7 @@
+// NOTE: This is a simplified example. In a real integration, use the ID token
+// to identify the user, link them to an account on your side, and create a
+// session using your own authentication system.
+
 import { type OidcClaims, verifyToken } from "@/lib/vercel/auth";
 import { cookies } from "next/headers";
 
