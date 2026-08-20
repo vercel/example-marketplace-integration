@@ -13,12 +13,16 @@ import Link from "next/link";
 import { createCheckFormSubmit } from "./actions";
 
 export default async function ResourcePage({
-  params: { resourceId, projectId },
-  searchParams: { checkId },
+  params,
+  searchParams,
 }: {
-  params: { resourceId: string; projectId: string };
-  searchParams: { checkId: string };
+  params: Promise<{ resourceId: string; projectId: string }>;
+  searchParams: Promise<{ checkId: string }>;
 }) {
+  const [{ resourceId, projectId }, { checkId }] = await Promise.all([
+    params,
+    searchParams,
+  ]);
   const session = await getSession();
   const installationId = session.installation_id;
   const [resource, account, project, checks] = await Promise.all([

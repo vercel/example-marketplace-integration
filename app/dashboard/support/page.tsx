@@ -7,10 +7,11 @@ import { FormButton } from "../components/form-button";
 import { Section } from "../components/section";
 
 export default async function SupportPage({
-  searchParams: { resourceId },
+  searchParams,
 }: {
-  searchParams: { resourceId?: string };
+  searchParams: Promise<{ resourceId?: string }>;
 }) {
+  const { resourceId } = await searchParams;
   let resourceName = "";
   const session = await getSession();
   if (resourceId) {

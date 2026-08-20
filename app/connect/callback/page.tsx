@@ -5,10 +5,11 @@ import { exchangeExternalCodeForToken } from "@/lib/vercel/external-api";
 export const dynamic = "force-dynamic";
 
 export default async function Page({
-  searchParams: { code, next },
+  searchParams,
 }: {
-  searchParams: { code: string; next: string };
+  searchParams: Promise<{ code: string; next: string }>;
 }) {
+  const { code, next } = await searchParams;
   if (!env.VERCEL_EXTERNAL_REDIRECT_URI) {
     throw new Error(
       "VERCEL_EXTERNAL_REDIRECT_URI is not set, cannot connect account",

@@ -7,16 +7,15 @@ import { refundInvoiceAction, submitInvoiceAction } from "./actions";
 export default async function Page({
   searchParams,
 }: {
-  searchParams: { id?: string; submitError?: string };
+  searchParams: Promise<{ id?: string; submitError?: string }>;
 }) {
   const session = await getSession();
+  const { id, submitError } = await searchParams;
 
   let invoice;
   let invoiceError;
   try {
-    invoice = searchParams.id
-      ? await getInvoice(session.installation_id, searchParams.id)
-      : null;
+    invoice = id ? await getInvoice(session.installation_id, id) : null;
   } catch (err) {
     invoiceError = err instanceof Error ? err.message : String(err);
   }
@@ -47,13 +46,13 @@ export default async function Page({
           </div>
         </form>
 
-        {searchParams.submitError ? (
+        {submitError ? (
           <div
             className="bg-pink-100 border border-pink-400 text-pink-700 px-4 py-3 rounded relative mt-4"
             role="alert"
           >
             <strong className="font-bold">Error! </strong>
-            <span className="block sm:inline">{searchParams.submitError}</span>
+            <span className="block sm:inline">{submitError}</span>
           </div>
         ) : null}
       </Section>
@@ -65,7 +64,7 @@ export default async function Page({
             className="border"
             type="text"
             name="id"
-            defaultValue={searchParams.id ?? ""}
+            defaultValue={id ?? ""}
           />
         </form>
         {invoice ? (
@@ -94,7 +93,7 @@ export default async function Page({
             className="border"
             type="text"
             name="id"
-            defaultValue={searchParams.id ?? ""}
+            defaultValue={id ?? ""}
           />
           <div className="flex gap-2">
             <label>Refund amount</label>
