@@ -290,6 +290,10 @@ export async function listResources(
   };
 }
 
+async function getResourceCount(installationId: string): Promise<number> {
+  return kv.llen(`${installationId}:resources`);
+}
+
 export async function getResource(
   installationId: string,
   resourceId: string,
@@ -492,10 +496,10 @@ export async function getInstallationBillingPlans(
   installationId: string,
   _experimental_metadata?: Record<string, unknown>,
 ): Promise<GetBillingPlansResponse> {
-  const resources = await listResources(installationId);
+  const resourceCount = await getResourceCount(installationId);
   return {
     plans:
-      resources.resources.length > 2
+      resourceCount > 2
         ? billingPlans.filter((p) => p.paymentMethodRequired)
         : billingPlans,
   };
@@ -506,10 +510,10 @@ export async function getProductBillingPlans(
   installationId: string,
   _experimental_metadata?: Record<string, unknown>,
 ): Promise<GetBillingPlansResponse> {
-  const resources = await listResources(installationId);
+  const resourceCount = await getResourceCount(installationId);
   return {
     plans:
-      resources.resources.length > 2
+      resourceCount > 2
         ? billingPlans.filter((p) => p.paymentMethodRequired)
         : billingPlans,
   };
