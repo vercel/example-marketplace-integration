@@ -221,11 +221,16 @@ export async function transferResource(
     throw new Error(`Cannot find resource ${resourceId}`);
   }
 
-  await kv.set(
+  const pipeline = kv.pipeline();
+  pipeline.set(
     `${targetInstallationId}:resource:${resourceId}`,
     serializeResource(resource),
   );
-  await kv.del(`${installationId}:resource:${resourceId}`);
+  pipeline.del(`${installationId}:resource:${resourceId}`);
+  pipeline.lrem(`${installationId}:resources`, 0, resourceId);
+  pipeline.lrem(`${targetInstallationId}:resources`, 0, resourceId);
+  pipeline.lpush(`${targetInstallationId}:resources`, resourceId);
+  await pipeline.exec();
 }
 
 export async function updateResourceNotification(

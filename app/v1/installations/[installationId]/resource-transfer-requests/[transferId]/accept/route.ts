@@ -64,13 +64,15 @@ export const POST = withAuth(
       );
     }
 
-    for (const resourceId of matchingClaim.resourceIds) {
-      transferResource(
-        matchingClaim.sourceInstallationId,
-        resourceId,
-        params.installationId,
-      );
-    }
+    await Promise.all(
+      matchingClaim.resourceIds.map((resourceId) =>
+        transferResource(
+          matchingClaim.sourceInstallationId,
+          resourceId,
+          params.installationId,
+        ),
+      ),
+    );
 
     await setTransferRequest({
       ...matchingClaim,
