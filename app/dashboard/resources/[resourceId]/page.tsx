@@ -17,10 +17,11 @@ import {
 } from "./actions";
 
 export default async function ResourcePage({
-  params: { resourceId },
+  params,
 }: {
-  params: { resourceId: string };
+  params: Promise<{ resourceId: string }>;
 }) {
+  const { resourceId } = await params;
   const session = await getSession();
   const installationId = session.installation_id;
   const [resource, account] = await Promise.all([
