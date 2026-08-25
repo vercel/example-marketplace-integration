@@ -19,7 +19,7 @@ export async function POST(req: Request): Promise<Response> {
   const rawBodyBuffer = Buffer.from(rawBody, "utf-8");
   const bodySignature = sha1(rawBodyBuffer, env.INTEGRATION_CLIENT_SECRET);
 
-  if (bodySignature !== req.headers.get("x-vercel-signature")) {
+  if (!signaturesMatch(bodySignature, req.headers.get("x-vercel-signature"))) {
     return Response.json({
       code: "invalid_signature",
       error: "signature didn't match",
@@ -193,6 +193,26 @@ function sha1(data: Buffer, secret: string): string {
     .createHmac("sha1", secret)
     .update(new Uint8Array(data))
     .digest("hex");
+}
+
+/**
+ * Compare the computed signature with the one on the request in constant time.
+ *
+ * `===` on strings stops at the first differing byte, so how long the
+ * comparison takes depends on how many leading characters were correct. That
+ * turns a 40-character search space into a 40-step one, guessed a character at
+ * a time. `crypto.timingSafeEqual` always reads both buffers to the end.
+ *
+ * It throws when the two buffers differ in length, so the length is checked
+ * first. That check is not constant time, but the length of a hex digest is
+ * fixed and public — it reveals nothing an attacker does not already know.
+ */
+function signaturesMatch(expected: string, provided: string | null): boolean {
+  if (provided === null) return false;
+  const a = Buffer.from(expected, "utf-8");
+  const b = Buffer.from(provided, "utf-8");
+  if (a.length !== b.length) return false;
+  return crypto.timingSafeEqual(new Uint8Array(a), new Uint8Array(b));
 }
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
