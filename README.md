@@ -86,3 +86,25 @@ See [Securing cron jobs](https://vercel.com/docs/cron-jobs/manage-cron-jobs#secu
 - Create a database for your product in the Storage tab via the "Create Store" button.
 - View and manage your new database for your product.;
 - When you've created a database, you should be able to click the "Open in <Product Name>" button on the store detail page to open the database on your integration's dashboard.
+
+## Validate Platform Organizations
+
+The integration can record redacted observations from a platform organization flow. Configure `ORGANIZATION_VALIDATION_SECRET` on the deployed project, then run:
+
+```bash
+VERCEL_TOKEN=... \
+ROOT_TEAM_ID=team_... \
+ORGANIZATION_ID=org_... \
+PARENT_INSTALLATION_ID=icfg_... \
+INTEGRATION_SLUG=... \
+PRODUCT_SLUG=... \
+BILLING_PLAN_ID=pro200 \
+PRODUCT_METADATA_JSON='{"region":"aws-us-east-1"}' \
+PROVIDER_BASE_URL=https://your-integration.example.com \
+ORGANIZATION_VALIDATION_SECRET=... \
+pnpm validate:organization
+```
+
+The script creates a platform child unless `CHILD_TEAM_ID` is supplied. It installs the integration without an `acceptedPolicies` body, lists products and plans, creates a zero-dollar billing authorization, provisions through the standard resource endpoint, performs point reads, and verifies that the provider observed the parent claims, `parentAccount`, inherited policy keys, plan metadata, and resource metadata.
+
+Before running it, deploy this branch and configure the validation secret. Then enable organization support, configure EULA/privacy policy URLs, and create or reinstall the parent installation so its policy acceptance is recorded. The script intentionally leaves created teams, installations, authorizations, and resources in place for inspection and prints diagnostic ID checkpoints as it progresses.

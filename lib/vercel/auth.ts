@@ -15,6 +15,8 @@ export interface OidcClaims {
   iat: number;
   account_id: string;
   installation_id: string;
+  parent_account_id?: string;
+  parent_installation_id?: string | null;
   user_id: string;
   user_role: string;
   user_name?: string;

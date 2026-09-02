@@ -4,6 +4,7 @@ const envSchema = z.object({
   HOST: z.string().min(1).optional(),
   INTEGRATION_CLIENT_ID: z.string().min(1),
   INTEGRATION_CLIENT_SECRET: z.string().min(1),
+  ORGANIZATION_VALIDATION_SECRET: z.string().min(1).optional(),
   CRON_SECRET: z.string().optional(),
   VERCEL_EXTERNAL_REDIRECT_URI: z.string().min(1).optional(),
 });

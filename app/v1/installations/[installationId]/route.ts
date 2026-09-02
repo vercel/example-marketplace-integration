@@ -1,4 +1,8 @@
 import {
+  recordInstallationValidation,
+  recordValidationBestEffort,
+} from "@/lib/organization-validation";
+import {
   getAllBillingPlans,
   getInstallation,
   getInstallationBillingPlans,
@@ -28,12 +32,13 @@ export const PUT = withAuth(async (claims, request) => {
     return new Response(null, { status: 400 });
   }
 
-  console.log("installIntegration body: ", requestBody.data);
-
   await installIntegration(claims.installation_id, {
     type: "marketplace",
     ...requestBody.data,
   });
+  await recordValidationBestEffort("installation", () =>
+    recordInstallationValidation(claims, requestBody.data),
+  );
 
   return new Response(null, { status: 201 });
 });

@@ -1,3 +1,7 @@
+import {
+  recordPlanValidation,
+  recordValidationBestEffort,
+} from "@/lib/organization-validation";
 import { getProductBillingPlans } from "@/lib/partner";
 import { readRequestBodyWithSchema } from "@/lib/utils";
 import { withAuth } from "@/lib/vercel/auth";
@@ -16,8 +20,10 @@ export const GET = withAuth(
 
     const url = new URL(request.url);
     const metadataQuery = url.searchParams.get("metadata");
+    const metadata: Record<string, unknown> = metadataQuery
+      ? JSON.parse(metadataQuery)
+      : {};
     if (metadataQuery) {
-      const metadata: Record<string, string> = JSON.parse(metadataQuery);
       if (metadata.primaryRegion === "sfo1") {
         response.plans = response.plans.map((plan) => ({
           ...plan,
@@ -26,6 +32,9 @@ export const GET = withAuth(
         }));
       }
     }
+    await recordValidationBestEffort("plan", () =>
+      recordPlanValidation(claims, params.productId, metadata, response),
+    );
     return Response.json(response);
   },
 );
