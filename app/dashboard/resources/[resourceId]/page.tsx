@@ -1,4 +1,8 @@
-import { getResource, getResourceBalance } from "@/lib/partner";
+import {
+  getResource,
+  getResourceBalance,
+  getResourceOrganization,
+} from "@/lib/partner";
 import { getAccountInfo } from "@/lib/vercel/marketplace-api";
 import type { Resource } from "@/lib/vercel/schemas";
 import Link from "next/link";
@@ -23,9 +27,10 @@ export default async function ResourcePage({
 }) {
   const session = await getSession();
   const installationId = session.installation_id;
-  const [resource, account] = await Promise.all([
-    await getResource(installationId, resourceId),
-    await getAccountInfo(installationId),
+  const [resource, account, organization] = await Promise.all([
+    getResource(installationId, resourceId),
+    getAccountInfo(installationId),
+    getResourceOrganization(installationId, resourceId),
   ]);
 
   if (!resource) {
@@ -44,6 +49,19 @@ export default async function ResourcePage({
       </h1>
 
       <ResourceCard resource={resource} />
+
+      {organization ? (
+        <Section title="Organization Attribution">
+          <dl className="grid grid-cols-[180px_1fr] gap-2 p-2">
+            <dt>Parent account ID</dt>
+            <dd>{organization.parentAccountId ?? "Missing"}</dd>
+            <dt>Parent installation ID</dt>
+            <dd>{organization.parentInstallationId ?? "Missing"}</dd>
+            <dt>Parent account</dt>
+            <dd>{organization.parentAccount?.name ?? "Not provided"}</dd>
+          </dl>
+        </Section>
+      ) : null}
 
       <Section title="Edit Resource">
         <form action={updateResourceAction}>

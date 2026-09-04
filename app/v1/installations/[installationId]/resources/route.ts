@@ -1,7 +1,3 @@
-import {
-  recordResourceValidation,
-  recordValidationBestEffort,
-} from "@/lib/organization-validation";
 import { listResources, provisionResource } from "@/lib/partner";
 import { readRequestBodyWithSchema } from "@/lib/utils";
 import { withAuth } from "@/lib/vercel/auth";
@@ -72,9 +68,6 @@ export const POST = withAuth(async (claims, request) => {
     {
       status: initialStatus,
     },
-  );
-  await recordValidationBestEffort("resource", () =>
-    recordResourceValidation(claims, requestBody.data, resource),
   );
 
   return Response.json(resource, {

@@ -1,7 +1,7 @@
 import {
   getTransferRequest,
   setTransferRequest,
-  transferResource,
+  transferResources,
 } from "@/lib/partner";
 import { buildError } from "@/lib/utils";
 import { withAuth } from "@/lib/vercel/auth";
@@ -64,14 +64,10 @@ export const POST = withAuth(
       );
     }
 
-    await Promise.all(
-      matchingClaim.resourceIds.map((resourceId) =>
-        transferResource(
-          matchingClaim.sourceInstallationId,
-          resourceId,
-          params.installationId,
-        ),
-      ),
+    await transferResources(
+      matchingClaim.sourceInstallationId,
+      matchingClaim.resourceIds,
+      params.installationId,
     );
 
     await setTransferRequest({

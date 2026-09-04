@@ -1,4 +1,12 @@
-import { getInstallation, getInstallationBalance } from "@/lib/partner";
+import {
+  getInstallation,
+  getInstallationBalance,
+  getOrganizationPlanId,
+} from "@/lib/partner";
+import {
+  getOrganizationAttributionStatus,
+  listChildInstallations,
+} from "@/lib/partner/organizations";
 import { getAccountInfo } from "@/lib/vercel/marketplace-api";
 import { getSession } from "../auth";
 import { FormButton } from "../components/form-button";
@@ -16,10 +24,14 @@ export const dynamic = "force-dynamic";
 export default async function IntallationPage() {
   const session = await getSession();
 
-  const [installation, account] = await Promise.all([
-    getInstallation(session.installation_id),
-    getAccountInfo(session.installation_id),
-  ]);
+  const installation = await getInstallation(session.installation_id);
+  const [account, children, attribution, organizationPlanId] =
+    await Promise.all([
+      getAccountInfo(session.installation_id),
+      listChildInstallations(session.installation_id),
+      getOrganizationAttributionStatus(session.installation_id),
+      getOrganizationPlanId(installation),
+    ]);
 
   const balance = await getInstallationBalance(session.installation_id);
 
@@ -40,6 +52,67 @@ export default async function IntallationPage() {
           <code>{JSON.stringify(account, null, 2)}</code>
         </pre>
       </Section>
+
+      {installation.organization ? (
+        <Section title="Organization Parent">
+          <dl className="grid grid-cols-[180px_1fr] gap-2 p-2">
+            <dt>Parent account ID</dt>
+            <dd>{installation.organization.parentAccountId ?? "Missing"}</dd>
+            <dt>Parent installation ID</dt>
+            <dd>
+              {installation.organization.parentInstallationId ?? "Missing"}
+            </dd>
+            <dt>Parent account</dt>
+            <dd>
+              {installation.organization.parentAccount?.name ?? "Not provided"}
+            </dd>
+            <dt>Parent-selected plan</dt>
+            <dd>{organizationPlanId ?? "No plan selected"}</dd>
+            <dt>Missing attribution</dt>
+            <dd>{attribution.missingCount} requests</dd>
+            <dt>Mismatched attribution</dt>
+            <dd>{attribution.mismatchCount} requests</dd>
+          </dl>
+          {attribution.lastIssue ? (
+            <pre className="overflow-scroll p-2">
+              <code>{JSON.stringify(attribution.lastIssue, null, 2)}</code>
+            </pre>
+          ) : null}
+        </Section>
+      ) : null}
+
+      {children.length > 0 ? (
+        <Section title={`Organization Children (${children.length})`}>
+          <div className="divide-y">
+            {children.map((child) => (
+              <div
+                className="grid grid-cols-[1fr_auto] gap-4 p-2"
+                key={child.installationId}
+              >
+                <div>
+                  <div className="font-medium">
+                    {child.accountName ?? child.accountId ?? "Unknown account"}
+                  </div>
+                  <div className="text-sm text-slate-600">
+                    {child.installationId}
+                    {child.billingPlanId
+                      ? ` · plan ${child.billingPlanId}`
+                      : ""}
+                  </div>
+                </div>
+                <div className="text-sm text-slate-600">
+                  {child.resourceCount} resource
+                  {child.resourceCount === 1 ? "" : "s"}
+                  {child.attribution.missingCount > 0 ||
+                  child.attribution.mismatchCount > 0
+                    ? ` · ${child.attribution.missingCount} missing, ${child.attribution.mismatchCount} mismatched attribution requests`
+                    : " · attribution healthy"}
+                </div>
+              </div>
+            ))}
+          </div>
+        </Section>
+      ) : null}
 
       <Section title="Balance">
         <div className="p-2">

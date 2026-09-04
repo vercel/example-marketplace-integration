@@ -8,8 +8,7 @@
     "start": "next start",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
-    "format": "biome format --write .",
-    "validate:organization": "node scripts/validate-platform-organization.mjs"
+    "format": "biome format --write ."
   },
   "dependencies": {
     "@upstash/redis": "^1.35.3",

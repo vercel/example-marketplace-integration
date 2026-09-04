@@ -174,6 +174,8 @@ const accountInfoSchema = z
   })
   .passthrough();
 
+export type AccountInfo = z.infer<typeof accountInfoSchema>;
+
 export const installIntegrationRequestSchema = z.object({
   scopes: z.array(z.string()),
   acceptedPolicies: z.record(datetimeSchema),

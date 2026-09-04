@@ -254,12 +254,20 @@ export async function getInvoice(
 
 export async function submitInvoice(
   installationId: string,
-  opts?: { test?: boolean; maxAmount?: number; discountPercent?: number },
+  opts?: {
+    test?: boolean;
+    maxAmount?: number;
+    discountPercent?: number;
+    usageInstallationId?: string;
+    billingPlanId?: string;
+  },
 ): Promise<{ invoiceId: string }> {
   const test = opts?.test ?? false;
   const maxAmount = opts?.maxAmount ?? undefined;
 
-  const billingData = await mockBillingData(installationId);
+  const usageInstallationId = opts?.usageInstallationId ?? installationId;
+  const billingData = await mockBillingData(usageInstallationId);
+  const includeResourceIds = usageInstallationId === installationId;
 
   let items = billingData.billing.filter((item) => Boolean(item.resourceId));
   if (maxAmount !== undefined) {
@@ -287,7 +295,7 @@ export async function submitInvoice(
       const discount = total * opts.discountPercent;
       discounts.push({
         resourceId: undefined,
-        billingPlanId: items[0].billingPlanId,
+        billingPlanId: opts?.billingPlanId ?? items[0].billingPlanId,
         name: "Discount1",
         amount: discount.toFixed(2),
       });
@@ -302,8 +310,8 @@ export async function submitInvoice(
     items:
       items.length > 0
         ? items.map((item) => ({
-            resourceId: item.resourceId!,
-            billingPlanId: item.billingPlanId,
+            resourceId: includeResourceIds ? item.resourceId : undefined,
+            billingPlanId: opts?.billingPlanId ?? item.billingPlanId,
             name: item.name,
             price: item.price,
             quantity: item.quantity,
@@ -312,7 +320,7 @@ export async function submitInvoice(
           }))
         : [
             {
-              billingPlanId: "pro200",
+              billingPlanId: opts?.billingPlanId ?? "pro200",
               name: "Lone item. Maybe final invoice?",
               price: "1.80",
               quantity: 1,

@@ -1,8 +1,4 @@
 import {
-  recordInstallationValidation,
-  recordValidationBestEffort,
-} from "@/lib/organization-validation";
-import {
   getAllBillingPlans,
   getInstallation,
   getInstallationBillingPlans,
@@ -10,6 +6,10 @@ import {
   uninstallInstallation,
   updateInstallation,
 } from "@/lib/partner";
+import {
+  getOrganizationRelation,
+  recordOrganizationAttribution,
+} from "@/lib/partner/organizations";
 import { readRequestBodyWithSchema } from "@/lib/utils";
 import { withAuth } from "@/lib/vercel/auth";
 import {
@@ -32,13 +32,26 @@ export const PUT = withAuth(async (claims, request) => {
     return new Response(null, { status: 400 });
   }
 
-  await installIntegration(claims.installation_id, {
-    type: "marketplace",
-    ...requestBody.data,
-  });
-  await recordValidationBestEffort("installation", () =>
-    recordInstallationValidation(claims, requestBody.data),
+  const { created } = await installIntegration(
+    claims.installation_id,
+    {
+      type: "marketplace",
+      ...requestBody.data,
+    },
+    {
+      accountId: claims.account_id,
+      organization: getOrganizationRelation(
+        claims,
+        requestBody.data.parentAccount,
+      ),
+    },
   );
+  if (created) {
+    await recordOrganizationAttribution(
+      claims,
+      `${request.method} ${request.nextUrl.pathname}`,
+    );
+  }
 
   return new Response(null, { status: 201 });
 });

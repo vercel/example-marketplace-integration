@@ -1,7 +1,3 @@
-import {
-  recordPlanValidation,
-  recordValidationBestEffort,
-} from "@/lib/organization-validation";
 import { getProductBillingPlans } from "@/lib/partner";
 import { readRequestBodyWithSchema } from "@/lib/utils";
 import { withAuth } from "@/lib/vercel/auth";
@@ -32,9 +28,6 @@ export const GET = withAuth(
         }));
       }
     }
-    await recordValidationBestEffort("plan", () =>
-      recordPlanValidation(claims, params.productId, metadata, response),
-    );
     return Response.json(response);
   },
 );
