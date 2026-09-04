@@ -1,7 +1,7 @@
 import {
   getResource,
   getResourceBalance,
-  getResourceOrganization,
+  getResourceParent,
 } from "@/lib/partner";
 import { getAccountInfo } from "@/lib/vercel/marketplace-api";
 import type { Resource } from "@/lib/vercel/schemas";
@@ -27,10 +27,10 @@ export default async function ResourcePage({
 }) {
   const session = await getSession();
   const installationId = session.installation_id;
-  const [resource, account, organization] = await Promise.all([
+  const [resource, account, parent] = await Promise.all([
     getResource(installationId, resourceId),
     getAccountInfo(installationId),
-    getResourceOrganization(installationId, resourceId),
+    getResourceParent(installationId, resourceId),
   ]);
 
   if (!resource) {
@@ -50,15 +50,15 @@ export default async function ResourcePage({
 
       <ResourceCard resource={resource} />
 
-      {organization ? (
+      {parent ? (
         <Section title="Organization Attribution">
           <dl className="grid grid-cols-[180px_1fr] gap-2 p-2">
             <dt>Parent account ID</dt>
-            <dd>{organization.parentAccountId ?? "Missing"}</dd>
+            <dd>{parent.parentAccountId ?? "Missing"}</dd>
             <dt>Parent installation ID</dt>
-            <dd>{organization.parentInstallationId ?? "Missing"}</dd>
+            <dd>{parent.parentInstallationId ?? "Missing"}</dd>
             <dt>Parent account</dt>
-            <dd>{organization.parentAccount?.name ?? "Not provided"}</dd>
+            <dd>{parent.parentAccount?.name ?? "Not provided"}</dd>
           </dl>
         </Section>
       ) : null}

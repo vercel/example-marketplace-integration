@@ -26,9 +26,9 @@ import {
   importResource as importResourceToVercelApi,
 } from "../vercel/marketplace-api";
 import {
-  type OrganizationRelation,
+  type ParentRelation,
   updateParentChildIndex,
-} from "./organizations";
+} from "./parent-relations";
 
 const billingPlans: BillingPlan[] = [
   {
@@ -50,20 +50,6 @@ const billingPlans: BillingPlan[] = [
     maxResources: 3,
     requiredPolicies: [
       { id: "1", name: "Terms of Service", url: "https://partner/toc" },
-    ],
-    effectiveDate: "2021-01-01T00:00:00Z",
-  },
-  {
-    id: "pro200-child-billing",
-    scope: "resource",
-    name: "Pro (child billing aggregation test)",
-    cost: "$10 every Gb",
-    type: "subscription",
-    description: "Bills each child installation to exercise Vercel aggregation",
-    paymentMethodRequired: true,
-    details: [{ label: "Billing destination", value: "Child installation" }],
-    highlightedDetails: [
-      { label: "Purpose", value: "Organization aggregation testing" },
     ],
     effectiveDate: "2021-01-01T00:00:00Z",
   },
@@ -106,12 +92,11 @@ const billingPlans: BillingPlan[] = [
 ];
 
 const billingPlanMap = new Map(billingPlans.map((plan) => [plan.id, plan]));
-export const CHILD_BILLING_PLAN_ID = "pro200-child-billing";
 
 export interface Installation extends InstallIntegrationRequest {
   type: "marketplace" | "external";
   accountId?: string;
-  organization?: OrganizationRelation;
+  parent?: ParentRelation;
   billingPlanId?: string;
   deletedAt?: number;
   notification?: Notification;
@@ -122,16 +107,15 @@ export async function installIntegration(
   request: InstallIntegrationRequest & { type: "marketplace" | "external" },
   context?: {
     accountId?: string;
-    organization?: OrganizationRelation;
+    parent?: ParentRelation;
   },
 ): Promise<{ created: boolean }> {
   const previous = await kv.get<Installation>(installationId);
   const installation: Installation = {
     ...request,
     accountId: context?.accountId ?? previous?.accountId,
-    organization:
-      context?.organization ??
-      (previous?.deletedAt ? undefined : previous?.organization),
+    parent:
+      context?.parent ?? (previous?.deletedAt ? undefined : previous?.parent),
     billingPlanId: request.billingPlanId ?? previous?.billingPlanId,
   };
   const pipeline = kv.pipeline();
@@ -141,10 +125,10 @@ export async function installIntegration(
   await pipeline.exec();
   await updateParentChildIndex(
     installationId,
-    previous?.organization,
-    installation.organization,
+    previous?.parent,
+    installation.parent,
   );
-  await updateResourceOrganizations(installationId, installation.organization);
+  await updateResourceParentRelations(installationId, installation.parent);
   return { created: !previous || Boolean(previous.deletedAt) };
 }
 
@@ -153,7 +137,7 @@ export async function updateInstallation(
   billingPlanId: string,
 ): Promise<void> {
   const installation = await getInstallation(installationId);
-  await assertOrganizationPlan(installation, billingPlanId);
+  await assertParentPlan(installation, billingPlanId);
   const pipeline = kv.pipeline();
   await pipeline.set(installationId, { ...installation, billingPlanId });
   await pipeline.exec();
@@ -166,7 +150,7 @@ export async function uninstallInstallation(
   if (installation.deletedAt) {
     await updateParentChildIndex(
       installationId,
-      installation.organization,
+      installation.parent,
       undefined,
     );
     return undefined;
@@ -178,11 +162,7 @@ export async function uninstallInstallation(
   });
   await pipeline.lrem("installations", 0, installationId);
   await pipeline.exec();
-  await updateParentChildIndex(
-    installationId,
-    installation.organization,
-    undefined,
-  );
+  await updateParentChildIndex(installationId, installation.parent, undefined);
 
   // Installation is finalized immediately if it's on a free plan.
   const billingPlan = installation.billingPlanId
@@ -202,7 +182,7 @@ export async function provisionResource(
   opts?: { status?: ResourceStatusType },
 ): Promise<ProvisionResourceResponse> {
   const installation = await getInstallation(installationId);
-  await assertOrganizationPlan(installation, request.billingPlanId);
+  await assertParentPlan(installation, request.billingPlanId);
   const billingPlan = billingPlanMap.get(request.billingPlanId);
   if (!billingPlan) {
     throw new Error(`Unknown billing plan ${request.billingPlanId}`);
@@ -218,7 +198,7 @@ export async function provisionResource(
 
   await kv.set(`${installationId}:resource:${resource.id}`, {
     ...serializeResource(resource),
-    organization: installation.organization,
+    parent: installation.parent,
   } satisfies StoredResource);
   await kv.lpush(`${installationId}:resources`, resource.id);
   await updateInstallation(installationId, request.billingPlanId);
@@ -258,7 +238,7 @@ export async function updateResource(
 
   const { billingPlanId, ...updatedFields } = request;
   if (billingPlanId) {
-    await assertOrganizationPlan(
+    await assertParentPlan(
       await getInstallation(installationId),
       billingPlanId,
     );
@@ -274,7 +254,7 @@ export async function updateResource(
 
   await kv.set(`${installationId}:resource:${resourceId}`, {
     ...serializeResource(nextResource),
-    organization: storedResource.organization,
+    parent: storedResource.parent,
   } satisfies StoredResource);
 
   return nextResource;
@@ -298,7 +278,7 @@ export async function transferResources(
     if (!storedResource) {
       throw new Error(`Cannot find resource ${resourceIds[index]}`);
     }
-    await assertOrganizationPlan(
+    await assertParentPlan(
       targetInstallation,
       deserializeResource(storedResource).billingPlan.id,
     );
@@ -310,7 +290,7 @@ export async function transferResources(
     if (!storedResource || !resourceId) continue;
     pipeline.set(`${targetInstallationId}:resource:${resourceId}`, {
       ...storedResource,
-      organization: targetInstallation.organization,
+      parent: targetInstallation.parent,
     } satisfies StoredResource);
     pipeline.del(`${installationId}:resource:${resourceId}`);
     pipeline.lrem(`${installationId}:resources`, 0, resourceId);
@@ -337,7 +317,7 @@ export async function updateResourceNotification(
       ...resource,
       notification,
     }),
-    organization: storedResource.organization,
+    parent: storedResource.parent,
   } satisfies StoredResource);
 }
 
@@ -400,11 +380,11 @@ export async function getResource(
   return null;
 }
 
-export async function getResourceOrganization(
+export async function getResourceParent(
   installationId: string,
   resourceId: string,
-): Promise<OrganizationRelation | undefined> {
-  return (await getStoredResource(installationId, resourceId))?.organization;
+): Promise<ParentRelation | undefined> {
+  return (await getStoredResource(installationId, resourceId))?.parent;
 }
 
 export async function cloneResource(
@@ -566,7 +546,7 @@ type SerializedResource = Omit<Resource, "billingPlan"> & {
 };
 
 type StoredResource = SerializedResource & {
-  organization?: OrganizationRelation;
+  parent?: ParentRelation;
 };
 
 function getStoredResource(
@@ -581,7 +561,7 @@ function serializeResource(resource: Resource): SerializedResource {
 }
 
 function deserializeResource(storedResource: StoredResource): Resource {
-  const { organization: _organization, ...serializedResource } = storedResource;
+  const { parent: _parent, ...serializedResource } = storedResource;
   const billingPlan = billingPlanMap.get(serializedResource.billingPlan) ?? {
     id: serializedResource.billingPlan,
     scope: "resource",
@@ -658,78 +638,33 @@ export async function getInstallation(
   return installation;
 }
 
-export async function getOrganizationPlanId(
+export async function getParentPlanId(
   installation: Installation,
 ): Promise<string | undefined> {
-  if (!installation.organization) return undefined;
-  if (!installation.organization.parentInstallationId) return undefined;
+  if (!installation.parent) return undefined;
+  if (!installation.parent.parentInstallationId) return undefined;
   const parentInstallation = await getInstallation(
-    installation.organization.parentInstallationId,
+    installation.parent.parentInstallationId,
   );
   return parentInstallation.billingPlanId;
 }
 
-async function assertOrganizationPlan(
+async function assertParentPlan(
   installation: Installation,
   billingPlanId: string,
 ): Promise<void> {
-  if (!installation.organization) return;
-  const organizationPlanId = await getOrganizationPlanId(installation);
-  if (billingPlanId !== organizationPlanId) {
+  if (!installation.parent) return;
+  const parentPlanId = await getParentPlanId(installation);
+  if (billingPlanId !== parentPlanId) {
     throw new Error(
       `Billing plan ${billingPlanId} is not available to child installation`,
     );
   }
 }
 
-export async function getBillingContext(installationId: string): Promise<{
-  billingInstallationId: string;
-  billingPlanId: string | undefined;
-}> {
-  const installation = await getInstallation(installationId);
-  if (!installation.organization?.parentInstallationId) {
-    return {
-      billingInstallationId: installationId,
-      billingPlanId: installation.billingPlanId,
-    };
-  }
-  const parentInstallation = await getInstallation(
-    installation.organization.parentInstallationId,
-  );
-  return {
-    billingInstallationId:
-      parentInstallation.billingPlanId === CHILD_BILLING_PLAN_ID
-        ? installationId
-        : installation.organization.parentInstallationId,
-    billingPlanId: parentInstallation.billingPlanId,
-  };
-}
-
-export async function recordInvoiceBillingInstallation(
-  sourceInstallationId: string,
-  invoiceId: string,
-  billingInstallationId: string,
-): Promise<void> {
-  await kv.set(
-    `${sourceInstallationId}:invoice:${invoiceId}:billing-installation`,
-    billingInstallationId,
-  );
-}
-
-export async function getInvoiceBillingInstallation(
-  sourceInstallationId: string,
-  invoiceId: string,
-): Promise<string> {
-  return (
-    (await kv.get<string>(
-      `${sourceInstallationId}:invoice:${invoiceId}:billing-installation`,
-    )) ?? (await getBillingContext(sourceInstallationId)).billingInstallationId
-  );
-}
-
-async function updateResourceOrganizations(
+async function updateResourceParentRelations(
   installationId: string,
-  organization: OrganizationRelation | undefined,
+  parent: ParentRelation | undefined,
 ): Promise<void> {
   const resourceIds = await kv.lrange<string>(
     `${installationId}:resources`,
@@ -748,7 +683,7 @@ async function updateResourceOrganizations(
     if (!resource) continue;
     pipeline.set(`${installationId}:resource:${resourceIds[index]}`, {
       ...resource,
-      organization,
+      parent,
     } satisfies StoredResource);
   }
   await pipeline.exec();
@@ -759,11 +694,9 @@ async function getAvailableBillingPlans(
   plans: BillingPlan[],
 ): Promise<BillingPlan[]> {
   const installation = await getInstallation(installationId);
-  if (!installation.organization) return plans;
-  const organizationPlanId = await getOrganizationPlanId(installation);
-  return organizationPlanId
-    ? plans.filter((plan) => plan.id === organizationPlanId)
-    : [];
+  if (!installation.parent) return plans;
+  const parentPlanId = await getParentPlanId(installation);
+  return parentPlanId ? plans.filter((plan) => plan.id === parentPlanId) : [];
 }
 
 export async function setInstallationNotification(

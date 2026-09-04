@@ -1,5 +1,5 @@
 import { getInstallation } from "@/lib/partner";
-import { listChildInstallations } from "@/lib/partner/organizations";
+import { listChildInstallations } from "@/lib/partner/parent-relations";
 import { getAccountInfo } from "@/lib/vercel/marketplace-api";
 import { getSession } from "./auth";
 import { Nav } from "./nav";
@@ -71,17 +71,16 @@ export default async function DashboardLayout({
         <nav className="mt-4">
           <Nav />
         </nav>
-        {installation.organization ? (
+        {installation.parent ? (
           <div className="mt-4 rounded border border-blue-300 bg-white/70 p-3 text-sm">
             <strong>Organization child</strong>
             <div>
               Parent account:{" "}
-              {installation.organization.parentAccountId ??
-                "Missing attribution"}
+              {installation.parent.parentAccountId ?? "Missing attribution"}
             </div>
             <div>
               Parent installation:{" "}
-              {installation.organization.parentInstallationId ??
+              {installation.parent.parentInstallationId ??
                 "Missing attribution"}
             </div>
           </div>

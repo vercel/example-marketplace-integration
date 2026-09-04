@@ -1,12 +1,12 @@
 import {
   getInstallation,
   getInstallationBalance,
-  getOrganizationPlanId,
+  getParentPlanId,
 } from "@/lib/partner";
 import {
-  getOrganizationAttributionStatus,
+  getParentAttributionStatus,
   listChildInstallations,
-} from "@/lib/partner/organizations";
+} from "@/lib/partner/parent-relations";
 import { getAccountInfo } from "@/lib/vercel/marketplace-api";
 import { getSession } from "../auth";
 import { FormButton } from "../components/form-button";
@@ -25,12 +25,12 @@ export default async function IntallationPage() {
   const session = await getSession();
 
   const installation = await getInstallation(session.installation_id);
-  const [account, children, attribution, organizationPlanId] =
+  const [account, children, parentAttribution, parentPlanId] =
     await Promise.all([
       getAccountInfo(session.installation_id),
       listChildInstallations(session.installation_id),
-      getOrganizationAttributionStatus(session.installation_id),
-      getOrganizationPlanId(installation),
+      getParentAttributionStatus(session.installation_id),
+      getParentPlanId(installation),
     ]);
 
   const balance = await getInstallationBalance(session.installation_id);
@@ -53,29 +53,27 @@ export default async function IntallationPage() {
         </pre>
       </Section>
 
-      {installation.organization ? (
+      {installation.parent ? (
         <Section title="Organization Parent">
           <dl className="grid grid-cols-[180px_1fr] gap-2 p-2">
             <dt>Parent account ID</dt>
-            <dd>{installation.organization.parentAccountId ?? "Missing"}</dd>
+            <dd>{installation.parent.parentAccountId ?? "Missing"}</dd>
             <dt>Parent installation ID</dt>
-            <dd>
-              {installation.organization.parentInstallationId ?? "Missing"}
-            </dd>
+            <dd>{installation.parent.parentInstallationId ?? "Missing"}</dd>
             <dt>Parent account</dt>
-            <dd>
-              {installation.organization.parentAccount?.name ?? "Not provided"}
-            </dd>
+            <dd>{installation.parent.parentAccount?.name ?? "Not provided"}</dd>
             <dt>Parent-selected plan</dt>
-            <dd>{organizationPlanId ?? "No plan selected"}</dd>
+            <dd>{parentPlanId ?? "No plan selected"}</dd>
             <dt>Missing attribution</dt>
-            <dd>{attribution.missingCount} requests</dd>
+            <dd>{parentAttribution.missingCount} requests</dd>
             <dt>Mismatched attribution</dt>
-            <dd>{attribution.mismatchCount} requests</dd>
+            <dd>{parentAttribution.mismatchCount} requests</dd>
           </dl>
-          {attribution.lastIssue ? (
+          {parentAttribution.lastIssue ? (
             <pre className="overflow-scroll p-2">
-              <code>{JSON.stringify(attribution.lastIssue, null, 2)}</code>
+              <code>
+                {JSON.stringify(parentAttribution.lastIssue, null, 2)}
+              </code>
             </pre>
           ) : null}
         </Section>

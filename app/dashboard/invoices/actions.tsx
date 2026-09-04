@@ -1,19 +1,17 @@
 "use server";
 
-import {
-  getBillingContext,
-  getInvoiceBillingInstallation,
-  recordInvoiceBillingInstallation,
-} from "@/lib/partner";
+import { getInstallation } from "@/lib/partner";
+import { listChildInstallations } from "@/lib/partner/parent-relations";
 import { refundInvoice, submitInvoice } from "@/lib/vercel/marketplace-api";
 import { redirect } from "next/navigation";
 import { getSession } from "../auth";
 
 export async function submitInvoiceAction(formData: FormData): Promise<void> {
   const session = await getSession();
-  const { billingInstallationId, billingPlanId } = await getBillingContext(
-    session.installation_id,
-  );
+  const [installation, children] = await Promise.all([
+    getInstallation(session.installation_id),
+    listChildInstallations(session.installation_id),
+  ]);
 
   const test = formData.get("test") === "on";
   const maxAmount = formData.get("maxAmount")
@@ -23,25 +21,25 @@ export async function submitInvoiceAction(formData: FormData): Promise<void> {
   let invoiceId: string;
   try {
     const { invoiceId: resultInvoiceId } = await submitInvoice(
-      billingInstallationId,
+      session.installation_id,
       {
         test,
         maxAmount,
         discountPercent: 0.2,
-        usageInstallationId: session.installation_id,
-        billingPlanId,
+        billingPlanId: installation.billingPlanId,
+        childSummary:
+          children.length > 0
+            ? {
+                childInstallationCount: children.length,
+                childResourceCount: children.reduce(
+                  (total, child) => total + child.resourceCount,
+                  0,
+                ),
+              }
+            : undefined,
       },
     );
     invoiceId = resultInvoiceId;
-    try {
-      await recordInvoiceBillingInstallation(
-        session.installation_id,
-        invoiceId,
-        billingInstallationId,
-      );
-    } catch (error) {
-      console.warn("Failed to record invoice billing installation", error);
-    }
   } catch (e) {
     redirect(
       `/dashboard/invoices?submitError=${encodeURIComponent(
@@ -55,15 +53,11 @@ export async function submitInvoiceAction(formData: FormData): Promise<void> {
 export async function refundInvoiceAction(formData: FormData) {
   const session = await getSession();
   const invoiceId = formData.get("id") as string;
-  const billingInstallationId = await getInvoiceBillingInstallation(
-    session.installation_id,
-    invoiceId,
-  );
   const refundAmount = formData.get("refundAmount") as string;
   const refundReason = formData.get("refundReason") as string;
 
   await refundInvoice(
-    billingInstallationId,
+    session.installation_id,
     invoiceId,
     refundAmount,
     refundReason,

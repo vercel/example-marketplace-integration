@@ -2,13 +2,13 @@ import { kv } from "@/lib/redis";
 import type { OidcClaims } from "@/lib/vercel/auth";
 import type { AccountInfo } from "@/lib/vercel/schemas";
 
-export interface OrganizationRelation {
+export interface ParentRelation {
   parentAccountId?: string;
   parentInstallationId?: string;
   parentAccount?: AccountInfo;
 }
 
-export interface OrganizationAttributionIssue {
+export interface ParentAttributionIssue {
   type: "missing" | "mismatch";
   operation: string;
   observedAt: string;
@@ -18,24 +18,24 @@ export interface OrganizationAttributionIssue {
   receivedParentInstallationId?: string | null;
 }
 
-export interface OrganizationAttributionStatus {
+export interface ParentAttributionStatus {
   missingCount: number;
   mismatchCount: number;
-  lastIssue: OrganizationAttributionIssue | null;
+  lastIssue: ParentAttributionIssue | null;
 }
 
 interface StoredInstallationSummary {
   accountId?: string;
   account?: AccountInfo;
-  organization?: OrganizationRelation;
+  parent?: ParentRelation;
   billingPlanId?: string;
   deletedAt?: number;
 }
 
-export function getOrganizationRelation(
+export function getParentRelation(
   claims: OidcClaims,
   parentAccount?: AccountInfo,
-): OrganizationRelation | undefined {
+): ParentRelation | undefined {
   if (
     !claims.parent_account_id &&
     !claims.parent_installation_id &&
@@ -53,8 +53,8 @@ export function getOrganizationRelation(
 
 export async function updateParentChildIndex(
   childInstallationId: string,
-  previous: OrganizationRelation | undefined,
-  next: OrganizationRelation | undefined,
+  previous: ParentRelation | undefined,
+  next: ParentRelation | undefined,
 ): Promise<void> {
   const pipeline = kv.pipeline();
   if (previous?.parentInstallationId) {
@@ -78,7 +78,7 @@ export async function updateParentChildIndex(
   await pipeline.exec();
 }
 
-export async function recordOrganizationAttribution(
+export async function recordParentAttribution(
   claims: OidcClaims,
   operation: string,
 ): Promise<void> {
@@ -86,7 +86,7 @@ export async function recordOrganizationAttribution(
     claims.installation_id,
   );
   if (installation?.deletedAt) return;
-  const expected = installation?.organization;
+  const expected = installation?.parent;
   if (!expected) return;
 
   const missing = !claims.parent_account_id || !claims.parent_installation_id;
@@ -97,7 +97,7 @@ export async function recordOrganizationAttribution(
   if (!missing && !mismatch) return;
 
   const type = missing ? "missing" : "mismatch";
-  const issue: OrganizationAttributionIssue = {
+  const issue: ParentAttributionIssue = {
     type,
     operation,
     observedAt: new Date().toISOString(),
@@ -107,26 +107,23 @@ export async function recordOrganizationAttribution(
     receivedParentInstallationId: claims.parent_installation_id,
   };
   await Promise.all([
-    kv.incr(`${claims.installation_id}:organization-attribution:${type}`),
-    kv.set(
-      `${claims.installation_id}:organization-attribution:last-issue`,
-      issue,
-    ),
+    kv.incr(`${claims.installation_id}:parent-attribution:${type}`),
+    kv.set(`${claims.installation_id}:parent-attribution:last-issue`, issue),
   ]);
-  console.warn("Organization attribution issue", {
+  console.warn("Parent attribution issue", {
     installationId: claims.installation_id,
     ...issue,
   });
 }
 
-export async function getOrganizationAttributionStatus(
+export async function getParentAttributionStatus(
   installationId: string,
-): Promise<OrganizationAttributionStatus> {
+): Promise<ParentAttributionStatus> {
   const [missingCount, mismatchCount, lastIssue] = await Promise.all([
-    kv.get<number>(`${installationId}:organization-attribution:missing`),
-    kv.get<number>(`${installationId}:organization-attribution:mismatch`),
-    kv.get<OrganizationAttributionIssue>(
-      `${installationId}:organization-attribution:last-issue`,
+    kv.get<number>(`${installationId}:parent-attribution:missing`),
+    kv.get<number>(`${installationId}:parent-attribution:mismatch`),
+    kv.get<ParentAttributionIssue>(
+      `${installationId}:parent-attribution:last-issue`,
     ),
   ]);
   return {
@@ -146,12 +143,12 @@ export async function listChildInstallations(parentInstallationId: string) {
       const [installation, resourceCount, attribution] = await Promise.all([
         kv.get<StoredInstallationSummary>(installationId),
         kv.llen(`${installationId}:resources`),
-        getOrganizationAttributionStatus(installationId),
+        getParentAttributionStatus(installationId),
       ]);
       if (
         !installation ||
         installation.deletedAt ||
-        installation.organization?.parentInstallationId !== parentInstallationId
+        installation.parent?.parentInstallationId !== parentInstallationId
       ) {
         await kv.lrem(
           `${parentInstallationId}:child-installations`,

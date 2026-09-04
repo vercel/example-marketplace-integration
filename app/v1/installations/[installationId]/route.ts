@@ -7,9 +7,9 @@ import {
   updateInstallation,
 } from "@/lib/partner";
 import {
-  getOrganizationRelation,
-  recordOrganizationAttribution,
-} from "@/lib/partner/organizations";
+  getParentRelation,
+  recordParentAttribution,
+} from "@/lib/partner/parent-relations";
 import { readRequestBodyWithSchema } from "@/lib/utils";
 import { withAuth } from "@/lib/vercel/auth";
 import {
@@ -40,14 +40,11 @@ export const PUT = withAuth(async (claims, request) => {
     },
     {
       accountId: claims.account_id,
-      organization: getOrganizationRelation(
-        claims,
-        requestBody.data.parentAccount,
-      ),
+      parent: getParentRelation(claims, requestBody.data.parentAccount),
     },
   );
   if (created) {
-    await recordOrganizationAttribution(
+    await recordParentAttribution(
       claims,
       `${request.method} ${request.nextUrl.pathname}`,
     );

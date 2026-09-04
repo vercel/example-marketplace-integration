@@ -258,18 +258,41 @@ export async function submitInvoice(
     test?: boolean;
     maxAmount?: number;
     discountPercent?: number;
-    usageInstallationId?: string;
     billingPlanId?: string;
+    childSummary?: {
+      childInstallationCount: number;
+      childResourceCount: number;
+    };
   },
 ): Promise<{ invoiceId: string }> {
   const test = opts?.test ?? false;
   const maxAmount = opts?.maxAmount ?? undefined;
 
-  const usageInstallationId = opts?.usageInstallationId ?? installationId;
-  const billingData = await mockBillingData(usageInstallationId);
-  const includeResourceIds = usageInstallationId === installationId;
+  const billingData = await mockBillingData(installationId);
 
   let items = billingData.billing.filter((item) => Boolean(item.resourceId));
+  if (opts?.childSummary) {
+    const billingPlanId =
+      opts.billingPlanId ?? items[0]?.billingPlanId ?? "pro200";
+    items.push(
+      {
+        billingPlanId,
+        name: "Platform organization child installations",
+        price: "1.00",
+        quantity: opts.childSummary.childInstallationCount,
+        units: "installations",
+        total: opts.childSummary.childInstallationCount.toFixed(2),
+      },
+      {
+        billingPlanId,
+        name: "Platform organization child resources",
+        price: "0.10",
+        quantity: opts.childSummary.childResourceCount,
+        units: "resources",
+        total: (opts.childSummary.childResourceCount * 0.1).toFixed(2),
+      },
+    );
+  }
   if (maxAmount !== undefined) {
     const total = items.reduce(
       (acc, item) => acc + Number.parseFloat(item.total),
@@ -279,7 +302,10 @@ export async function submitInvoice(
       const ratio = maxAmount / total;
       items = items.map((item) => ({
         ...item,
-        quantity: item.quantity * ratio,
+        price: item.resourceId
+          ? item.price
+          : (Number.parseFloat(item.price) * ratio).toFixed(2),
+        quantity: item.resourceId ? item.quantity * ratio : item.quantity,
         total: (Number.parseFloat(item.total) * ratio).toFixed(2),
       }));
     }
@@ -310,7 +336,7 @@ export async function submitInvoice(
     items:
       items.length > 0
         ? items.map((item) => ({
-            resourceId: includeResourceIds ? item.resourceId : undefined,
+            resourceId: item.resourceId,
             billingPlanId: opts?.billingPlanId ?? item.billingPlanId,
             name: item.name,
             price: item.price,

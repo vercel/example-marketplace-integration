@@ -2,7 +2,7 @@ import { createRemoteJWKSet, jwtVerify } from "jose";
 import { JWTExpired, JWTInvalid } from "jose/errors";
 import { type NextRequest, NextResponse } from "next/server";
 import { env } from "../env";
-import { recordOrganizationAttribution } from "../partner/organizations";
+import { recordParentAttribution } from "../partner/parent-relations";
 
 const JWKS = createRemoteJWKSet(
   new URL("https://marketplace.vercel.com/.well-known/jwks"),
@@ -37,7 +37,7 @@ export function withAuth(
       const claims = await verifyToken(token);
 
       try {
-        await recordOrganizationAttribution(
+        await recordParentAttribution(
           claims,
           `${req.method} ${req.nextUrl.pathname}`,
         );

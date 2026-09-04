@@ -1,7 +1,3 @@
-import {
-  getBillingContext,
-  getInvoiceBillingInstallation,
-} from "@/lib/partner";
 import { getAccountInfo, getInvoice } from "@/lib/vercel/marketplace-api";
 import { getSession } from "../auth";
 import { FormButton } from "../components/form-button";
@@ -14,18 +10,12 @@ export default async function Page({
   searchParams: { id?: string; submitError?: string };
 }) {
   const session = await getSession();
-  const billingInstallationId = searchParams.id
-    ? await getInvoiceBillingInstallation(
-        session.installation_id,
-        searchParams.id,
-      )
-    : (await getBillingContext(session.installation_id)).billingInstallationId;
 
   let invoice;
   let invoiceError;
   try {
     invoice = searchParams.id
-      ? await getInvoice(billingInstallationId, searchParams.id)
+      ? await getInvoice(session.installation_id, searchParams.id)
       : null;
   } catch (err) {
     invoiceError = err instanceof Error ? err.message : String(err);
@@ -34,9 +24,6 @@ export default async function Page({
   return (
     <main className="space-y-8">
       <Section title="Submit Invoice">
-        <p className="mb-4 text-sm text-slate-600">
-          Billing installation: {billingInstallationId}
-        </p>
         <form action={submitInvoiceAction}>
           <div className="space-y-4">
             <div className="flex gap-2">
