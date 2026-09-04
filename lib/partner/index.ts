@@ -25,6 +25,10 @@ import {
   getInvoice,
   importResource as importResourceToVercelApi,
 } from "../vercel/marketplace-api";
+import {
+  type ParentRelation,
+  updateParentChildIndex,
+} from "./parent-relations";
 
 const billingPlans: BillingPlan[] = [
   {
@@ -89,15 +93,43 @@ const billingPlans: BillingPlan[] = [
 
 const billingPlanMap = new Map(billingPlans.map((plan) => [plan.id, plan]));
 
+export interface Installation extends InstallIntegrationRequest {
+  type: "marketplace" | "external";
+  accountId?: string;
+  parent?: ParentRelation;
+  billingPlanId?: string;
+  deletedAt?: number;
+  notification?: Notification;
+}
+
 export async function installIntegration(
   installationId: string,
   request: InstallIntegrationRequest & { type: "marketplace" | "external" },
-): Promise<void> {
+  context?: {
+    accountId?: string;
+    parent?: ParentRelation;
+  },
+): Promise<{ created: boolean }> {
+  const previous = await kv.get<Installation>(installationId);
+  const installation: Installation = {
+    ...request,
+    accountId: context?.accountId ?? previous?.accountId,
+    parent:
+      context?.parent ?? (previous?.deletedAt ? undefined : previous?.parent),
+    billingPlanId: request.billingPlanId ?? previous?.billingPlanId,
+  };
   const pipeline = kv.pipeline();
-  await pipeline.set(installationId, request);
+  await pipeline.set(installationId, installation);
   await pipeline.lrem("installations", 0, installationId);
   await pipeline.lpush("installations", installationId);
   await pipeline.exec();
+  await updateParentChildIndex(
+    installationId,
+    previous?.parent,
+    installation.parent,
+  );
+  await updateResourceParentRelations(installationId, installation.parent);
+  return { created: !previous || Boolean(previous.deletedAt) };
 }
 
 export async function updateInstallation(
@@ -105,6 +137,7 @@ export async function updateInstallation(
   billingPlanId: string,
 ): Promise<void> {
   const installation = await getInstallation(installationId);
+  await assertParentPlan(installation, billingPlanId);
   const pipeline = kv.pipeline();
   await pipeline.set(installationId, { ...installation, billingPlanId });
   await pipeline.exec();
@@ -114,7 +147,12 @@ export async function uninstallInstallation(
   installationId: string,
 ): Promise<{ finalized: boolean } | undefined> {
   const installation = await getInstallation(installationId);
-  if (!installation || installation.deletedAt) {
+  if (installation.deletedAt) {
+    await updateParentChildIndex(
+      installationId,
+      installation.parent,
+      undefined,
+    );
     return undefined;
   }
   const pipeline = kv.pipeline();
@@ -124,9 +162,12 @@ export async function uninstallInstallation(
   });
   await pipeline.lrem("installations", 0, installationId);
   await pipeline.exec();
+  await updateParentChildIndex(installationId, installation.parent, undefined);
 
   // Installation is finalized immediately if it's on a free plan.
-  const billingPlan = billingPlanMap.get(installation.billingPlanId);
+  const billingPlan = installation.billingPlanId
+    ? billingPlanMap.get(installation.billingPlanId)
+    : undefined;
   return { finalized: billingPlan?.paymentMethodRequired === false };
 }
 
@@ -140,6 +181,8 @@ export async function provisionResource(
   request: ProvisionResourceRequest,
   opts?: { status?: ResourceStatusType },
 ): Promise<ProvisionResourceResponse> {
+  const installation = await getInstallation(installationId);
+  await assertParentPlan(installation, request.billingPlanId);
   const billingPlan = billingPlanMap.get(request.billingPlanId);
   if (!billingPlan) {
     throw new Error(`Unknown billing plan ${request.billingPlanId}`);
@@ -153,10 +196,10 @@ export async function provisionResource(
     productId: request.productId,
   } satisfies Resource;
 
-  await kv.set(
-    `${installationId}:resource:${resource.id}`,
-    serializeResource(resource),
-  );
+  await kv.set(`${installationId}:resource:${resource.id}`, {
+    ...serializeResource(resource),
+    parent: installation.parent,
+  } satisfies StoredResource);
   await kv.lpush(`${installationId}:resources`, resource.id);
   await updateInstallation(installationId, request.billingPlanId);
 
@@ -186,13 +229,20 @@ export async function updateResource(
   resourceId: string,
   request: UpdateResourceRequest,
 ): Promise<UpdateResourceResponse> {
-  const resource = await getResource(installationId, resourceId);
+  const storedResource = await getStoredResource(installationId, resourceId);
+  const resource = storedResource && deserializeResource(storedResource);
 
   if (!resource) {
     throw new Error(`Cannot find resource ${resourceId}`);
   }
 
   const { billingPlanId, ...updatedFields } = request;
+  if (billingPlanId) {
+    await assertParentPlan(
+      await getInstallation(installationId),
+      billingPlanId,
+    );
+  }
 
   const nextResource = {
     ...resource,
@@ -202,34 +252,51 @@ export async function updateResource(
       : resource.billingPlan,
   };
 
-  await kv.set(
-    `${installationId}:resource:${resourceId}`,
-    serializeResource(nextResource),
-  );
+  await kv.set(`${installationId}:resource:${resourceId}`, {
+    ...serializeResource(nextResource),
+    parent: storedResource.parent,
+  } satisfies StoredResource);
 
   return nextResource;
 }
 
-export async function transferResource(
+export async function transferResources(
   installationId: string,
-  resourceId: string,
+  resourceIds: string[],
   targetInstallationId: string,
 ): Promise<void> {
-  const resource = await getResource(installationId, resourceId);
-
-  if (!resource) {
-    throw new Error(`Cannot find resource ${resourceId}`);
+  const [targetInstallation, storedResources] = await Promise.all([
+    getInstallation(targetInstallationId),
+    Promise.all(
+      resourceIds.map((resourceId) =>
+        getStoredResource(installationId, resourceId),
+      ),
+    ),
+  ]);
+  for (let index = 0; index < storedResources.length; index++) {
+    const storedResource = storedResources[index];
+    if (!storedResource) {
+      throw new Error(`Cannot find resource ${resourceIds[index]}`);
+    }
+    await assertParentPlan(
+      targetInstallation,
+      deserializeResource(storedResource).billingPlan.id,
+    );
   }
-
   const pipeline = kv.pipeline();
-  pipeline.set(
-    `${targetInstallationId}:resource:${resourceId}`,
-    serializeResource(resource),
-  );
-  pipeline.del(`${installationId}:resource:${resourceId}`);
-  pipeline.lrem(`${installationId}:resources`, 0, resourceId);
-  pipeline.lrem(`${targetInstallationId}:resources`, 0, resourceId);
-  pipeline.lpush(`${targetInstallationId}:resources`, resourceId);
+  for (let index = 0; index < storedResources.length; index++) {
+    const storedResource = storedResources[index];
+    const resourceId = resourceIds[index];
+    if (!storedResource || !resourceId) continue;
+    pipeline.set(`${targetInstallationId}:resource:${resourceId}`, {
+      ...storedResource,
+      parent: targetInstallation.parent,
+    } satisfies StoredResource);
+    pipeline.del(`${installationId}:resource:${resourceId}`);
+    pipeline.lrem(`${installationId}:resources`, 0, resourceId);
+    pipeline.lrem(`${targetInstallationId}:resources`, 0, resourceId);
+    pipeline.lpush(`${targetInstallationId}:resources`, resourceId);
+  }
   await pipeline.exec();
 }
 
@@ -238,19 +305,20 @@ export async function updateResourceNotification(
   resourceId: string,
   notification?: Notification,
 ): Promise<void> {
-  const resource = await getResource(installationId, resourceId);
+  const storedResource = await getStoredResource(installationId, resourceId);
+  const resource = storedResource && deserializeResource(storedResource);
 
   if (!resource) {
     throw new Error(`Cannot find resource ${resourceId}`);
   }
 
-  await kv.set(
-    `${installationId}:resource:${resourceId}`,
-    serializeResource({
+  await kv.set(`${installationId}:resource:${resourceId}`, {
+    ...serializeResource({
       ...resource,
       notification,
     }),
-  );
+    parent: storedResource.parent,
+  } satisfies StoredResource);
 }
 
 export async function clearResourceNotification(
@@ -288,7 +356,7 @@ export async function listResources(
     pipeline.get(`${installationId}:resource:${resourceId}`);
   }
 
-  const resources = await pipeline.exec<SerializedResource[]>();
+  const resources = await pipeline.exec<StoredResource[]>();
 
   return {
     resources: compact(resources).map(deserializeResource),
@@ -303,15 +371,20 @@ export async function getResource(
   installationId: string,
   resourceId: string,
 ): Promise<GetResourceResponse | null> {
-  const resource = await kv.get<SerializedResource>(
-    `${installationId}:resource:${resourceId}`,
-  );
+  const resource = await getStoredResource(installationId, resourceId);
 
   if (resource) {
     return deserializeResource(resource);
   }
 
   return null;
+}
+
+export async function getResourceParent(
+  installationId: string,
+  resourceId: string,
+): Promise<ParentRelation | undefined> {
+  return (await getStoredResource(installationId, resourceId))?.parent;
 }
 
 export async function cloneResource(
@@ -472,11 +545,23 @@ type SerializedResource = Omit<Resource, "billingPlan"> & {
   billingPlan: string;
 };
 
+type StoredResource = SerializedResource & {
+  parent?: ParentRelation;
+};
+
+function getStoredResource(
+  installationId: string,
+  resourceId: string,
+): Promise<StoredResource | null> {
+  return kv.get<StoredResource>(`${installationId}:resource:${resourceId}`);
+}
+
 function serializeResource(resource: Resource): SerializedResource {
   return { ...resource, billingPlan: resource.billingPlan.id };
 }
 
-function deserializeResource(serializedResource: SerializedResource): Resource {
+function deserializeResource(storedResource: StoredResource): Resource {
+  const { parent: _parent, ...serializedResource } = storedResource;
   const billingPlan = billingPlanMap.get(serializedResource.billingPlan) ?? {
     id: serializedResource.billingPlan,
     scope: "resource",
@@ -489,11 +574,11 @@ function deserializeResource(serializedResource: SerializedResource): Resource {
 }
 
 export async function getAllBillingPlans(
-  _installationId: string,
+  installationId: string,
   _experimental_metadata?: Record<string, unknown>,
 ): Promise<GetBillingPlansResponse> {
   return {
-    plans: billingPlans,
+    plans: await getAvailableBillingPlans(installationId, billingPlans),
   };
 }
 
@@ -502,11 +587,15 @@ export async function getInstallationBillingPlans(
   _experimental_metadata?: Record<string, unknown>,
 ): Promise<GetBillingPlansResponse> {
   const resourceCount = await getResourceCount(installationId);
+  const availablePlans = await getAvailableBillingPlans(
+    installationId,
+    billingPlans,
+  );
   return {
     plans:
       resourceCount > 2
-        ? billingPlans.filter((p) => p.paymentMethodRequired)
-        : billingPlans,
+        ? availablePlans.filter((p) => p.paymentMethodRequired)
+        : availablePlans,
   };
 }
 
@@ -516,43 +605,98 @@ export async function getProductBillingPlans(
   _experimental_metadata?: Record<string, unknown>,
 ): Promise<GetBillingPlansResponse> {
   const resourceCount = await getResourceCount(installationId);
+  const availablePlans = await getAvailableBillingPlans(
+    installationId,
+    billingPlans,
+  );
   return {
     plans:
       resourceCount > 2
-        ? billingPlans.filter((p) => p.paymentMethodRequired)
-        : billingPlans,
+        ? availablePlans.filter((p) => p.paymentMethodRequired)
+        : availablePlans,
   };
 }
 
 export async function getResourceBillingPlans(
-  _installationId: string,
+  installationId: string,
   _resourceId: string,
 ): Promise<GetBillingPlansResponse> {
-  return { plans: billingPlans };
+  return {
+    plans: await getAvailableBillingPlans(installationId, billingPlans),
+  };
 }
 
-export async function getInstallation(installationId: string): Promise<
-  InstallIntegrationRequest & {
-    type: "marketplace" | "external";
-    billingPlanId: string;
-    deletedAt?: number;
-    notification?: Notification;
-  }
-> {
-  const installation = await kv.get<
-    InstallIntegrationRequest & {
-      type: "marketplace" | "external";
-      billingPlanId: string;
-      deletedAt?: number;
-      notification?: Notification;
-    }
-  >(installationId);
+export async function getInstallation(
+  installationId: string,
+): Promise<Installation> {
+  const installation = await kv.get<Installation>(installationId);
 
   if (!installation) {
     throw new Error(`Installation '${installationId}' not found`);
   }
 
   return installation;
+}
+
+export async function getParentPlanId(
+  installation: Installation,
+): Promise<string | undefined> {
+  if (!installation.parent) return undefined;
+  if (!installation.parent.parentInstallationId) return undefined;
+  const parentInstallation = await getInstallation(
+    installation.parent.parentInstallationId,
+  );
+  return parentInstallation.billingPlanId;
+}
+
+async function assertParentPlan(
+  installation: Installation,
+  billingPlanId: string,
+): Promise<void> {
+  if (!installation.parent) return;
+  const parentPlanId = await getParentPlanId(installation);
+  if (billingPlanId !== parentPlanId) {
+    throw new Error(
+      `Billing plan ${billingPlanId} is not available to child installation`,
+    );
+  }
+}
+
+async function updateResourceParentRelations(
+  installationId: string,
+  parent: ParentRelation | undefined,
+): Promise<void> {
+  const resourceIds = await kv.lrange<string>(
+    `${installationId}:resources`,
+    0,
+    -1,
+  );
+  if (resourceIds.length === 0) return;
+  const resources = await Promise.all(
+    resourceIds.map((resourceId) =>
+      getStoredResource(installationId, resourceId),
+    ),
+  );
+  const pipeline = kv.pipeline();
+  for (let index = 0; index < resources.length; index++) {
+    const resource = resources[index];
+    if (!resource) continue;
+    pipeline.set(`${installationId}:resource:${resourceIds[index]}`, {
+      ...resource,
+      parent,
+    } satisfies StoredResource);
+  }
+  await pipeline.exec();
+}
+
+async function getAvailableBillingPlans(
+  installationId: string,
+  plans: BillingPlan[],
+): Promise<BillingPlan[]> {
+  const installation = await getInstallation(installationId);
+  if (!installation.parent) return plans;
+  const parentPlanId = await getParentPlanId(installation);
+  return parentPlanId ? plans.filter((plan) => plan.id === parentPlanId) : [];
 }
 
 export async function setInstallationNotification(

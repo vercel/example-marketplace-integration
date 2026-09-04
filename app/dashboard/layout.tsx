@@ -1,4 +1,5 @@
 import { getInstallation } from "@/lib/partner";
+import { listChildInstallations } from "@/lib/partner/parent-relations";
 import { getAccountInfo } from "@/lib/vercel/marketplace-api";
 import { getSession } from "./auth";
 import { Nav } from "./nav";
@@ -9,8 +10,11 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const session = await getSession();
-  const account = await getAccountInfo(session.installation_id);
-  const installation = await getInstallation(session.installation_id);
+  const [account, installation, childInstallations] = await Promise.all([
+    getAccountInfo(session.installation_id),
+    getInstallation(session.installation_id),
+    listChildInstallations(session.installation_id),
+  ]);
 
   return (
     <div className="w-[800px] mx-auto">
@@ -67,6 +71,28 @@ export default async function DashboardLayout({
         <nav className="mt-4">
           <Nav />
         </nav>
+        {installation.parent ? (
+          <div className="mt-4 rounded border border-blue-300 bg-white/70 p-3 text-sm">
+            <strong>Organization child</strong>
+            <div>
+              Parent account:{" "}
+              {installation.parent.parentAccountId ?? "Missing attribution"}
+            </div>
+            <div>
+              Parent installation:{" "}
+              {installation.parent.parentInstallationId ??
+                "Missing attribution"}
+            </div>
+          </div>
+        ) : childInstallations.length > 0 ? (
+          <div className="mt-4 rounded border border-blue-300 bg-white/70 p-3 text-sm">
+            <strong>Organization parent</strong>
+            <div>
+              {childInstallations.length} child installation
+              {childInstallations.length === 1 ? "" : "s"}
+            </div>
+          </div>
+        ) : null}
       </header>
       <main className="container mx-auto p-4">{children}</main>
     </div>

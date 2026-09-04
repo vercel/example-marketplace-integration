@@ -6,6 +6,10 @@ import {
   uninstallInstallation,
   updateInstallation,
 } from "@/lib/partner";
+import {
+  getParentRelation,
+  recordParentAttribution,
+} from "@/lib/partner/parent-relations";
 import { readRequestBodyWithSchema } from "@/lib/utils";
 import { withAuth } from "@/lib/vercel/auth";
 import {
@@ -28,12 +32,23 @@ export const PUT = withAuth(async (claims, request) => {
     return new Response(null, { status: 400 });
   }
 
-  console.log("installIntegration body: ", requestBody.data);
-
-  await installIntegration(claims.installation_id, {
-    type: "marketplace",
-    ...requestBody.data,
-  });
+  const { created } = await installIntegration(
+    claims.installation_id,
+    {
+      type: "marketplace",
+      ...requestBody.data,
+    },
+    {
+      accountId: claims.account_id,
+      parent: getParentRelation(claims, requestBody.data.parentAccount),
+    },
+  );
+  if (created) {
+    await recordParentAttribution(
+      claims,
+      `${request.method} ${request.nextUrl.pathname}`,
+    );
+  }
 
   return new Response(null, { status: 201 });
 });

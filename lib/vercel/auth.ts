@@ -2,6 +2,7 @@ import { createRemoteJWKSet, jwtVerify } from "jose";
 import { JWTExpired, JWTInvalid } from "jose/errors";
 import { type NextRequest, NextResponse } from "next/server";
 import { env } from "../env";
+import { recordParentAttribution } from "../partner/parent-relations";
 
 const JWKS = createRemoteJWKSet(
   new URL("https://marketplace.vercel.com/.well-known/jwks"),
@@ -15,6 +16,8 @@ export interface OidcClaims {
   iat: number;
   account_id: string;
   installation_id: string;
+  parent_account_id?: string;
+  parent_installation_id?: string | null;
   user_id: string;
   user_role: string;
   user_name?: string;
@@ -33,6 +36,14 @@ export function withAuth(
       const token = getAuthorizationToken(req);
       const claims = await verifyToken(token);
 
+      try {
+        await recordParentAttribution(
+          claims,
+          `${req.method} ${req.nextUrl.pathname}`,
+        );
+      } catch (error) {
+        console.warn("Failed to record organization attribution", error);
+      }
       return callback(claims, req, ...rest);
     } catch (err) {
       if (err instanceof AuthError) {
