@@ -161,6 +161,21 @@ const ResourceSecretsSchema = z.array(
 
 // Account and Installation
 
+const accountInfoSchema = z
+  .object({
+    name: z.string().optional(),
+    url: z.string(),
+    contact: z
+      .object({
+        name: z.string().optional(),
+        email: z.string(),
+      })
+      .nullable(),
+  })
+  .passthrough();
+
+export type AccountInfo = z.infer<typeof accountInfoSchema>;
+
 export const installIntegrationRequestSchema = z.object({
   scopes: z.array(z.string()),
   acceptedPolicies: z.record(datetimeSchema),
@@ -168,6 +183,10 @@ export const installIntegrationRequestSchema = z.object({
     access_token: z.string().min(1),
     token_type: z.string().min(1),
   }),
+  account: accountInfoSchema.optional(),
+  parentAccount: accountInfoSchema.optional(),
+  billingPlanId: z.string().optional(),
+  metadata: metadataSchema.optional(),
 });
 
 export const updateInstallationRequestSchema = z.object({

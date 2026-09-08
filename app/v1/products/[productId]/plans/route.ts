@@ -16,8 +16,10 @@ export const GET = withAuth(
 
     const url = new URL(request.url);
     const metadataQuery = url.searchParams.get("metadata");
+    const metadata: Record<string, unknown> = metadataQuery
+      ? JSON.parse(metadataQuery)
+      : {};
     if (metadataQuery) {
-      const metadata: Record<string, string> = JSON.parse(metadataQuery);
       if (metadata.primaryRegion === "sfo1") {
         response.plans = response.plans.map((plan) => ({
           ...plan,

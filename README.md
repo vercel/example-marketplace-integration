@@ -86,3 +86,9 @@ See [Securing cron jobs](https://vercel.com/docs/cron-jobs/manage-cron-jobs#secu
 - Create a database for your product in the Storage tab via the "Create Store" button.
 - View and manage your new database for your product.;
 - When you've created a database, you should be able to click the "Open in <Product Name>" button on the store detail page to open the database on your integration's dashboard.
+
+## Platform Organizations
+
+When Vercel sends parent organization context, the example integration stores the parent account and installation relationship on child installations and resources. Child dashboards show the received parent context, while parent dashboards show a count and compact list of child installations with resource counts.
+
+The integration records requests whose parent claims are missing or disagree with the stored child relationship. Child plan listings return only the plan selected on the parent installation, and resource provisioning enforces that selection. Every installation submits its own manual invoices. Parent installation invoices include aggregate lines for the current number of child installations and child resources.
