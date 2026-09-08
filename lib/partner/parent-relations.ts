@@ -24,6 +24,63 @@ export interface ParentAttributionStatus {
   lastIssue: ParentAttributionIssue | null;
 }
 
+export type ParentResolution =
+  | { state: "none" }
+  | {
+      state: "resolved";
+      relation: ParentRelation;
+      parentInstallationId: string;
+      parentPlanId: string | undefined;
+    }
+  | {
+      state: "invalid";
+      relation: ParentRelation;
+      reason: "missing_parent_installation_id" | "parent_record_missing";
+    };
+
+export type ParentRelationFailureReason =
+  | "missing_parent_installation_id"
+  | "parent_record_missing";
+
+export class ParentRelationUnavailableError extends Error {
+  readonly installationId: string;
+  readonly reason: ParentRelationFailureReason;
+
+  constructor(installationId: string, reason: ParentRelationFailureReason) {
+    super(
+      reason === "missing_parent_installation_id"
+        ? "The stored parent relation has no parent installation ID"
+        : "The stored parent installation record is missing",
+    );
+    this.installationId = installationId;
+    this.reason = reason;
+  }
+}
+
+export async function recordParentRelationFailure(
+  installationId: string,
+  reason: ParentRelationFailureReason,
+): Promise<void> {
+  await kv.incr(`${installationId}:parent-relation-failure:${reason}`);
+}
+
+export async function getParentRelationFailureCounts(
+  installationId: string,
+): Promise<Record<ParentRelationFailureReason, number>> {
+  const [missingParentInstallationId, parentRecordMissing] = await Promise.all([
+    kv.get<number>(
+      `${installationId}:parent-relation-failure:missing_parent_installation_id`,
+    ),
+    kv.get<number>(
+      `${installationId}:parent-relation-failure:parent_record_missing`,
+    ),
+  ]);
+  return {
+    missing_parent_installation_id: missingParentInstallationId ?? 0,
+    parent_record_missing: parentRecordMissing ?? 0,
+  };
+}
+
 interface StoredInstallationSummary {
   accountId?: string;
   account?: AccountInfo;

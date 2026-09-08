@@ -1,10 +1,11 @@
 import {
   getInstallation,
   getInstallationBalance,
-  getParentPlanId,
+  resolveParent,
 } from "@/lib/partner";
 import {
   getParentAttributionStatus,
+  getParentRelationFailureCounts,
   listChildInstallations,
 } from "@/lib/partner/parent-relations";
 import { getAccountInfo } from "@/lib/vercel/marketplace-api";
@@ -25,12 +26,13 @@ export default async function IntallationPage() {
   const session = await getSession();
 
   const installation = await getInstallation(session.installation_id);
-  const [account, children, parentAttribution, parentPlanId] =
+  const [account, children, parentAttribution, parent, relationFailures] =
     await Promise.all([
       getAccountInfo(session.installation_id),
       listChildInstallations(session.installation_id),
       getParentAttributionStatus(session.installation_id),
-      getParentPlanId(installation),
+      resolveParent(installation),
+      getParentRelationFailureCounts(session.installation_id),
     ]);
 
   const balance = await getInstallationBalance(session.installation_id);
@@ -53,21 +55,37 @@ export default async function IntallationPage() {
         </pre>
       </Section>
 
-      {installation.parent ? (
+      {parent.state !== "none" ? (
         <Section title="Organization Parent">
           <dl className="grid grid-cols-[180px_1fr] gap-2 p-2">
+            <dt>Relation state</dt>
+            <dd>
+              {parent.state === "resolved"
+                ? "Resolved"
+                : parent.reason === "missing_parent_installation_id"
+                  ? "Invalid: parent relation has no parent installation ID"
+                  : "Invalid: parent installation record is missing"}
+            </dd>
             <dt>Parent account ID</dt>
-            <dd>{installation.parent.parentAccountId ?? "Missing"}</dd>
+            <dd>{parent.relation.parentAccountId ?? "Missing"}</dd>
             <dt>Parent installation ID</dt>
-            <dd>{installation.parent.parentInstallationId ?? "Missing"}</dd>
+            <dd>{parent.relation.parentInstallationId ?? "Missing"}</dd>
             <dt>Parent account</dt>
-            <dd>{installation.parent.parentAccount?.name ?? "Not provided"}</dd>
+            <dd>{parent.relation.parentAccount?.name ?? "Not provided"}</dd>
             <dt>Parent-selected plan</dt>
-            <dd>{parentPlanId ?? "No plan selected"}</dd>
+            <dd>
+              {parent.state === "resolved"
+                ? (parent.parentPlanId ?? "No plan selected")
+                : "Unavailable"}
+            </dd>
             <dt>Missing attribution</dt>
             <dd>{parentAttribution.missingCount} requests</dd>
             <dt>Mismatched attribution</dt>
             <dd>{parentAttribution.mismatchCount} requests</dd>
+            <dt>Refused: no parent installation ID</dt>
+            <dd>{relationFailures.missing_parent_installation_id} requests</dd>
+            <dt>Refused: parent record missing</dt>
+            <dd>{relationFailures.parent_record_missing} requests</dd>
           </dl>
           {parentAttribution.lastIssue ? (
             <pre className="overflow-scroll p-2">

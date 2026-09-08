@@ -2,7 +2,12 @@ import { createRemoteJWKSet, jwtVerify } from "jose";
 import { JWTExpired, JWTInvalid } from "jose/errors";
 import { type NextRequest, NextResponse } from "next/server";
 import { env } from "../env";
-import { recordParentAttribution } from "../partner/parent-relations";
+import {
+  ParentRelationUnavailableError,
+  recordParentAttribution,
+  recordParentRelationFailure,
+} from "../partner/parent-relations";
+import { buildError } from "../utils";
 
 const JWKS = createRemoteJWKSet(
   new URL("https://marketplace.vercel.com/.well-known/jwks"),
@@ -44,10 +49,25 @@ export function withAuth(
       } catch (error) {
         console.warn("Failed to record organization attribution", error);
       }
-      return callback(claims, req, ...rest);
+      return await callback(claims, req, ...rest);
     } catch (err) {
       if (err instanceof AuthError) {
         return new NextResponse(err.message, { status: 403 });
+      }
+
+      if (err instanceof ParentRelationUnavailableError) {
+        try {
+          await recordParentRelationFailure(err.installationId, err.reason);
+        } catch (recordError) {
+          console.warn("Failed to record parent relation failure", recordError);
+        }
+        return NextResponse.json(
+          buildError("parent_relation_unavailable", err.message, {
+            message:
+              "This installation belongs to a platform organization, but its parent installation could not be resolved. Reinstall the parent integration or contact support.",
+          }),
+          { status: 409 },
+        );
       }
 
       throw err;

@@ -27,6 +27,8 @@ import {
 } from "../vercel/marketplace-api";
 import {
   type ParentRelation,
+  ParentRelationUnavailableError,
+  type ParentResolution,
   updateParentChildIndex,
 } from "./parent-relations";
 
@@ -137,7 +139,7 @@ export async function updateInstallation(
   billingPlanId: string,
 ): Promise<void> {
   const installation = await getInstallation(installationId);
-  await assertParentPlan(installation, billingPlanId);
+  await assertParentPlan(installationId, installation, billingPlanId);
   const pipeline = kv.pipeline();
   await pipeline.set(installationId, { ...installation, billingPlanId });
   await pipeline.exec();
@@ -182,7 +184,7 @@ export async function provisionResource(
   opts?: { status?: ResourceStatusType },
 ): Promise<ProvisionResourceResponse> {
   const installation = await getInstallation(installationId);
-  await assertParentPlan(installation, request.billingPlanId);
+  await assertParentPlan(installationId, installation, request.billingPlanId);
   const billingPlan = billingPlanMap.get(request.billingPlanId);
   if (!billingPlan) {
     throw new Error(`Unknown billing plan ${request.billingPlanId}`);
@@ -239,6 +241,7 @@ export async function updateResource(
   const { billingPlanId, ...updatedFields } = request;
   if (billingPlanId) {
     await assertParentPlan(
+      installationId,
       await getInstallation(installationId),
       billingPlanId,
     );
@@ -279,6 +282,7 @@ export async function transferResources(
       throw new Error(`Cannot find resource ${resourceIds[index]}`);
     }
     await assertParentPlan(
+      targetInstallationId,
       targetInstallation,
       deserializeResource(storedResource).billingPlan.id,
     );
@@ -638,24 +642,46 @@ export async function getInstallation(
   return installation;
 }
 
-export async function getParentPlanId(
+export async function resolveParent(
   installation: Installation,
-): Promise<string | undefined> {
-  if (!installation.parent) return undefined;
-  if (!installation.parent.parentInstallationId) return undefined;
-  const parentInstallation = await getInstallation(
+): Promise<ParentResolution> {
+  if (!installation.parent) return { state: "none" };
+  if (!installation.parent.parentInstallationId) {
+    return {
+      state: "invalid",
+      relation: installation.parent,
+      reason: "missing_parent_installation_id",
+    };
+  }
+  const parentInstallation = await kv.get<Installation>(
     installation.parent.parentInstallationId,
   );
-  return parentInstallation.billingPlanId;
+  if (!parentInstallation) {
+    return {
+      state: "invalid",
+      relation: installation.parent,
+      reason: "parent_record_missing",
+    };
+  }
+  return {
+    state: "resolved",
+    relation: installation.parent,
+    parentInstallationId: installation.parent.parentInstallationId,
+    parentPlanId: parentInstallation.billingPlanId,
+  };
 }
 
 async function assertParentPlan(
+  installationId: string,
   installation: Installation,
   billingPlanId: string,
 ): Promise<void> {
-  if (!installation.parent) return;
-  const parentPlanId = await getParentPlanId(installation);
-  if (billingPlanId !== parentPlanId) {
+  const parent = await resolveParent(installation);
+  if (parent.state === "none") return;
+  if (parent.state === "invalid") {
+    throw new ParentRelationUnavailableError(installationId, parent.reason);
+  }
+  if (billingPlanId !== parent.parentPlanId) {
     throw new Error(
       `Billing plan ${billingPlanId} is not available to child installation`,
     );
@@ -694,9 +720,12 @@ async function getAvailableBillingPlans(
   plans: BillingPlan[],
 ): Promise<BillingPlan[]> {
   const installation = await getInstallation(installationId);
-  if (!installation.parent) return plans;
-  const parentPlanId = await getParentPlanId(installation);
-  return parentPlanId ? plans.filter((plan) => plan.id === parentPlanId) : [];
+  const parent = await resolveParent(installation);
+  if (parent.state === "none") return plans;
+  if (parent.state === "invalid") return [];
+  return parent.parentPlanId
+    ? plans.filter((plan) => plan.id === parent.parentPlanId)
+    : [];
 }
 
 export async function setInstallationNotification(
