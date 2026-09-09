@@ -9,6 +9,10 @@ import {
   updateResource,
   updateResourceNotification,
 } from "@/lib/partner";
+import {
+  ParentRelationUnavailableError,
+  recordParentRelationFailure,
+} from "@/lib/partner/parent-relations";
 import { dispatchEvent, updateSecrets } from "@/lib/vercel/marketplace-api";
 import type { Notification, Resource } from "@/lib/vercel/schemas";
 import { revalidatePath } from "next/cache";
@@ -147,10 +151,22 @@ export async function setExampleNotificationAction(formData: FormData) {
 export async function cloneResourceAction(formData: FormData) {
   const session = await getSession();
   const resourceId = formData.get("resourceId") as string;
-  const clonedResource = await cloneResource(
-    session.installation_id,
-    resourceId,
-  );
+  let clonedResource: Awaited<ReturnType<typeof cloneResource>>;
+  try {
+    clonedResource = await cloneResource(session.installation_id, resourceId);
+  } catch (error) {
+    if (error instanceof ParentRelationUnavailableError) {
+      try {
+        await recordParentRelationFailure(error.installationId, error.reason);
+      } catch (recordError) {
+        console.warn("Failed to record parent relation failure", recordError);
+      }
+      throw new Error(
+        `Cannot clone this resource: ${error.message.toLowerCase()}.`,
+      );
+    }
+    throw error;
+  }
   revalidatePath("/dashboard");
   redirect(`/dashboard/resources/${clonedResource.id}`);
 }
