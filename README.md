@@ -94,3 +94,78 @@ When Vercel sends parent organization context, the example integration stores th
 The integration records requests whose parent claims are missing or disagree with the stored child relationship. Child plan listings return only the plan selected on the parent installation, and resource provisioning enforces that selection. Every installation submits its own manual invoices. Parent installation invoices include aggregate lines for the current number of child installations and child resources.
 
 Child parent relations resolve to one of three states: no parent, resolved, or invalid. A relation is invalid when it has no parent installation ID or when the referenced parent record is missing. Invalid relations still fail closed—plan listings are empty and provisioning-shaped writes are refused—but the refusal is a structured `parent_relation_unavailable` error instead of an unhandled failure, each invalid reason is counted separately, and the installation dashboard shows the relation state and refusal counts.
+
+## Marketplace Resource Tokens (OIDC)
+
+A customer's Vercel deployment can mint a short-lived, resource-scoped OIDC token
+for one of our resources and present it to us instead of a long-lived secret. The
+token is Vercel-signed, expires in 300s, and names the resource it is good for —
+so nothing durable has to sit in the customer's environment variables.
+
+The customer side of this demo lives in
+[`vercel/vercel-marketplace-oidc-client-demo`](https://github.com/vercel/vercel-marketplace-oidc-client-demo).
+
+### The two hops
+
+```
+customer deployment ──1── POST api.vercel.com/v1/integrations/marketplace/resources/<store id>/token
+                     │         Authorization: Bearer $VERCEL_OIDC_TOKEN
+                     │     → { token, tokenType, expiresIn: 300, expiresAt }
+                     │
+                     └──2── POST <this integration>/oidc/resource-token
+                               Authorization: Bearer <minted resource token>
+                           → { accepted: true, identity: { … }, checks: [ … ], claims: { … } }
+```
+
+Hop 1 is Vercel's; we never see the deployment's own OIDC token. Hop 2 is ours:
+[`app/oidc/resource-token/route.ts`](app/oidc/resource-token/route.ts) stands in
+for this integration's data plane, taking the token exactly the way a database
+would take a password. `GET` on the same path returns the issuer, JWKS URL, and
+claim guide.
+
+### What we verify
+
+[`lib/vercel/resource-token.ts`](lib/vercel/resource-token.ts) does the checking.
+One Vercel key signs resource tokens for **every** integration, so a valid
+signature proves nothing about who the token was minted for — isolation comes
+entirely from three claim checks:
+
+| Claim      | Check                                                          |
+| ---------- | -------------------------------------------------------------- |
+| `iss`      | pinned to `https://integrations.vercel.com/$INTEGRATION_CLIENT_ID` |
+| `aud`      | must be an installation this integration holds, not uninstalled |
+| `resource` | must name a resource **under that installation**                |
+
+`sub` (the calling Vercel project) and `act.sub` (the deployment identity that
+asked Vercel to mint) do not gate access — they are the audit trail, and are
+recorded and displayed.
+
+`INTEGRATION_CLIENT_ID` is already our integration id — it is what Vercel puts in
+`aud` on SSO tokens — so the issuer needs no new configuration. Set
+`VERCEL_INTEGRATIONS_ISSUER_BASE` only to point verification at a non-production
+Vercel.
+
+### Seeing it
+
+Presented tokens — accepted and rejected — are logged to Redis and rendered at
+**Dashboard → Resource Tokens** with each claim, each check and its outcome, and
+the raw JWT. Persisting the token is a demo affordance; a real integration would
+keep the claims and drop the credential.
+
+`lib/vercel/resource-token.test.ts` signs tokens with a real RSA key the same way
+`api-integrations` does and runs them through the real verification path, so the
+claim contract is covered without a deployment. It is the partner-side mirror of
+`packages/util-integrations/src/marketplace/resource-token-signature.test.ts` in
+`vercel/api`.
+
+### Prerequisites for a live end-to-end run
+
+Minting is gated, and both gates are Vercel-internal:
+
+1. `resourceTokenMintEnabled: true` in the integration's admin settings
+   (backoffice → `update-integration-admin-settings`).
+2. The `marketplace-resource-token-mint-team` flag enabled for the customer's team.
+
+With either off, hop 1 returns `404` by design — a stealth 404, so rollout state
+does not leak. The resource must also be connected to the calling project in the
+environment the deployment is running in.
