@@ -74,6 +74,23 @@ export async function POST(request: NextRequest): Promise<Response> {
   }
 
   if (!verification.ok) {
+    // A JWKS availability problem means the token was never actually judged, so
+    // the caller (holding a possibly-valid token) should retry rather than
+    // treat this as a permanent auth rejection. See `classifyVerifyError`.
+    if (verification.retryable) {
+      return Response.json(
+        {
+          ...buildError("resource_token_unverifiable", verification.error, {
+            message:
+              "The token could not be verified because our key set was temporarily unavailable. This is a transient problem on our side — retry shortly with the same token.",
+          }),
+          presentationId,
+          checks: verification.checks,
+        },
+        { status: 503 },
+      );
+    }
+
     return Response.json(
       {
         ...buildError("resource_token_rejected", verification.error, {
