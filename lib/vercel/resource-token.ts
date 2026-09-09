@@ -124,6 +124,12 @@ export type ResourceTokenVerification =
       installationId?: string;
       resource?: VerifiedResource;
       error: string;
+      /**
+       * True when the token was never actually judged because the key set could
+       * not be read (a JWKS availability problem on our side). Callers should
+       * retry (5xx) rather than treat the token as permanently rejected (403).
+       */
+      retryable?: boolean;
     };
 
 /**
@@ -168,6 +174,7 @@ function check(
 function classifyVerifyError(err: unknown): {
   failed: ResourceTokenCheckName;
   detail: string;
+  retryable?: boolean;
 } {
   if (err instanceof JWTExpired) {
     return {
@@ -215,6 +222,7 @@ function classifyVerifyError(err: unknown): {
     return {
       failed: "signature",
       detail: `Could not read the key set at ${resourceTokenJwksUri} (${err.message}). The token was not judged — this is a metadata availability problem, not a bad signature.`,
+      retryable: true,
     };
   }
 
@@ -322,14 +330,14 @@ export async function verifyResourceToken(
       ),
     );
   } catch (err) {
-    const { failed, detail } = classifyVerifyError(err);
+    const { failed, detail, retryable } = classifyVerifyError(err);
     return failure(
       [
         ...checksBefore(failed),
         check(failed, checkLabel(failed), false, detail),
       ],
       detail,
-      { header },
+      { header, retryable },
     );
   }
 
