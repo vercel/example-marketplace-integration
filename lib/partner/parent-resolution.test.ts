@@ -76,6 +76,8 @@ const { store, kvMock } = vi.hoisted(() => {
           return pipeline;
         },
         exec: async () => {
+          if (operations.length === 0) throw new Error("Pipeline is empty");
+
           const results: unknown[] = [];
           for (const operation of operations) {
             results.push(await operation());

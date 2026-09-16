@@ -113,6 +113,8 @@ export async function updateParentChildIndex(
   previous: ParentRelation | undefined,
   next: ParentRelation | undefined,
 ): Promise<void> {
+  if (!previous?.parentInstallationId && !next?.parentInstallationId) return;
+
   const pipeline = kv.pipeline();
   if (previous?.parentInstallationId) {
     pipeline.lrem(
