@@ -15,6 +15,15 @@ import {
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request): Promise<Response> {
+  try {
+    return await handleWebhook(req);
+  } catch (error) {
+    console.error("Failed to handle webhook event", error);
+    return new Response("", { status: 200 });
+  }
+}
+
+async function handleWebhook(req: Request): Promise<Response> {
   const rawBody = await req.text();
   const rawBodyBuffer = Buffer.from(rawBody, "utf-8");
   const bodySignature = sha1(rawBodyBuffer, env.INTEGRATION_CLIENT_SECRET);
