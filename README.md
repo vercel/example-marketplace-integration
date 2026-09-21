@@ -6,7 +6,7 @@ Welcome to the Example Marketplace Integration. This repository contains a refer
 
 ## Getting Started
 
-1. Clone the code to your machine
+1. Clone the code to your machine.
 
 ```sh
 $ git clone git@github.com:vercel/example-marketplace-integration.git example-marketplace-integration
