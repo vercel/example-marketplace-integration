@@ -1,6 +1,7 @@
 import {
   getResource,
   getResourceBalance,
+  getResourceCustomClaims,
   getResourceParent,
 } from "@/lib/partner";
 import { getAccountInfo } from "@/lib/vercel/marketplace-api";
@@ -14,9 +15,11 @@ import {
   clearResourceNotificationAction,
   cloneResourceAction,
   importResourceToVercelAction,
+  resetResourceCustomClaimsAction,
   rotateCredentialsAction,
   setExampleNotificationAction,
   updateResourceAction,
+  updateResourceCustomClaimsAction,
   updateResourceNotificationAction,
 } from "./actions";
 
@@ -27,10 +30,11 @@ export default async function ResourcePage({
 }) {
   const session = await getSession();
   const installationId = session.installation_id;
-  const [resource, account, parent] = await Promise.all([
+  const [resource, account, parent, customClaims] = await Promise.all([
     getResource(installationId, resourceId),
     getAccountInfo(installationId),
     getResourceParent(installationId, resourceId),
+    getResourceCustomClaims(installationId, resourceId),
   ]);
 
   if (!resource) {
@@ -95,6 +99,40 @@ export default async function ResourcePage({
               </FormButton>
             </div>
           </div>
+        </form>
+      </Section>
+
+      <Section title="Resource Token Claims">
+        <p className="p-2">
+          Roles and claim rules Vercel resolves into the resource tokens a
+          connected deployment mints. Saving sends them to Vercel with{" "}
+          <code>
+            PATCH /v1/installations/{installationId}/resources/{resource.id}
+          </code>
+          ; a deployment picks a role with <code>?role=</code> when it mints.
+        </p>
+        <form action={updateResourceCustomClaimsAction} className="p-2">
+          <input type="hidden" name="resourceId" value={resource.id} />
+          <div className="space-y-4">
+            <textarea
+              name="customClaims"
+              rows={18}
+              spellCheck={false}
+              className="w-full border border-1 border-slate-400 p-2 font-mono text-xs"
+              defaultValue={JSON.stringify(customClaims ?? {}, null, 2)}
+            />
+            <div className="flex justify-end">
+              <FormButton className="rounded bg-blue-500 text-white px-2 py-1 disabled:opacity-50">
+                Save to Vercel
+              </FormButton>
+            </div>
+          </div>
+        </form>
+        <form action={resetResourceCustomClaimsAction} className="p-2">
+          <input type="hidden" name="resourceId" value={resource.id} />
+          <FormButton className="rounded border border-slate-400 px-2 py-1 disabled:opacity-50">
+            Reset to example claims
+          </FormButton>
         </form>
       </Section>
 

@@ -11,6 +11,7 @@ import type {
   ProvisionResourceRequest,
   ProvisionResourceResponse,
   Resource,
+  ResourceCustomClaims,
   ResourceStatusType,
   Claim as TransferRequest,
   UnknownWebhookEvent,
@@ -24,6 +25,7 @@ import { kv } from "../redis";
 import {
   getInvoice,
   importResource as importResourceToVercelApi,
+  updateVercelResource,
 } from "../vercel/marketplace-api";
 import {
   type ParentRelation,
@@ -31,6 +33,7 @@ import {
   type ParentResolution,
   updateParentChildIndex,
 } from "./parent-relations";
+import { exampleResourceCustomClaims } from "./resource-claims";
 
 const billingPlans: BillingPlan[] = [
   {
@@ -197,10 +200,12 @@ export async function provisionResource(
     metadata: request.metadata,
     productId: request.productId,
   } satisfies Resource;
+  const customClaims = exampleResourceCustomClaims(resource);
 
   await kv.set(`${installationId}:resource:${resource.id}`, {
     ...serializeResource(resource),
     parent: installation.parent,
+    customClaims,
   } satisfies StoredResource);
   await kv.lpush(`${installationId}:resources`, resource.id);
   await updateInstallation(installationId, request.billingPlanId);
@@ -209,6 +214,7 @@ export async function provisionResource(
 
   return {
     ...resource,
+    customClaims,
 
     secrets: [
       {
@@ -256,8 +262,8 @@ export async function updateResource(
   };
 
   await kv.set(`${installationId}:resource:${resourceId}`, {
+    ...storedResource,
     ...serializeResource(nextResource),
-    parent: storedResource.parent,
   } satisfies StoredResource);
 
   return nextResource;
@@ -317,11 +323,11 @@ export async function updateResourceNotification(
   }
 
   await kv.set(`${installationId}:resource:${resourceId}`, {
+    ...storedResource,
     ...serializeResource({
       ...resource,
       notification,
     }),
-    parent: storedResource.parent,
   } satisfies StoredResource);
 }
 
@@ -384,6 +390,31 @@ export async function getResource(
   return null;
 }
 
+export async function getResourceCustomClaims(
+  installationId: string,
+  resourceId: string,
+): Promise<ResourceCustomClaims | undefined> {
+  return (await getStoredResource(installationId, resourceId))?.customClaims;
+}
+
+export async function setResourceCustomClaims(
+  installationId: string,
+  resourceId: string,
+  customClaims: ResourceCustomClaims,
+): Promise<void> {
+  const storedResource = await getStoredResource(installationId, resourceId);
+
+  if (!storedResource) {
+    throw new Error(`Cannot find resource ${resourceId}`);
+  }
+
+  await updateVercelResource(installationId, resourceId, { customClaims });
+  await kv.set(`${installationId}:resource:${resourceId}`, {
+    ...storedResource,
+    customClaims,
+  } satisfies StoredResource);
+}
+
 export async function getResourceParent(
   installationId: string,
   resourceId: string,
@@ -416,11 +447,15 @@ export async function importResourceToVercel(
   installationId: string,
   resourceId: string,
 ): Promise<void> {
-  const resource = await getResource(installationId, resourceId);
+  const storedResource = await getStoredResource(installationId, resourceId);
 
-  if (!resource) {
+  if (!storedResource) {
     throw new Error(`Cannot find resource ${resourceId}`);
   }
+
+  const resource = deserializeResource(storedResource);
+  const customClaims =
+    storedResource.customClaims ?? exampleResourceCustomClaims(resource);
 
   const response = await importResourceToVercelApi(
     installationId,
@@ -432,6 +467,7 @@ export async function importResourceToVercel(
       metadata: resource.metadata,
       billingPlan: resource.billingPlan,
       notification: resource.notification,
+      customClaims,
       secrets: [
         {
           name: "TOP_SECRET",
@@ -444,6 +480,10 @@ export async function importResourceToVercel(
       ],
     },
   );
+  await kv.set(`${installationId}:resource:${resourceId}`, {
+    ...storedResource,
+    customClaims,
+  } satisfies StoredResource);
 }
 
 export async function provisionPurchase(
@@ -551,6 +591,7 @@ type SerializedResource = Omit<Resource, "billingPlan"> & {
 
 type StoredResource = SerializedResource & {
   parent?: ParentRelation;
+  customClaims?: ResourceCustomClaims;
 };
 
 function getStoredResource(
@@ -565,7 +606,11 @@ function serializeResource(resource: Resource): SerializedResource {
 }
 
 function deserializeResource(storedResource: StoredResource): Resource {
-  const { parent: _parent, ...serializedResource } = storedResource;
+  const {
+    parent: _parent,
+    customClaims: _customClaims,
+    ...serializedResource
+  } = storedResource;
   const billingPlan = billingPlanMap.get(serializedResource.billingPlan) ?? {
     id: serializedResource.billingPlan,
     scope: "resource",

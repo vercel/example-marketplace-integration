@@ -6,6 +6,7 @@ import {
   cloneResource,
   getResource,
   importResourceToVercel,
+  setResourceCustomClaims,
   updateResource,
   updateResourceNotification,
 } from "@/lib/partner";
@@ -13,8 +14,13 @@ import {
   ParentRelationUnavailableError,
   recordParentRelationFailure,
 } from "@/lib/partner/parent-relations";
+import { exampleResourceCustomClaims } from "@/lib/partner/resource-claims";
 import { dispatchEvent, updateSecrets } from "@/lib/vercel/marketplace-api";
-import type { Notification, Resource } from "@/lib/vercel/schemas";
+import {
+  type Notification,
+  type Resource,
+  resourceCustomClaimsSchema,
+} from "@/lib/vercel/schemas";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getSession } from "../../auth";
@@ -188,4 +194,37 @@ export async function addResourceBalance(formData: FormData) {
 
   revalidatePath("/dashboard");
   revalidatePath(`/dashboard/resources/${formData.get("resourceId")}`);
+}
+
+export async function updateResourceCustomClaimsAction(formData: FormData) {
+  const session = await getSession();
+  const resourceId = formData.get("resourceId") as string;
+  const customClaims = resourceCustomClaimsSchema.parse(
+    JSON.parse(formData.get("customClaims") as string),
+  );
+
+  await setResourceCustomClaims(
+    session.installation_id,
+    resourceId,
+    customClaims,
+  );
+
+  revalidatePath(`/dashboard/resources/${resourceId}`);
+}
+
+export async function resetResourceCustomClaimsAction(formData: FormData) {
+  const session = await getSession();
+  const resourceId = formData.get("resourceId") as string;
+  const resource = await getResource(session.installation_id, resourceId);
+  if (!resource) {
+    throw new Error(`Unknown resource '${resourceId}'`);
+  }
+
+  await setResourceCustomClaims(
+    session.installation_id,
+    resource.id,
+    exampleResourceCustomClaims(resource),
+  );
+
+  revalidatePath(`/dashboard/resources/${resource.id}`);
 }

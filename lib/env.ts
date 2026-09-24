@@ -6,6 +6,7 @@ const envSchema = z.object({
   INTEGRATION_CLIENT_SECRET: z.string().min(1),
   CRON_SECRET: z.string().optional(),
   VERCEL_EXTERNAL_REDIRECT_URI: z.string().min(1).optional(),
+  VERCEL_INTEGRATIONS_ISSUER_BASE: z.string().url().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);

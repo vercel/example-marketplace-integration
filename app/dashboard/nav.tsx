@@ -24,6 +24,11 @@ const links = [
     segment: "webhook-events",
     label: "Webhook Events",
   },
+  {
+    href: "/dashboard/oidc-tokens",
+    segment: "oidc-tokens",
+    label: "Resource Tokens",
+  },
 ] as const;
 
 export function Nav() {

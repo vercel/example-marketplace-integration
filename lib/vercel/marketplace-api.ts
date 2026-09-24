@@ -15,6 +15,7 @@ import type {
   RefundInvoiceRequest,
   SubmitPrepaymentBalanceRequest,
   UpdateDeploymentActionRequest,
+  UpdateVercelResourceRequest,
 } from "./schemas";
 
 interface InstallationUpdatedEvent {
@@ -213,6 +214,21 @@ export async function importResource(
       data: request,
     },
   )) as ImportResourceResponse;
+}
+
+export async function updateVercelResource(
+  installationId: string,
+  resourceId: string,
+  request: UpdateVercelResourceRequest,
+): Promise<void> {
+  await fetchVercelApi(
+    `/v1/installations/${installationId}/resources/${resourceId}`,
+    {
+      installationId,
+      method: "PATCH",
+      data: request,
+    },
+  );
 }
 
 export async function submitPrepaymentBalances(
