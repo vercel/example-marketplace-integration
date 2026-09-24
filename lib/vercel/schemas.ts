@@ -159,6 +159,45 @@ const ResourceSecretsSchema = z.array(
   }),
 );
 
+// Resource token claims
+
+const resourceClaimRoleSchema = z.string().min(1).max(32);
+
+export const resourceClaimRuleSchema = z
+  .object({
+    when: z
+      .object({
+        role: z.array(resourceClaimRoleSchema).min(1).optional(),
+        environment: z.array(z.string().min(1)).min(1).optional(),
+      })
+      .strict()
+      .optional(),
+    claims: z.record(
+      z.string().min(1),
+      z.union([z.string(), z.number(), z.boolean()]).nullable(),
+    ),
+  })
+  .strict();
+
+export type ResourceClaimRule = z.infer<typeof resourceClaimRuleSchema>;
+
+export const resourceCustomClaimsSchema = z
+  .object({
+    roles: z.array(resourceClaimRoleSchema).max(32).optional(),
+    defaultRole: resourceClaimRoleSchema.optional(),
+    claimRules: z.array(resourceClaimRuleSchema).optional(),
+  })
+  .strict()
+  .refine(
+    ({ roles, defaultRole }) =>
+      roles?.length ? roles.includes(defaultRole ?? "") : !defaultRole,
+    {
+      message: "`defaultRole` is required with `roles` and must be one of them",
+    },
+  );
+
+export type ResourceCustomClaims = z.infer<typeof resourceCustomClaimsSchema>;
+
 // Account and Installation
 
 const accountInfoSchema = z
@@ -303,6 +342,7 @@ const environmentOverrideTargets = z.enum([
 
 export const provisionResourceResponseSchema = resourceSchema.extend({
   secrets: ResourceSecretsSchema,
+  customClaims: resourceCustomClaimsSchema.optional(),
 });
 
 export type ProvisionResourceResponse = z.infer<
@@ -346,6 +386,7 @@ export const importResourceRequestSchema = z.object({
   billingPlan: billingPlanSchema.optional(),
   notification: notificationSchema.optional(),
   secrets: ResourceSecretsSchema.optional(),
+  customClaims: resourceCustomClaimsSchema.optional(),
 });
 
 export type ImportResourceRequest = z.infer<typeof importResourceRequestSchema>;
@@ -356,6 +397,14 @@ export const importResourceResponseSchema = z.object({
 
 export type ImportResourceResponse = z.infer<
   typeof importResourceResponseSchema
+>;
+
+export const updateVercelResourceRequestSchema = z.object({
+  customClaims: resourceCustomClaimsSchema,
+});
+
+export type UpdateVercelResourceRequest = z.infer<
+  typeof updateVercelResourceRequestSchema
 >;
 
 // Billing data.
@@ -610,7 +659,7 @@ export type UpdateDeploymentActionRequest = z.infer<
 >;
 
 export type DeploymentActionOutcome = z.infer<
-  typeof deploymentActionResourceSecretsOutcomeSchema
+  typeof deploymentActionOutcomeSchema
 >;
 
 export const deploymentActionResourceSecretsOutcomeSchema = z.object({
@@ -623,10 +672,20 @@ export const deploymentActionResourceSecretsOutcomeSchema = z.object({
   ),
 });
 
+export const deploymentActionResourceClaimsOutcomeSchema = z.object({
+  kind: z.literal("resource-claims"),
+  claimRules: z.array(resourceClaimRuleSchema),
+});
+
+export const deploymentActionOutcomeSchema = z.discriminatedUnion("kind", [
+  deploymentActionResourceSecretsOutcomeSchema,
+  deploymentActionResourceClaimsOutcomeSchema,
+]);
+
 export const updateDeploymentActionRequestSchema = z.object({
   status: z.enum(["succeeded", "failed"]),
   statusText: z.string().optional(),
-  outcomes: z.array(deploymentActionResourceSecretsOutcomeSchema).optional(),
+  outcomes: z.array(deploymentActionOutcomeSchema).optional(),
 });
 
 // Claims

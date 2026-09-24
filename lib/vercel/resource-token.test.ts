@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import {
   RESOURCE_TOKEN_CLOCK_TOLERANCE_SECONDS,
   type ResourceTokenStore,
+  resourceTokenCustomClaims,
   resourceTokenIssuer,
   verifyResourceToken,
 } from "@/lib/vercel/resource-token";
@@ -25,6 +26,7 @@ const INSTALLATION_ID = "icfg_d5746caf3c00c0628a53316b";
 const PROJECT_ID = "prj_storefront";
 const RESOURCE_ID = "young-pine-52426100";
 const ACT = "owner:acme:project:storefront:environment:production";
+const DEPLOYMENT_ID = "dpl_7Gw5ZMBpQA8h9GF832KGp7nwbuh3";
 const TTL_SECONDS = 300;
 
 const { publicKey, privateKey } = crypto.generateKeyPairSync("rsa", {
@@ -48,6 +50,7 @@ async function mint(
     sub?: string;
     resource?: string;
     act?: { sub: string } | undefined;
+    claims?: Record<string, string | number | boolean>;
     issuedAt?: number;
     signingKey?: crypto.KeyObject;
   } = {},
@@ -59,12 +62,17 @@ async function mint(
 
   const jwt = new SignJWT({
     resource: overrides.resource ?? RESOURCE_ID,
+    owner: "team_acme",
+    project: PROJECT_ID,
+    environment: "production",
+    deployment: DEPLOYMENT_ID,
+    ...overrides.claims,
     ...(act ? { act } : {}),
   })
     .setProtectedHeader({ alg: "RS256", kid: KEY_ID })
     .setIssuer(overrides.iss ?? resourceTokenIssuer)
     .setAudience(overrides.aud ?? INSTALLATION_ID)
-    .setSubject(overrides.sub ?? PROJECT_ID)
+    .setSubject(overrides.sub ?? overrides.resource ?? RESOURCE_ID)
     .setIssuedAt(issuedAt)
     .setNotBefore(issuedAt)
     .setExpirationTime(issuedAt + TTL_SECONDS);
@@ -116,7 +124,9 @@ describe("verifyResourceToken", () => {
       name: "acme-production",
       status: "ready",
     });
-    expect(result.claims.sub).toEqual(PROJECT_ID);
+    expect(result.claims.sub).toEqual(RESOURCE_ID);
+    expect(result.claims.project).toEqual(PROJECT_ID);
+    expect(result.claims.deployment).toEqual(DEPLOYMENT_ID);
     expect(result.claims.act?.sub).toEqual(ACT);
     expect(result.claims.exp - result.claims.iat).toEqual(TTL_SECONDS);
     expect(result.header.kid).toEqual(KEY_ID);
@@ -128,8 +138,71 @@ describe("verifyResourceToken", () => {
       "audience",
       "resource",
       "subject",
+      "project",
+      "deployment",
       "actor",
     ]);
+  });
+
+  it("accepts a role this resource grants and surfaces its custom claims", async () => {
+    const result = await verify(
+      await mint({
+        sub: "readonly",
+        claims: { scope: "read", branch: "main" },
+      }),
+      storeWith({
+        findResource: async (_installationId, resourceId) => ({
+          id: resourceId,
+          name: "acme-production",
+          status: "ready",
+          roles: ["readonly", "readwrite"],
+        }),
+      }),
+    );
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.claims.sub).toEqual("readonly");
+    expect(resourceTokenCustomClaims(result.claims)).toEqual({
+      scope: "read",
+      branch: "main",
+    });
+  });
+
+  it("rejects a subject that is not a role this resource grants", async () => {
+    const result = await verify(
+      await mint({ sub: "admin" }),
+      storeWith({
+        findResource: async (_installationId, resourceId) => ({
+          id: resourceId,
+          name: "acme-production",
+          status: "ready",
+          roles: ["readonly", "readwrite"],
+        }),
+      }),
+    );
+
+    expect(result.ok).toBe(false);
+    expect(failedCheckNames(result.checks)).toEqual(["subject"]);
+  });
+
+  it("accepts a token minted without a deployment id", async () => {
+    const jwt = await new SignJWT({
+      resource: RESOURCE_ID,
+      project: PROJECT_ID,
+      act: { sub: ACT },
+    })
+      .setProtectedHeader({ alg: "RS256", kid: KEY_ID })
+      .setIssuer(resourceTokenIssuer)
+      .setAudience(INSTALLATION_ID)
+      .setSubject(RESOURCE_ID)
+      .setIssuedAt()
+      .setExpirationTime("300s")
+      .sign(privateKey);
+
+    const result = await verify(jwt);
+
+    expect(result.ok).toBe(true);
   });
 
   it("rejects a token minted for a different integration", async () => {

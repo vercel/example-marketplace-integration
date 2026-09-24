@@ -5,6 +5,7 @@ import {
 import {
   RESOURCE_TOKEN_CLAIM_GUIDE,
   type ResourceTokenCheck,
+  resourceTokenCustomClaims,
   resourceTokenDiscoveryUri,
   resourceTokenIssuer,
   resourceTokenJwksUri,
@@ -203,7 +204,13 @@ function Claims({
     ],
     ["sub", claims.sub ?? "—"],
     ["resource", claims.resource ?? "—"],
+    ["project", claims.project ?? "—"],
+    ["environment", claims.environment ?? "—"],
+    ["deployment", claims.deployment ?? "—"],
     ["act.sub", claims.act?.sub ?? "—"],
+    ...Object.entries(resourceTokenCustomClaims(claims)).map(
+      ([name, value]): [string, string] => [name, JSON.stringify(value)],
+    ),
     [
       "exp",
       claims.exp

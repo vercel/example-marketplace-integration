@@ -32,7 +32,7 @@ import { env } from "../env";
  * | ----------- | --------------------------------- | ------------------------------------------------- |
  * | `iss`       | `https://marketplace.vercel.com`  | `https://integrations.vercel.com/<integrationId>` |
  * | `aud`       | our integration id                | the *installation* id the resource belongs to     |
- * | `sub`       | the Vercel user                   | the Vercel project that minted it                 |
+ * | `sub`       | the Vercel user                   | the requested role, else our resource id          |
  * | minted by   | Vercel, for a user or our API     | the customer's deployment, from its OIDC token    |
  * | lifetime    | long-ish                          | 300s                                              |
  *
@@ -69,7 +69,7 @@ export interface ResourceTokenActor {
 }
 
 export interface ResourceTokenClaims {
-  /** The Vercel project that minted the token. */
+  /** The role the deployment minted for, or our resource id when the resource defines none. */
   sub: string;
   /** `https://integrations.vercel.com/<our integration id>`. */
   iss: string;
@@ -79,9 +79,43 @@ export interface ResourceTokenClaims {
   resource: string;
   /** The deployment OIDC token that asked for the mint. */
   act?: ResourceTokenActor;
+  owner?: string;
+  project?: string;
+  environment?: string;
+  customEnvironmentId?: string;
+  deployment?: string;
   iat: number;
   nbf: number;
   exp: number;
+  [claim: string]: unknown;
+}
+
+export const RESOURCE_TOKEN_DEFAULT_CLAIMS = [
+  "iss",
+  "aud",
+  "sub",
+  "resource",
+  "act",
+  "owner",
+  "project",
+  "environment",
+  "customEnvironmentId",
+  "deployment",
+  "iat",
+  "nbf",
+  "exp",
+] as const;
+
+const defaultClaims: ReadonlySet<string> = new Set(
+  RESOURCE_TOKEN_DEFAULT_CLAIMS,
+);
+
+export function resourceTokenCustomClaims(
+  claims: Partial<ResourceTokenClaims>,
+): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(claims).filter(([name]) => !defaultClaims.has(name)),
+  );
 }
 
 export type ResourceTokenCheckName =
@@ -91,6 +125,8 @@ export type ResourceTokenCheckName =
   | "audience"
   | "resource"
   | "subject"
+  | "project"
+  | "deployment"
   | "actor";
 
 export interface ResourceTokenCheck {
@@ -105,6 +141,7 @@ export interface VerifiedResource {
   name: string;
   status: string;
   productId?: string;
+  roles?: string[];
 }
 
 export type ResourceTokenVerification =
@@ -394,18 +431,32 @@ export async function verifyResourceToken(
     ),
   );
 
-  // `sub` and `act.sub` do not gate access — the three checks above do that.
-  // They are recorded because they are the audit trail: which project holds the
-  // credential, and which deployment identity asked Vercel to mint it.
-  const subject = typeof claims.sub === "string" ? claims.sub : "";
+  checks.push(subjectCheck(claims, resource));
+
+  // `project`, `deployment`, and `act.sub` do not gate access — the checks
+  // above do that. They are recorded because they are the audit trail: which
+  // project holds the credential, which deployment and deployment identity
+  // asked Vercel to mint it.
+  const project = typeof claims.project === "string" ? claims.project : "";
   checks.push(
     check(
-      "subject",
-      checkLabel("subject"),
-      subject.length > 0,
-      subject.length === 0
-        ? "Token carries no `sub` claim."
-        : `${subject}${subject.startsWith("prj_") ? "" : " (not a prj_ id — unexpected)"}`,
+      "project",
+      checkLabel("project"),
+      project.length > 0,
+      project.length === 0
+        ? "Token carries no `project` claim."
+        : `${project}${project.startsWith("prj_") ? "" : " (not a prj_ id — unexpected)"}`,
+    ),
+  );
+
+  checks.push(
+    check(
+      "deployment",
+      checkLabel("deployment"),
+      true,
+      typeof claims.deployment === "string"
+        ? claims.deployment
+        : "Absent — the minting deployment's OIDC token carried no `deployment_id`.",
     ),
   );
 
@@ -441,6 +492,36 @@ export async function verifyResourceToken(
   };
 }
 
+function subjectCheck(
+  claims: ResourceTokenClaims,
+  resource: VerifiedResource,
+): ResourceTokenCheck {
+  const subject = typeof claims.sub === "string" ? claims.sub : "";
+  const roles = resource.roles ?? [];
+
+  if (roles.length === 0) {
+    return check(
+      "subject",
+      checkLabel("subject"),
+      subject.length > 0,
+      subject.length === 0
+        ? "Token carries no `sub` claim."
+        : subject === claims.resource
+          ? `${subject} — the resource itself; it defines no roles`
+          : subject,
+    );
+  }
+
+  return check(
+    "subject",
+    checkLabel("subject"),
+    roles.includes(subject),
+    roles.includes(subject)
+      ? `Role ${subject}`
+      : `${subject || "(absent)"} is not a role this resource grants (${roles.join(", ")}).`,
+  );
+}
+
 export function checkLabel(name: ResourceTokenCheckName): string {
   switch (name) {
     case "signature":
@@ -454,7 +535,11 @@ export function checkLabel(name: ResourceTokenCheckName): string {
     case "resource":
       return "Resource exists under that installation";
     case "subject":
+      return "Subject is a role this resource grants";
+    case "project":
       return "Names the calling Vercel project";
+    case "deployment":
+      return "Names the minting deployment";
     case "actor":
       return "Names the minting deployment identity";
   }
@@ -474,13 +559,30 @@ export const RESOURCE_TOKEN_CLAIM_GUIDE = [
   },
   {
     claim: "sub",
-    meaning: "The Vercel project whose deployment minted the token.",
-    example: "prj_storefront",
+    meaning:
+      "The role the deployment minted for (`?role=`, else our `defaultRole`), or our resource id when the resource defines no roles.",
+    example: "readwrite",
   },
   {
     claim: "resource",
     meaning: "Our own resource id, as returned when we provisioned it.",
     example: "young-pine-52426100",
+  },
+  {
+    claim: "owner / project / environment",
+    meaning: "The Vercel team, project, and environment that minted the token.",
+    example: "team_acme / prj_storefront / production",
+  },
+  {
+    claim: "deployment",
+    meaning: "The deployment that minted the token.",
+    example: "dpl_7Gw5ZMBpQA8h9GF832KGp7nwbuh3",
+  },
+  {
+    claim: "…custom",
+    meaning:
+      "Whatever our `customClaims` rules resolve to for this role and environment, then any `resource-claims` deployment action outcome on top.",
+    example: '{ "scope": "read write", "branch": "main" }',
   },
   {
     claim: "act.sub",

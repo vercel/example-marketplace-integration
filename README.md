@@ -108,7 +108,7 @@ The customer side of this demo lives in
 ### The two hops
 
 ```
-customer deployment ──1── POST api.vercel.com/v1/integrations/marketplace/resources/<store id>/token
+customer deployment ──1── POST api.vercel.com/v1/integrations/marketplace/resources/<store id>/token[?role=<role>]
                      │         Authorization: Bearer $VERCEL_OIDC_TOKEN
                      │     → { token, tokenType, expiresIn: 300, expiresAt }
                      │
@@ -136,14 +136,59 @@ entirely from three claim checks:
 | `aud`      | must be an installation this integration holds, not uninstalled |
 | `resource` | must name a resource **under that installation**                |
 
-`sub` (the calling Vercel project) and `act.sub` (the deployment identity that
-asked Vercel to mint) do not gate access — they are the audit trail, and are
-recorded and displayed.
+`sub` is the role the deployment minted for, or our resource id when the
+resource defines no roles; when it defines roles, `sub` must be one of them.
+`project`, `deployment`, and `act.sub` (the deployment identity that asked Vercel
+to mint) do not gate access — they are the audit trail, and are recorded and
+displayed.
 
 `INTEGRATION_CLIENT_ID` is already our integration id — it is what Vercel puts in
 `aud` on SSO tokens — so the issuer needs no new configuration. Set
 `VERCEL_INTEGRATIONS_ISSUER_BASE` only to point verification at a non-production
 Vercel.
+
+### Custom claims
+
+We decide what else a token carries, per resource, with `customClaims`:
+
+```json
+{
+  "roles": ["readonly", "readwrite"],
+  "defaultRole": "readwrite",
+  "claimRules": [
+    { "claims": { "database": "acme-production", "scope": "read" } },
+    { "when": { "role": ["readwrite"] }, "claims": { "scope": "read write" } },
+    {
+      "when": { "role": ["readwrite"], "environment": ["production"] },
+      "claims": { "scope": "read write ddl" }
+    },
+    {
+      "when": { "environment": ["preview", "development"] },
+      "claims": { "branch": "preview" }
+    }
+  ]
+}
+```
+
+Rules resolve in order at mint time and shallow-merge, later wins; `null`
+removes a claim. A deployment picks a role with `?role=` on the mint call, else
+it gets `defaultRole`, and the role becomes `sub`. `iss`, `act`, `iat`, `nbf`,
+and `exp` are Vercel's and cannot be set.
+
+Claims reach Vercel two ways:
+
+| Scope | How | Here |
+| --- | --- | --- |
+| Resource | `customClaims` on the provision response, on `PUT /v1/installations/:id/resources/:id` (import), or on `PATCH /v1/installations/:id/resources/:id` | Every provisioned resource starts with [`lib/partner/resource-claims.ts`](lib/partner/resource-claims.ts). **Dashboard → resource → Resource Token Claims** edits and PATCHes them. |
+| Deployment | A `resource-claims` outcome when succeeding a deployment action, `PATCH /v1/deployments/:id/integrations/:icfg/resources/:id/actions/:action` | **Dashboard → Webhook Events → Succeed with resource claims** on a `deployment.integration.action.start` event sets `branch` and `commit` from the deployment's git source. Its rules apply after the resource's. |
+
+The deployment path needs a deployment action declared on the product in the
+Integrations Console, and a minting token that carries `deployment_id` — the
+rules are looked up by the deployment that mints. Only succeeded actions count.
+
+The verifier checks `sub` against the roles we stored for the resource, and
+`/oidc/resource-token` returns everything beyond the default claims as
+`identity.grants` — what a real data plane would authorize against.
 
 ### Seeing it
 

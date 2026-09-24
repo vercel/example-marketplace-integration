@@ -45,6 +45,42 @@ export async function succeedAction(
   });
 }
 
+export async function succeedActionWithClaims(
+  event: DeploymentIntegrationActionStartEvent,
+): Promise<void> {
+  await getSession();
+
+  const { payload } = event;
+
+  const deployment = await getDeployment(
+    payload.installationId,
+    payload.deployment.id,
+  );
+  const ref: string | undefined = deployment.gitSource?.ref;
+  const sha: string | undefined = deployment.gitSource?.sha;
+
+  await updateDeploymentAction({
+    deploymentId: payload.deployment.id,
+    installationId: payload.installationId,
+    resourceId: payload.resourceId,
+    action: payload.action,
+    status: "succeeded",
+    outcomes: [
+      {
+        kind: "resource-claims",
+        claimRules: [
+          {
+            claims: {
+              branch: ref ?? deployment.id,
+              ...(sha && { commit: sha }),
+            },
+          },
+        ],
+      },
+    ],
+  });
+}
+
 export async function failAction(
   event: DeploymentIntegrationActionStartEvent,
 ): Promise<void> {

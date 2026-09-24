@@ -4,7 +4,7 @@ import type {
   ResourceTokenStore,
   VerifiedResource,
 } from "@/lib/vercel/resource-token";
-import type { Resource } from "@/lib/vercel/schemas";
+import type { Resource, ResourceCustomClaims } from "@/lib/vercel/schemas";
 import { nanoid } from "nanoid";
 import { kv } from "../redis";
 import type { Installation } from "./index";
@@ -13,7 +13,7 @@ import type { Installation } from "./index";
 type StoredResourceFields = Pick<
   Resource,
   "id" | "name" | "status" | "productId"
->;
+> & { customClaims?: ResourceCustomClaims };
 
 const PRESENTATION_LOG_KEY = "oidc_resource_token_presentations";
 const PRESENTATION_LOG_LIMIT = 50;
@@ -42,6 +42,7 @@ export const redisResourceTokenStore: ResourceTokenStore = {
       name: stored.name,
       status: stored.status,
       productId: stored.productId,
+      roles: stored.customClaims?.roles,
     } satisfies VerifiedResource;
   },
 };

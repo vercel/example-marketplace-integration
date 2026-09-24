@@ -5,6 +5,7 @@ import {
 import { buildError } from "@/lib/utils";
 import {
   RESOURCE_TOKEN_CLAIM_GUIDE,
+  resourceTokenCustomClaims,
   resourceTokenDiscoveryUri,
   resourceTokenIssuer,
   resourceTokenJwksUri,
@@ -117,8 +118,12 @@ export async function POST(request: NextRequest): Promise<Response> {
       resourceName: resource.name,
       resourceStatus: resource.status,
       productId: resource.productId,
-      project: claims.sub,
+      role: claims.sub,
+      project: claims.project ?? null,
+      environment: claims.environment ?? null,
+      deployment: claims.deployment ?? null,
       mintedBy: claims.act?.sub ?? null,
+      grants: resourceTokenCustomClaims(claims),
       expiresAt: new Date(claims.exp * 1000).toISOString(),
       secondsRemaining: Math.max(0, claims.exp - Math.floor(Date.now() / 1000)),
     },
