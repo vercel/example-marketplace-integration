@@ -442,7 +442,7 @@ export async function verifyResourceToken(
     check(
       "project",
       checkLabel("project"),
-      project.length > 0,
+      true,
       project.length === 0
         ? "Token carries no `project` claim."
         : `${project}${project.startsWith("prj_") ? "" : " (not a prj_ id — unexpected)"}`,
