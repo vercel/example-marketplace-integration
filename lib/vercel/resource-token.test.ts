@@ -10,17 +10,6 @@ import { SignJWT, createLocalJWKSet, exportJWK } from "jose";
 import { JOSEError } from "jose/errors";
 import { describe, expect, it } from "vitest";
 
-/**
- * Signs tokens the way `api-integrations` does — same claim set, same RS256
- * envelope, real RSA — and runs them through the verification path a partner
- * would actually deploy. Nothing here is mocked except the two store lookups,
- * so a change to the claim contract fails these tests.
- *
- * The api-side counterpart is
- * `packages/util-integrations/src/marketplace/resource-token-signature.test.ts`
- * in `vercel/api`.
- */
-
 const KEY_ID = "arn:aws:kms:us-east-1:000000000000:key/test";
 const INSTALLATION_ID = "icfg_d5746caf3c00c0628a53316b";
 const PROJECT_ID = "prj_storefront";
@@ -42,23 +31,20 @@ async function publishedJwks(key: crypto.KeyObject = publicKey) {
   return createLocalJWKSet({ keys: [{ ...jwk, kid: KEY_ID, alg: "RS256" }] });
 }
 
-/** Mirrors `buildResourceTokenClaims` plus the signer-owned time claims. */
 async function mint(
   overrides: {
     iss?: string;
     aud?: string | string[];
     sub?: string;
     resource?: string;
-    act?: { sub: string } | undefined;
-    claims?: Record<string, string | number | boolean>;
+    act?: { sub: string } | null;
+    claims?: Record<string, string | number | boolean | undefined>;
     issuedAt?: number;
     signingKey?: crypto.KeyObject;
   } = {},
 ): Promise<string> {
   const issuedAt = overrides.issuedAt ?? Math.floor(Date.now() / 1000);
-  // `"act" in overrides` rather than a truthiness check, so a test can mint a
-  // token that carries no actor at all by passing `act: undefined`.
-  const act = "act" in overrides ? overrides.act : { sub: ACT };
+  const act = overrides.act === undefined ? { sub: ACT } : overrides.act;
 
   const jwt = new SignJWT({
     resource: overrides.resource ?? RESOURCE_ID,
@@ -186,28 +172,18 @@ describe("verifyResourceToken", () => {
     expect(failedCheckNames(result.checks)).toEqual(["subject"]);
   });
 
-  it("accepts a token minted without a deployment id", async () => {
-    const jwt = await new SignJWT({
-      resource: RESOURCE_ID,
-      project: PROJECT_ID,
-      act: { sub: ACT },
-    })
-      .setProtectedHeader({ alg: "RS256", kid: KEY_ID })
-      .setIssuer(resourceTokenIssuer)
-      .setAudience(INSTALLATION_ID)
-      .setSubject(RESOURCE_ID)
-      .setIssuedAt()
-      .setExpirationTime("300s")
-      .sign(privateKey);
-
-    const result = await verify(jwt);
+  it("accepts a token whose claim rules removed project and deployment", async () => {
+    const result = await verify(
+      await mint({ claims: { project: undefined, deployment: undefined } }),
+    );
 
     expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.claims.project).toBeUndefined();
+    expect(result.claims.deployment).toBeUndefined();
   });
 
   it("rejects a token minted for a different integration", async () => {
-    // One Vercel key signs every integration's resource tokens, so this token's
-    // signature is genuine — only the pinned `iss` separates it from ours.
     const result = await verify(
       await mint({ iss: "https://integrations.vercel.com/oac_someone_else" }),
     );
@@ -317,7 +293,6 @@ describe("verifyResourceToken", () => {
 
   it("reports an unreachable key set as an availability problem, not a bad signature", async () => {
     const result = await verifyResourceToken(await mint(), storeWith(), {
-      // What `createRemoteJWKSet` throws on a non-200 from the JWKS endpoint.
       jwks: async () => {
         throw new JOSEError(
           "Expected 200 OK from the JSON Web Key Set HTTP response",
@@ -333,7 +308,7 @@ describe("verifyResourceToken", () => {
   });
 
   it("rejects a token with no actor, so a mint can always be attributed", async () => {
-    const result = await verify(await mint({ act: undefined }));
+    const result = await verify(await mint({ act: null }));
 
     expect(result.ok).toBe(false);
     expect(failedCheckNames(result.checks)).toEqual(["actor"]);

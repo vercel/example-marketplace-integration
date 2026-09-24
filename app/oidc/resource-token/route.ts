@@ -5,6 +5,7 @@ import {
 import { buildError } from "@/lib/utils";
 import {
   RESOURCE_TOKEN_CLAIM_GUIDE,
+  type ResourceTokenVerification,
   resourceTokenCustomClaims,
   resourceTokenDiscoveryUri,
   resourceTokenIssuer,
@@ -13,27 +14,65 @@ import {
 } from "@/lib/vercel/resource-token";
 import type { NextRequest } from "next/server";
 
-/**
- * Stands in for this integration's data plane.
- *
- * The real shape of this feature is a customer's deployment presenting a minted
- * resource token where a long-lived secret used to go — a database password, an
- * API key header. So this endpoint takes the token exactly that way, as a bearer
- * credential, verifies it, and answers with what it resolved the caller to.
- *
- * Deliberately *not* under `/v1/installations/...`: those routes are the
- * Marketplace API contract that Vercel calls with an SSO/API token. This is a
- * partner-owned endpoint that customers call with a resource token.
- *
- * `GET` returns the metadata a customer (or a debugging session) needs to
- * reason about what this endpoint will accept.
- */
-
 function bearerToken(request: NextRequest): string | null {
   const match = request.headers
     .get("authorization")
     ?.match(/^bearer[ ]+(.+)$/i);
   return match ? match[1].trim() : null;
+}
+
+async function recordPresentation(
+  token: string,
+  verification: ResourceTokenVerification,
+): Promise<string | null> {
+  try {
+    const presentation = await recordResourceTokenPresentation({
+      accepted: verification.ok,
+      error: verification.ok ? undefined : verification.error,
+      checks: verification.checks,
+      claims: verification.claims,
+      header: verification.header,
+      installationId: verification.installationId,
+      resource: verification.resource,
+      token,
+    });
+    return presentation.id;
+  } catch (error) {
+    console.warn("Failed to record resource token presentation", error);
+    return null;
+  }
+}
+
+const UNVERIFIABLE = {
+  code: "resource_token_unverifiable",
+  message:
+    "The token could not be verified because our key set was temporarily unavailable. This is a transient problem on our side — retry shortly with the same token.",
+  status: 503,
+};
+
+const REJECTED = {
+  code: "resource_token_rejected",
+  message:
+    "The resource token was not accepted. Mint a fresh one for a resource on this installation.",
+  status: 403,
+};
+
+function rejection(
+  verification: Extract<ResourceTokenVerification, { ok: false }>,
+  presentationId: string | null,
+): Response {
+  const { code, message, status } = verification.retryable
+    ? UNVERIFIABLE
+    : REJECTED;
+
+  return Response.json(
+    {
+      ...buildError(code, verification.error, { message }),
+      presentationId,
+      checks: verification.checks,
+    },
+    { status },
+  );
 }
 
 export async function POST(request: NextRequest): Promise<Response> {
@@ -53,56 +92,10 @@ export async function POST(request: NextRequest): Promise<Response> {
     token,
     redisResourceTokenStore,
   );
-
-  // Best-effort, like `recordParentAttribution` in `withAuth`: the demo log is
-  // an observability nicety, and losing it must never turn a clean verdict into
-  // a 500 the caller cannot interpret.
-  let presentationId: string | null = null;
-  try {
-    const presentation = await recordResourceTokenPresentation({
-      accepted: verification.ok,
-      error: verification.ok ? undefined : verification.error,
-      checks: verification.checks,
-      claims: verification.claims,
-      header: verification.header as Record<string, unknown> | undefined,
-      installationId: verification.installationId,
-      resource: verification.resource,
-      token,
-    });
-    presentationId = presentation.id;
-  } catch (error) {
-    console.warn("Failed to record resource token presentation", error);
-  }
+  const presentationId = await recordPresentation(token, verification);
 
   if (!verification.ok) {
-    // A JWKS availability problem means the token was never actually judged, so
-    // the caller (holding a possibly-valid token) should retry rather than
-    // treat this as a permanent auth rejection. See `classifyVerifyError`.
-    if (verification.retryable) {
-      return Response.json(
-        {
-          ...buildError("resource_token_unverifiable", verification.error, {
-            message:
-              "The token could not be verified because our key set was temporarily unavailable. This is a transient problem on our side — retry shortly with the same token.",
-          }),
-          presentationId,
-          checks: verification.checks,
-        },
-        { status: 503 },
-      );
-    }
-
-    return Response.json(
-      {
-        ...buildError("resource_token_rejected", verification.error, {
-          message:
-            "The resource token was not accepted. Mint a fresh one for a resource on this installation.",
-        }),
-        presentationId,
-        checks: verification.checks,
-      },
-      { status: 403 },
-    );
+    return rejection(verification, presentationId);
   }
 
   const { claims, resource, installationId, header, checks } = verification;
@@ -110,8 +103,6 @@ export async function POST(request: NextRequest): Promise<Response> {
   return Response.json({
     accepted: true,
     presentationId,
-    // What the token authenticated the caller *as* — the whole point of the
-    // exchange. A real data plane would authorize against exactly these.
     identity: {
       installationId,
       resourceId: resource.id,

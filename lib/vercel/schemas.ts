@@ -159,11 +159,15 @@ const ResourceSecretsSchema = z.array(
   }),
 );
 
-// Resource token claims
+const MAX_RESOURCE_CLAIM_ROLE_LENGTH = 32;
+const MAX_RESOURCE_CLAIM_ROLES = 32;
 
-const resourceClaimRoleSchema = z.string().min(1).max(32);
+const resourceClaimRoleSchema = z
+  .string()
+  .min(1)
+  .max(MAX_RESOURCE_CLAIM_ROLE_LENGTH);
 
-export const resourceClaimRuleSchema = z
+const resourceClaimRuleSchema = z
   .object({
     when: z
       .object({
@@ -179,11 +183,12 @@ export const resourceClaimRuleSchema = z
   })
   .strict();
 
-export type ResourceClaimRule = z.infer<typeof resourceClaimRuleSchema>;
-
 export const resourceCustomClaimsSchema = z
   .object({
-    roles: z.array(resourceClaimRoleSchema).max(32).optional(),
+    roles: z
+      .array(resourceClaimRoleSchema)
+      .max(MAX_RESOURCE_CLAIM_ROLES)
+      .optional(),
     defaultRole: resourceClaimRoleSchema.optional(),
     claimRules: z.array(resourceClaimRuleSchema).optional(),
   })

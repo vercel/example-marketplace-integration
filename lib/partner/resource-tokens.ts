@@ -9,7 +9,6 @@ import { nanoid } from "nanoid";
 import { kv } from "../redis";
 import type { Installation } from "./index";
 
-/** The subset of the stored resource record this file reads. */
 type StoredResourceFields = Pick<
   Resource,
   "id" | "name" | "status" | "productId"
@@ -18,13 +17,6 @@ type StoredResourceFields = Pick<
 const PRESENTATION_LOG_KEY = "oidc_resource_token_presentations";
 const PRESENTATION_LOG_LIMIT = 50;
 
-/**
- * The two lookups {@link verifyResourceToken} needs, backed by the same Redis
- * keys the marketplace API handlers write. Read directly rather than through
- * `getInstallation`/`getResource` so an unknown id comes back as `null` instead
- * of throwing, and so an uninstalled installation is still distinguishable from
- * one that never existed.
- */
 export const redisResourceTokenStore: ResourceTokenStore = {
   async findInstallation(installationId) {
     const installation = await kv.get<Installation>(installationId);
@@ -57,11 +49,6 @@ export interface ResourceTokenPresentation {
   header?: Record<string, unknown>;
   installationId?: string;
   resource?: VerifiedResource;
-  /**
-   * Demo affordance. A real integration would never persist a presented
-   * credential — it would keep the claims and drop the token. Kept here so the
-   * dashboard can show the exact JWT that was presented; it expires in 300s.
-   */
   token: string;
 }
 

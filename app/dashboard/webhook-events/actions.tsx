@@ -71,7 +71,7 @@ export async function succeedActionWithClaims(
         claimRules: [
           {
             claims: {
-              branch: ref ?? deployment.id,
+              ...(ref && { branch: ref }),
               ...(sha && { commit: sha }),
             },
           },
