@@ -87,6 +87,51 @@ See [Securing cron jobs](https://vercel.com/docs/cron-jobs/manage-cron-jobs#secu
 - View and manage your new database for your product.;
 - When you've created a database, you should be able to click the "Open in <Product Name>" button on the store detail page to open the database on your integration's dashboard.
 
+## Import Existing Resources
+
+The [Import existing resources flow](https://vercel.com/docs/integrations/create-integration/marketplace-flows#import-existing-resources-flow)
+lets a user bring a resource that already exists on the provider's platform
+into their Vercel installation instead of provisioning a new one. To try it,
+set the **Import Resource URL** in the Integrations Console to
+`https://<your-host>/import`. Native marketplace installations also need
+importing enabled by Vercel.
+
+```
+Vercel ──GET /import?installation_id&product_id&state&return──▶ app/import/route.ts
+                                                                  │ validate, store pending import (12h)
+                                                                  ▼
+                                     /import/<id>  sign in to the provider account, pick a resource
+                                                                  │
+               PUT /v1/installations/<id>/resources/<resourceId>  │ ownership: "linked", status, secrets
+Vercel ◀──────────────────────────────────────────────────────────┤ (must complete before redirecting)
+                                                                  │
+Vercel ◀──302 return?installation_id&resource_id&state────────────┘
+```
+
+| Step | Where |
+| --- | --- |
+| Import Resource URL handler. Requires `installation_id`, `state`, and `return`; `product_id` is optional. Refuses a `return` that is not `https://vercel.com` or a subdomain, and installations this integration does not hold. | [`app/import/route.ts`](app/import/route.ts), [`lib/partner/resource-import.ts`](lib/partner/resource-import.ts) |
+| Authenticating the user against the provider's own accounts and selecting a resource. When Vercel sends no `product_id`, the user enters the product slug. | [`app/import/[importId]/page.tsx`](app/import/[importId]/page.tsx), [`lib/partner/provider-accounts.ts`](lib/partner/provider-accounts.ts) |
+| Registering the resource with `ownership: "linked"`, its secrets, and no Vercel billing plan, then redirecting to `return` with the original `state` and the selected resource ID. | `completeResourceImport` in [`lib/partner/resource-import.ts`](lib/partner/resource-import.ts) |
+
+The provider platform is simulated. Signing in with any email address creates
+an account with two seeded resources, and the selection page can create more.
+A real integration would use its existing login here. Before importing, the
+page shows the Vercel team the resource will be linked to. That matters because
+the Import Resource call shares the resource's credentials with that team
+before Vercel validates `state`.
+
+Linked resources:
+
+- Return `ownership: "linked"` from Get Resource. When Vercel syncs after a
+  `resource.updated` event, it copies ownership from that response, and
+  leaving it out resets the resource to owned.
+- Are left out of billing data and invoices (`isBilledThroughVercel` in
+  [`lib/partner/index.ts`](lib/partner/index.ts)), and cannot be transferred.
+- Are disconnected by Vercel on removal without a call to Delete Resource.
+
+Tests: [`lib/partner/resource-import.test.ts`](lib/partner/resource-import.test.ts).
+
 ## Platform Organizations
 
 When Vercel sends parent organization context, the example integration stores the parent account and installation relationship on child installations and resources. Child dashboards show the received parent context, while parent dashboards show a count and compact list of child installations with resource counts.

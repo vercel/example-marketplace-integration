@@ -69,7 +69,10 @@ async function ResourceCard({
         Product: {resource.productId}
       </p>
       <p className="text-gray-600 text-sm">
-        Billing Plan: {resource.billingPlan?.name}
+        Ownership: {resource.ownership ?? "owned"}
+      </p>
+      <p className="text-gray-600 text-sm">
+        Billing Plan: {resource.billingPlan?.name ?? "Billed by provider"}
       </p>
       {balance ? (
         <p className="text-gray-600 text-sm">

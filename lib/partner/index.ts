@@ -287,10 +287,16 @@ export async function transferResources(
     if (!storedResource) {
       throw new Error(`Cannot find resource ${resourceIds[index]}`);
     }
+    const resource = deserializeResource(storedResource);
+    if (!isBilledThroughVercel(resource)) {
+      throw new Error(
+        `Resource ${resourceIds[index]} is not billed through Vercel and cannot be transferred`,
+      );
+    }
     await assertParentPlan(
       targetInstallationId,
       targetInstallation,
-      deserializeResource(storedResource).billingPlan.id,
+      resource.billingPlan.id,
     );
   }
   const pipeline = kv.pipeline();
@@ -461,6 +467,7 @@ export async function importResourceToVercel(
     installationId,
     resource.id,
     {
+      ownership: resource.ownership ?? "owned",
       name: resource.name,
       productId: resource.productId,
       status: resource.status,
@@ -585,8 +592,41 @@ export async function getResourceBalance(
   };
 }
 
+// Mirrors Vercel's per-resource `billable` capability: only owned resources
+// are billed through Vercel. Linked resources are billed by the partner.
+export function isBilledThroughVercel(
+  resource: Resource,
+): resource is Resource & { billingPlan: BillingPlan } {
+  return (
+    (resource.ownership ?? "owned") === "owned" &&
+    resource.billingPlan !== undefined
+  );
+}
+
+// Stores a resource that already exists on the partner's platform under the
+// installation it was imported into, so Vercel's Get Resource, Update
+// Resource, and SSO requests for it resolve.
+export async function storeImportedResource(
+  installationId: string,
+  resource: Resource,
+  customClaims: ResourceCustomClaims,
+): Promise<{ created: boolean }> {
+  const installation = await getInstallation(installationId);
+  const previous = await getStoredResource(installationId, resource.id);
+  const pipeline = kv.pipeline();
+  pipeline.set(`${installationId}:resource:${resource.id}`, {
+    ...serializeResource(resource),
+    parent: installation.parent,
+    customClaims,
+  } satisfies StoredResource);
+  pipeline.lrem(`${installationId}:resources`, 0, resource.id);
+  pipeline.lpush(`${installationId}:resources`, resource.id);
+  await pipeline.exec();
+  return { created: !previous };
+}
+
 type SerializedResource = Omit<Resource, "billingPlan"> & {
-  billingPlan: string;
+  billingPlan?: string;
 };
 
 type StoredResource = SerializedResource & {
@@ -602,7 +642,7 @@ function getStoredResource(
 }
 
 function serializeResource(resource: Resource): SerializedResource {
-  return { ...resource, billingPlan: resource.billingPlan.id };
+  return { ...resource, billingPlan: resource.billingPlan?.id };
 }
 
 function deserializeResource(storedResource: StoredResource): Resource {
@@ -611,6 +651,11 @@ function deserializeResource(storedResource: StoredResource): Resource {
     customClaims: _customClaims,
     ...serializedResource
   } = storedResource;
+  if (serializedResource.billingPlan === undefined) {
+    const { billingPlan: _billingPlan, ...unbilledResource } =
+      serializedResource;
+    return unbilledResource;
+  }
   const billingPlan = billingPlanMap.get(serializedResource.billingPlan) ?? {
     id: serializedResource.billingPlan,
     scope: "resource",
@@ -675,10 +720,16 @@ export async function getResourceBillingPlans(
   };
 }
 
+export async function findInstallation(
+  installationId: string,
+): Promise<Installation | null> {
+  return kv.get<Installation>(installationId);
+}
+
 export async function getInstallation(
   installationId: string,
 ): Promise<Installation> {
-  const installation = await kv.get<Installation>(installationId);
+  const installation = await findInstallation(installationId);
 
   if (!installation) {
     throw new Error(`Installation '${installationId}' not found`);

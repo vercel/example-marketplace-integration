@@ -1,4 +1,4 @@
-import { listResources } from "@/lib/partner";
+import { isBilledThroughVercel, listResources } from "@/lib/partner";
 import type {
   BillingData,
   BillingItem,
@@ -18,7 +18,9 @@ export async function mockBillingData(
   const startOfMoth = new Date(Date.UTC(year, month, 1));
   const endOfMonth = new Date(Date.UTC(year, month + 1, 0, 23, 59, 59));
 
-  const { resources } = await listResources(installationId);
+  const resources = (await listResources(installationId)).resources.filter(
+    isBilledThroughVercel,
+  );
   if (resources.length === 0) {
     return {
       timestamp: timestamp.toISOString(),
