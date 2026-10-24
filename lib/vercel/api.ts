@@ -1,5 +1,6 @@
 import { env } from "../env";
 import { getInstallation } from "../partner";
+import { getInstallationAccessToken } from "./installation-token";
 
 // INTEGRATION_CLIENT_ID is the `oac_...` integration ID
 const userAgent = `Vercel Example Marketplace Integration/${env.INTEGRATION_CLIENT_ID}`;
@@ -13,22 +14,26 @@ export async function fetchVercelApi(
   if (options.installationId) {
     const installation = await getInstallation(options.installationId);
 
-    if (!installation) {
+    if (!installation || installation.deletedAt) {
       throw new Error(`Unknown installation '${options.installationId}'`);
     }
 
-    options.headers = {
-      Authorization: `Bearer ${installation.credentials.access_token}`,
-    };
+    const accessToken =
+      env.INTEGRATION_CLIENT_CREDENTIALS_ENABLED === "true"
+        ? await getInstallationAccessToken(
+            options.installationId,
+            installation.credentials.access_token,
+          )
+        : installation.credentials.access_token;
+    options.headers = new Headers(options.headers);
+    options.headers.set("Authorization", `Bearer ${accessToken}`);
   }
 
   if (options.data) {
     options.body = JSON.stringify(options.data);
-    options.headers = {
-      ...options.headers,
-      "content-type": "application/json",
-      "User-Agent": userAgent,
-    };
+    options.headers = new Headers(options.headers);
+    options.headers.set("content-type", "application/json");
+    options.headers.set("User-Agent", userAgent);
   }
 
   const url = `https://vercel.com/api${path}`;
