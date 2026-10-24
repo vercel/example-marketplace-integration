@@ -14,7 +14,7 @@ export async function fetchVercelApi(
   if (options.installationId) {
     const installation = await getInstallation(options.installationId);
 
-    if (!installation || installation.deletedAt) {
+    if (!installation) {
       throw new Error(`Unknown installation '${options.installationId}'`);
     }
 
