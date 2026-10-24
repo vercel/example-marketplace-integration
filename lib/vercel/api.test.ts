@@ -47,14 +47,34 @@ it.each([false, true])(
   },
 );
 
-it("rejects deleted installations without obtaining a token or calling the API", async () => {
-  mocks.installation.mockResolvedValue({ deletedAt: 123 });
+it("rejects unknown installations without obtaining a token or calling the API", async () => {
+  mocks.installation.mockResolvedValue(null);
   await expect(
     fetchVercelApi("/v1/example", { installationId: "icfg_one" }),
   ).rejects.toThrow("Unknown installation");
   expect(mocks.token).not.toHaveBeenCalled();
   expect(mocks.fetch).not.toHaveBeenCalled();
 });
+
+it.each([false, true])(
+  "allows billing finalization after local uninstall (renewal enabled: %s)",
+  async (enabled) => {
+    mocks.env.INTEGRATION_CLIENT_CREDENTIALS_ENABLED = String(enabled);
+    mocks.installation.mockResolvedValue({
+      deletedAt: 123,
+      credentials: { access_token: "original" },
+    });
+    await fetchVercelApi("/v1/installations/icfg_one/billing/finalize", {
+      installationId: "icfg_one",
+      method: "POST",
+      data: {},
+    });
+    const headers = mocks.fetch.mock.calls[0][1].headers as Headers;
+    expect(headers.get("authorization")).toBe(
+      `Bearer ${enabled ? "renewed" : "original"}`,
+    );
+  },
+);
 
 it("preserves authentication, caller headers, and the integration user agent on mutations", async () => {
   await fetchVercelApi("/v1/example", {

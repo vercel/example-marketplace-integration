@@ -226,4 +226,6 @@ This first rollout uses the OAuth client-credentials grant ([RFC 6749 §4.4](htt
 
 Tokens are cached separately per integration and installation in Redis and renewed 60–90 seconds early, with concurrent requests sharing an exchange within a process. Exchange failures are surfaced without falling back to the installation's original credential. Existing webhook verification continues using the client secret. Authorization-code exchange accepts the new `expires_in` response; subsequent API calls use client credentials when enabled. `/login/oauth/token` is not required.
 
+The provider's local uninstall marker does not end Vercel's billing-finalization window. Final invoices, refunds, and finalization calls continue through the same token helper; Vercel validates the installation lifecycle on exchange and API access, and renewal failures remain errors.
+
 Run `pnpm test` and `pnpm typecheck` to validate the example. A staging rollout should exercise installation, API access, renewal, and API access after the original permanent-token cutoff.
