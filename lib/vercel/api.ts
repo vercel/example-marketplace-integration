@@ -18,13 +18,10 @@ export async function fetchVercelApi(
       throw new Error(`Unknown installation '${options.installationId}'`);
     }
 
-    const accessToken =
-      env.INTEGRATION_CLIENT_CREDENTIALS_ENABLED === "true"
-        ? await getInstallationAccessToken(
-            options.installationId,
-            installation.credentials.access_token,
-          )
-        : installation.credentials.access_token;
+    const accessToken = await getInstallationAccessToken(
+      options.installationId,
+      installation.credentials.access_token,
+    );
     options.headers = new Headers(options.headers);
     options.headers.set("Authorization", `Bearer ${accessToken}`);
   }

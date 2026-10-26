@@ -3,7 +3,6 @@ import { fetchVercelApi } from "./api";
 
 const mocks = vi.hoisted(() => ({
   env: {
-    INTEGRATION_CLIENT_CREDENTIALS_ENABLED: "false",
     INTEGRATION_CLIENT_ID: "oac_example",
   },
   installation: vi.fn(),
@@ -18,7 +17,6 @@ vi.mock("./installation-token", () => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mocks.env.INTEGRATION_CLIENT_CREDENTIALS_ENABLED = "false";
   mocks.installation.mockResolvedValue({
     credentials: { access_token: "original" },
   });
@@ -28,24 +26,16 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllGlobals());
 
-it.each([false, true])(
-  "uses the selected token source and preserves headers (enabled: %s)",
-  async (enabled) => {
-    mocks.env.INTEGRATION_CLIENT_CREDENTIALS_ENABLED = String(enabled);
-    await fetchVercelApi("/v1/example", {
-      installationId: "icfg_one",
-      headers: new Headers({ "x-request-id": "one" }),
-    });
-    const headers = mocks.fetch.mock.calls[0][1].headers as Headers;
-    expect(headers.get("authorization")).toBe(
-      `Bearer ${enabled ? "renewed" : "original"}`,
-    );
-    expect(headers.get("x-request-id")).toBe("one");
-    if (enabled)
-      expect(mocks.token).toHaveBeenCalledWith("icfg_one", "original");
-    else expect(mocks.token).not.toHaveBeenCalled();
-  },
-);
+it("always obtains an installation token and preserves headers", async () => {
+  await fetchVercelApi("/v1/example", {
+    installationId: "icfg_one",
+    headers: new Headers({ "x-request-id": "one" }),
+  });
+  const headers = mocks.fetch.mock.calls[0][1].headers as Headers;
+  expect(headers.get("authorization")).toBe("Bearer renewed");
+  expect(headers.get("x-request-id")).toBe("one");
+  expect(mocks.token).toHaveBeenCalledWith("icfg_one", "original");
+});
 
 it("rejects unknown installations without obtaining a token or calling the API", async () => {
   mocks.installation.mockResolvedValue(null);
@@ -56,25 +46,19 @@ it("rejects unknown installations without obtaining a token or calling the API",
   expect(mocks.fetch).not.toHaveBeenCalled();
 });
 
-it.each([false, true])(
-  "allows billing finalization after local uninstall (renewal enabled: %s)",
-  async (enabled) => {
-    mocks.env.INTEGRATION_CLIENT_CREDENTIALS_ENABLED = String(enabled);
-    mocks.installation.mockResolvedValue({
-      deletedAt: 123,
-      credentials: { access_token: "original" },
-    });
-    await fetchVercelApi("/v1/installations/icfg_one/billing/finalize", {
-      installationId: "icfg_one",
-      method: "POST",
-      data: {},
-    });
-    const headers = mocks.fetch.mock.calls[0][1].headers as Headers;
-    expect(headers.get("authorization")).toBe(
-      `Bearer ${enabled ? "renewed" : "original"}`,
-    );
-  },
-);
+it("allows billing finalization after local uninstall", async () => {
+  mocks.installation.mockResolvedValue({
+    deletedAt: 123,
+    credentials: { access_token: "original" },
+  });
+  await fetchVercelApi("/v1/installations/icfg_one/billing/finalize", {
+    installationId: "icfg_one",
+    method: "POST",
+    data: {},
+  });
+  const headers = mocks.fetch.mock.calls[0][1].headers as Headers;
+  expect(headers.get("authorization")).toBe("Bearer renewed");
+});
 
 it("preserves authentication, caller headers, and the integration user agent on mutations", async () => {
   await fetchVercelApi("/v1/example", {
@@ -85,7 +69,7 @@ it("preserves authentication, caller headers, and the integration user agent on 
   });
   const options = mocks.fetch.mock.calls[0][1] as RequestInit;
   const headers = new Headers(options.headers);
-  expect(headers.get("authorization")).toBe("Bearer original");
+  expect(headers.get("authorization")).toBe("Bearer renewed");
   expect(headers.get("x-request-id")).toBe("one");
   expect(headers.get("content-type")).toBe("application/json");
   expect(headers.get("user-agent")).toBe(
@@ -95,7 +79,6 @@ it("preserves authentication, caller headers, and the integration user agent on 
 });
 
 it("propagates renewal failure before making an API mutation", async () => {
-  mocks.env.INTEGRATION_CLIENT_CREDENTIALS_ENABLED = "true";
   mocks.token.mockRejectedValue(new Error("Renewal unavailable"));
   await expect(
     fetchVercelApi("/v1/example", {
