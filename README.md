@@ -214,3 +214,18 @@ Minting is gated, and both gates are Vercel-internal:
 With either off, hop 1 returns `404` by design — a stealth 404, so rollout state
 does not leak. The resource must also be connected to the calling project in the
 environment the deployment is running in.
+
+## Short-lived installation access tokens
+
+This first rollout uses the OAuth client-credentials grant ([RFC 6749 §4.4](https://www.rfc-editor.org/rfc/rfc6749.html#section-4.4)) with the integration client secret. Public-key assertions and Vercel KMS signing will be added later; do not enable `accessTokenMustUseJwks` for this version of the example.
+
+1. Before deploying this version, have Vercel enable the API `integration-client-assertions` flag for the integration owner. The console controls have a separate `integration-client-assertions-ui` flag.
+2. Deploy the example with `INTEGRATION_CLIENT_ID` and `INTEGRATION_CLIENT_SECRET` configured server-only. Installation API calls always use client credentials; no environment toggle is required.
+3. Make a request for an existing installation. The example exchanges `client_id`, `client_secret`, and `installation_id` at `https://api.vercel.com/v2/oauth/access_token` with `grant_type=client_credentials`.
+4. Verify token acquisition and renewal, then enable short-lived access tokens in the integration console. Existing permanent tokens will stop working within one hour.
+
+Tokens are cached separately per integration and installation in Redis and renewed 60–90 seconds early, with concurrent requests sharing an exchange within a process. Exchange failures are surfaced without falling back to the installation's original credential. Existing webhook verification continues using the client secret. Authorization-code exchange accepts the new `expires_in` response and does not require the legacy `user_id` field; subsequent installation API calls always use client credentials. `/login/oauth/token` is not required.
+
+The provider's local uninstall marker does not end Vercel's billing-finalization window. Final invoices, refunds, and finalization calls continue through the same token helper; Vercel validates the installation lifecycle on exchange and API access, and renewal failures remain errors.
+
+Run `pnpm test` and `pnpm typecheck` to validate the example. A staging rollout should exercise installation, API access, renewal, and API access after the original permanent-token cutoff.

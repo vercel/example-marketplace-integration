@@ -7,8 +7,8 @@ const IntegrationsExternalTokenResponse = z.object({
   token_type: z.string(),
   access_token: z.string(),
   installation_id: z.string(),
-  user_id: z.string(),
   team_id: z.string().nullable(),
+  expires_in: z.number().int().positive().optional(),
 });
 
 export async function exchangeExternalCodeForToken(
@@ -22,6 +22,7 @@ export async function exchangeExternalCodeForToken(
         "content-type": "application/x-www-form-urlencoded",
       },
       body: stringify({
+        grant_type: "authorization_code",
         code,
         client_id: env.INTEGRATION_CLIENT_ID,
         client_secret: env.INTEGRATION_CLIENT_SECRET,
