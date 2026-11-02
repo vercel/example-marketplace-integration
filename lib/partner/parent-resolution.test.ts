@@ -255,6 +255,6 @@ describe("parent relation resolution", () => {
       metadata: {},
       billingPlanId: "pro200",
     });
-    expect(provisioned.billingPlan.id).toBe("pro200");
+    expect(provisioned.billingPlan?.id).toBe("pro200");
   });
 });

@@ -298,6 +298,14 @@ export type ProvisionPurchaseResponse = z.infer<
 
 // Product
 
+// "owned" resources are provisioned and billed through Vercel. "linked"
+// resources already existed on the partner's platform, were imported into
+// Vercel, and are billed by the partner directly. Vercel treats a missing
+// value as "owned".
+export const resourceOwnershipSchema = z.enum(["owned", "linked", "sandbox"]);
+
+export type ResourceOwnership = z.infer<typeof resourceOwnershipSchema>;
+
 export const resourceSchema = z.object({
   // Partner's resource ID.
   id: z.string().min(1),
@@ -305,8 +313,13 @@ export const resourceSchema = z.object({
   // Partner's product ID/slug.
   productId: z.string().min(1),
 
-  // Billing plan details.
-  billingPlan: billingPlanSchema,
+  // Vercel copies this from the Get Resource response when it syncs a
+  // resource, and clears its stored value when the field is omitted. Linked
+  // resources must therefore keep returning it.
+  ownership: resourceOwnershipSchema.optional(),
+
+  // Billing plan details. Omitted for resources not billed through Vercel.
+  billingPlan: billingPlanSchema.optional(),
 
   // Resource's name. Normally set by the user.
   name: z.string().min(1),
@@ -384,6 +397,9 @@ export const getResourceResponseSchema = resourceSchema;
 export type GetResourceResponse = z.infer<typeof getResourceResponseSchema>;
 
 export const importResourceRequestSchema = z.object({
+  // Omitting ownership on a re-import clears a previously stored value, so
+  // always send it.
+  ownership: resourceOwnershipSchema.optional(),
   productId: z.string().min(1),
   name: z.string().min(1),
   status: resourceStatusSchema,
