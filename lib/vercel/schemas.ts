@@ -203,6 +203,19 @@ export const resourceCustomClaimsSchema = z
 
 export type ResourceCustomClaims = z.infer<typeof resourceCustomClaimsSchema>;
 
+export const resourceCredentialTypeSchema = z.enum(["static", "oidc"]);
+
+export type ResourceCredentialType = z.infer<
+  typeof resourceCredentialTypeSchema
+>;
+
+export const resourceCredentialTypesSchema = z
+  .array(resourceCredentialTypeSchema)
+  .min(1)
+  .refine((types) => new Set(types).size === types.length, {
+    message: "Credential types must be unique",
+  });
+
 // Account and Installation
 
 const accountInfoSchema = z
@@ -346,6 +359,7 @@ export const provisionResourceRequestSchema = resourceSchema
   })
   .extend({
     billingPlanId: z.string().min(1),
+    credentialTypes: resourceCredentialTypesSchema.optional(),
   });
 
 export type ProvisionResourceRequest = z.infer<
@@ -421,7 +435,8 @@ export type ImportResourceResponse = z.infer<
 >;
 
 export const updateVercelResourceRequestSchema = z.object({
-  customClaims: resourceCustomClaimsSchema,
+  customClaims: resourceCustomClaimsSchema.optional(),
+  credentialTypes: resourceCredentialTypesSchema.optional(),
 });
 
 export type UpdateVercelResourceRequest = z.infer<
@@ -751,6 +766,11 @@ export const RequestSecretsRotationRequestSchema = z.object({
     .max(720) // Max 30 days.
     .optional()
     .describe("Delay in hours before old secrets expire after rotation."),
+  credentialTypes: resourceCredentialTypesSchema
+    .optional()
+    .describe(
+      "The credential types the resource accepts once this rotation completes. Confirm with Update Resource.",
+    ),
 });
 
 export type RequestSecretsRotationResponse = z.infer<
