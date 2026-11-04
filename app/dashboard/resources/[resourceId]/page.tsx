@@ -1,11 +1,20 @@
 import {
   getResource,
   getResourceBalance,
+  getResourceCredentials,
   getResourceCustomClaims,
   getResourceParent,
 } from "@/lib/partner";
+import {
+  type ResourceCredentials,
+  acceptsCredentialType,
+  isCredentialTypesChangePending,
+} from "@/lib/partner/credential-types";
 import { getAccountInfo } from "@/lib/vercel/marketplace-api";
-import type { Resource } from "@/lib/vercel/schemas";
+import {
+  type Resource,
+  resourceCredentialTypeSchema,
+} from "@/lib/vercel/schemas";
 import Link from "next/link";
 import { getSession } from "../../auth";
 import { FormButton } from "../../components/form-button";
@@ -17,6 +26,8 @@ import {
   importResourceToVercelAction,
   resetResourceCustomClaimsAction,
   rotateCredentialsAction,
+  sendResourceCredentialTypesAction,
+  setCredentialTypesChangeResponseAction,
   setExampleNotificationAction,
   updateResourceAction,
   updateResourceCustomClaimsAction,
@@ -30,12 +41,14 @@ export default async function ResourcePage({
 }) {
   const session = await getSession();
   const installationId = session.installation_id;
-  const [resource, account, parent, customClaims] = await Promise.all([
-    getResource(installationId, resourceId),
-    getAccountInfo(installationId),
-    getResourceParent(installationId, resourceId),
-    getResourceCustomClaims(installationId, resourceId),
-  ]);
+  const [resource, account, parent, customClaims, credentials] =
+    await Promise.all([
+      getResource(installationId, resourceId),
+      getAccountInfo(installationId),
+      getResourceParent(installationId, resourceId),
+      getResourceCustomClaims(installationId, resourceId),
+      getResourceCredentials(installationId, resourceId),
+    ]);
 
   if (!resource) {
     throw new Error(`Resource ${resourceId} not found`);
@@ -136,6 +149,12 @@ export default async function ResourcePage({
         </form>
       </Section>
 
+      <CredentialTypesSection
+        installationId={installationId}
+        resourceId={resource.id}
+        credentials={credentials ?? {}}
+      />
+
       <Section title="Balance">
         <div className="p-2">
           {balance ? (
@@ -178,7 +197,12 @@ export default async function ResourcePage({
         </form>
         <form action={rotateCredentialsAction} className="p-2">
           <input type="hidden" name="resourceId" value={resource.id} />
-          <FormButton className="rounded bg-blue-500 text-white px-2 py-1 disabled:opacity-50">
+          <FormButton
+            className="rounded bg-blue-500 text-white px-2 py-1 disabled:opacity-50"
+            disabled={
+              !acceptsCredentialType(credentials?.credentialTypes, "static")
+            }
+          >
             Rotate Credentials
           </FormButton>
         </form>
@@ -261,6 +285,91 @@ export default async function ResourcePage({
         </form>
       </Section>
     </main>
+  );
+}
+
+function CredentialTypesSection({
+  installationId,
+  resourceId,
+  credentials,
+}: {
+  installationId: string;
+  resourceId: string;
+  credentials: ResourceCredentials;
+}) {
+  const { credentialTypes, credentialTypesChange: change } = credentials;
+  const pending = isCredentialTypesChangePending(change);
+  const selected = (pending ? change.to : credentialTypes) ?? [];
+
+  return (
+    <Section title="Credential Types">
+      <p className="p-2">
+        Whether this resource accepts its long-lived secret (<code>static</code>
+        ) and resource tokens (<code>oidc</code>). Vercel sends{" "}
+        <code>credentialTypes</code> when it provisions a resource and when a
+        user changes them with a secrets rotation. We confirm a change, or
+        backfill an unset resource, with{" "}
+        <code>
+          PATCH /v1/installations/{installationId}/resources/{resourceId}
+        </code>
+        .
+      </p>
+      <dl className="grid grid-cols-[180px_1fr] gap-2 p-2">
+        <dt>Accepts</dt>
+        <dd>
+          {credentialTypes?.join(", ") ??
+            "Unset — Vercel applies the integration default"}
+        </dd>
+        <dt>Requested change</dt>
+        <dd>
+          {change
+            ? `To ${change.to.join(", ")}, requested ${new Date(change.requestedAt).toISOString()}, ${
+                change.confirmedAt
+                  ? `confirmed ${new Date(change.confirmedAt).toISOString()}`
+                  : "pending"
+              }`
+            : "None"}
+        </dd>
+      </dl>
+      <form action={setCredentialTypesChangeResponseAction} className="p-2">
+        <input type="hidden" name="resourceId" value={resourceId} />
+        <div className="flex flex-row items-center gap-2">
+          <label>When Vercel requests a change:</label>
+          <select
+            name="response"
+            defaultValue={
+              credentials.credentialTypesChangeResponse ?? "confirm"
+            }
+          >
+            <option value="confirm">Rotate, then confirm</option>
+            <option value="hold">Rotate, leave pending</option>
+            <option value="reject">Reject with 400</option>
+          </select>
+          <FormButton className="rounded border border-slate-400 px-2 py-1 disabled:opacity-50">
+            Save
+          </FormButton>
+        </div>
+      </form>
+      <form action={sendResourceCredentialTypesAction} className="p-2">
+        <input type="hidden" name="resourceId" value={resourceId} />
+        <div className="flex flex-row items-center gap-4">
+          {resourceCredentialTypeSchema.options.map((type) => (
+            <label key={type} className="flex items-center gap-1">
+              <input
+                type="checkbox"
+                name="credentialTypes"
+                value={type}
+                defaultChecked={selected.includes(type)}
+              />
+              <code>{type}</code>
+            </label>
+          ))}
+          <FormButton className="rounded bg-blue-500 text-white px-2 py-1 disabled:opacity-50">
+            {pending ? "Confirm change" : "Send to Vercel"}
+          </FormButton>
+        </div>
+      </form>
+    </Section>
   );
 }
 

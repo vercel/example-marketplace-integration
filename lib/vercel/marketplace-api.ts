@@ -161,6 +161,7 @@ export async function updateSecrets(
     value: string;
     environmentOverrides?: Record<string, string>;
   }[],
+  options: { partial?: boolean } = {},
 ): Promise<void> {
   const resource = await getResource(installationId, resourceId);
 
@@ -173,7 +174,7 @@ export async function updateSecrets(
     {
       installationId,
       method: "PUT",
-      data: { secrets },
+      data: { secrets, partial: options.partial },
     },
   );
 }

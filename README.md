@@ -259,3 +259,56 @@ Minting is gated, and both gates are Vercel-internal:
 With either off, hop 1 returns `404` by design — a stealth 404, so rollout state
 does not leak. The resource must also be connected to the calling project in the
 environment the deployment is running in.
+
+## Resource Credential Types
+
+Each resource declares which credentials it accepts: `static` for its
+long-lived secret (`TOP_SECRET`), `oidc` for resource tokens. Vercel mints
+resource tokens only for resources that accept `oidc`; otherwise the mint call
+returns `409 resource_oidc_not_enabled`. A resource without `credentialTypes`
+resolves to the integration's default on Vercel's side, and here it keeps
+both, as before.
+
+| Flow | Vercel sends | Here |
+| --- | --- | --- |
+| Provision | `credentialTypes` on `POST /v1/installations/:id/resources`, when the user picked one of the integration's `allowed.create` sets | Stored on the resource. Without `static`, the response has no secrets. |
+| Change | `credentialTypes` on `POST .../resources/:id/secrets/rotate`, an `allowed.update` end state | The change is recorded as pending. Secrets are rotated to the target: new ones with `static`, none without. Then `PATCH /v1/installations/:id/resources/:id` with the same `credentialTypes` confirms it. |
+| Backfill | Nothing | `PATCH` sets `credentialTypes` on a resource that has none. |
+
+**Dashboard → resource → Credential Types** shows what the resource accepts and
+the latest requested change, and has two controls:
+
+- **When Vercel requests a change**: *Rotate, then confirm* (the default),
+  *Rotate, leave pending* so you can see Vercel block other changes until
+  confirmation, or *Reject with 400* so Vercel restores the previous state.
+- **Send to Vercel**: `PATCH`es the selected credential types. Use it to confirm
+  a held change, backfill an unset resource, or confirm that Vercel rejects
+  anything else.
+
+Rotation completes after a 5–10s delay, or right away with `?sync=1`. This demo
+confirms as soon as the rotation is done. A real provider would wait until the
+old secrets expire (`delayOldSecretsExpirationHours`) before confirming a change
+that drops `static`. Regular rotations, and **Rotate Credentials**, are refused
+for resources without `static`. `/oidc/resource-token` rejects tokens for
+resources that accept only `static`.
+
+### Prerequisites
+
+All gates are Vercel-internal and build on the resource token gates above:
+
+1. `credentialTypes` in the integration's admin settings, for example:
+
+   ```json
+   {
+     "allowed": {
+       "create": [["static", "oidc"], ["oidc"]],
+       "update": [{ "start": ["static", "oidc"], "end": ["oidc"] }]
+     },
+     "default": ["static", "oidc"]
+   }
+   ```
+
+2. Creating resources with `credentialTypes` needs
+   `marketplace-resource-token-new-create-team` for the team.
+3. Changing them needs `supportsSecretsRotationRequest` and
+   `marketplace-resource-token-migration-team` for the team.

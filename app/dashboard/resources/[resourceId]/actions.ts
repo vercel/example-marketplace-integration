@@ -5,11 +5,18 @@ import {
   clearResourceNotification,
   cloneResource,
   getResource,
+  getResourceCredentials,
   importResourceToVercel,
+  setCredentialTypesChangeResponse,
+  setResourceCredentialTypes,
   setResourceCustomClaims,
   updateResource,
   updateResourceNotification,
 } from "@/lib/partner";
+import {
+  acceptsCredentialType,
+  credentialTypesChangeResponseSchema,
+} from "@/lib/partner/credential-types";
 import {
   ParentRelationUnavailableError,
   recordParentRelationFailure,
@@ -19,6 +26,7 @@ import { dispatchEvent, updateSecrets } from "@/lib/vercel/marketplace-api";
 import {
   type Notification,
   type Resource,
+  resourceCredentialTypesSchema,
   resourceCustomClaimsSchema,
 } from "@/lib/vercel/schemas";
 import { revalidatePath } from "next/cache";
@@ -62,6 +70,14 @@ export async function rotateCredentialsAction(
 
   if (!resource) {
     throw new Error(`Unknown resource '${formData.get("resourceId")}`);
+  }
+
+  const credentials = await getResourceCredentials(
+    session.installation_id,
+    resource.id,
+  );
+  if (!acceptsCredentialType(credentials?.credentialTypes, "static")) {
+    throw new Error(`Resource '${resource.id}' has no long-lived secrets`);
   }
 
   const currentDate = new Date().toISOString();
@@ -227,4 +243,32 @@ export async function resetResourceCustomClaimsAction(formData: FormData) {
   );
 
   revalidatePath(`/dashboard/resources/${resource.id}`);
+}
+
+export async function sendResourceCredentialTypesAction(formData: FormData) {
+  const session = await getSession();
+  const resourceId = formData.get("resourceId") as string;
+
+  await setResourceCredentialTypes(
+    session.installation_id,
+    resourceId,
+    resourceCredentialTypesSchema.parse(formData.getAll("credentialTypes")),
+  );
+
+  revalidatePath(`/dashboard/resources/${resourceId}`);
+}
+
+export async function setCredentialTypesChangeResponseAction(
+  formData: FormData,
+) {
+  const session = await getSession();
+  const resourceId = formData.get("resourceId") as string;
+
+  await setCredentialTypesChangeResponse(
+    session.installation_id,
+    resourceId,
+    credentialTypesChangeResponseSchema.parse(formData.get("response")),
+  );
+
+  revalidatePath(`/dashboard/resources/${resourceId}`);
 }

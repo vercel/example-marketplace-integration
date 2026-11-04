@@ -19,6 +19,8 @@ import {
   JWTInvalid,
 } from "jose/errors";
 import { env } from "../env";
+import { acceptsCredentialType } from "../partner/credential-types";
+import type { ResourceCredentialType } from "./schemas";
 
 const DEFAULT_ISSUER_BASE = "https://integrations.vercel.com";
 
@@ -87,6 +89,7 @@ const CHECK_LABELS = {
   lifetime: "Within its 300s lifetime",
   audience: "Audience is an installation we hold",
   resource: "Resource exists under that installation",
+  credentialTypes: "Resource accepts OIDC tokens",
   subject: "Subject is a role this resource grants",
   project: "Names the calling Vercel project",
   deployment: "Names the minting deployment",
@@ -113,6 +116,7 @@ export interface VerifiedResource {
   status: string;
   productId?: string;
   roles?: string[];
+  credentialTypes?: ResourceCredentialType[];
 }
 
 export interface ResourceTokenStore {
@@ -273,6 +277,26 @@ function reject(
     error: failed.detail,
     ...context,
   };
+}
+
+function credentialTypesCheck(resource: VerifiedResource): ResourceTokenCheck {
+  const { credentialTypes } = resource;
+
+  if (!credentialTypes) {
+    return check(
+      "credentialTypes",
+      true,
+      "Unset — Vercel's integration default decides whether it mints",
+    );
+  }
+
+  return acceptsCredentialType(credentialTypes, "oidc")
+    ? check("credentialTypes", true, `Accepts ${credentialTypes.join(", ")}`)
+    : check(
+        "credentialTypes",
+        false,
+        `Resource accepts only ${credentialTypes.join(", ")}, not OIDC tokens.`,
+      );
 }
 
 function subjectCheck(
@@ -439,6 +463,7 @@ export async function verifyResourceToken(
       true,
       `${resource.name} (${resource.id}), status ${resource.status}`,
     ),
+    credentialTypesCheck(resource),
     subjectCheck(claims, resource),
     projectCheck(claims),
     deploymentCheck(claims),

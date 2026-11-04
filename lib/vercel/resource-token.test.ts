@@ -123,6 +123,7 @@ describe("verifyResourceToken", () => {
       "lifetime",
       "audience",
       "resource",
+      "credentialTypes",
       "subject",
       "project",
       "deployment",
@@ -170,6 +171,45 @@ describe("verifyResourceToken", () => {
 
     expect(result.ok).toBe(false);
     expect(failedCheckNames(result.checks)).toEqual(["subject"]);
+  });
+
+  it.each([
+    ["accepts OIDC tokens only", ["oidc"]],
+    ["accepts both credential types", ["static", "oidc"]],
+  ] as const)(
+    "accepts a token for a resource that %s",
+    async (_, credentialTypes) => {
+      const result = await verify(
+        await mint(),
+        storeWith({
+          findResource: async (_installationId, resourceId) => ({
+            id: resourceId,
+            name: "acme-production",
+            status: "ready",
+            credentialTypes: [...credentialTypes],
+          }),
+        }),
+      );
+
+      expect(result.ok).toBe(true);
+    },
+  );
+
+  it("rejects a token for a resource that accepts only its long-lived secret", async () => {
+    const result = await verify(
+      await mint(),
+      storeWith({
+        findResource: async (_installationId, resourceId) => ({
+          id: resourceId,
+          name: "acme-production",
+          status: "ready",
+          credentialTypes: ["static"],
+        }),
+      }),
+    );
+
+    expect(result.ok).toBe(false);
+    expect(failedCheckNames(result.checks)).toEqual(["credentialTypes"]);
   });
 
   it("accepts a token whose claim rules removed project and deployment", async () => {

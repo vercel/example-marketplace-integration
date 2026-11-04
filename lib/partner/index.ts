@@ -11,6 +11,7 @@ import type {
   ProvisionResourceRequest,
   ProvisionResourceResponse,
   Resource,
+  ResourceCredentialType,
   ResourceCustomClaims,
   ResourceStatusType,
   Claim as TransferRequest,
@@ -27,6 +28,13 @@ import {
   importResource as importResourceToVercelApi,
   updateVercelResource,
 } from "../vercel/marketplace-api";
+import {
+  type CredentialTypesChangeResponse,
+  type ResourceCredentials,
+  acceptsCredentialType,
+  isCredentialTypesChangePending,
+  isSameCredentialTypes,
+} from "./credential-types";
 import {
   type ParentRelation,
   ParentRelationUnavailableError,
@@ -206,6 +214,7 @@ export async function provisionResource(
     ...serializeResource(resource),
     parent: installation.parent,
     customClaims,
+    credentialTypes: request.credentialTypes,
   } satisfies StoredResource);
   await kv.lpush(`${installationId}:resources`, resource.id);
   await updateInstallation(installationId, request.billingPlanId);
@@ -216,19 +225,21 @@ export async function provisionResource(
     ...resource,
     customClaims,
 
-    secrets: [
-      {
-        name: "TOP_SECRET",
-        value: `birds aren't real (${currentDate})`,
-        environmentOverrides:
-          resource.productId === "with-env-override"
-            ? {
-                production: `birds ARE real (${currentDate})`,
-                preview: `birds ARE real (${currentDate})`,
-              }
-            : undefined,
-      },
-    ],
+    secrets: acceptsCredentialType(request.credentialTypes, "static")
+      ? [
+          {
+            name: "TOP_SECRET",
+            value: `birds aren't real (${currentDate})`,
+            environmentOverrides:
+              resource.productId === "with-env-override"
+                ? {
+                    production: `birds ARE real (${currentDate})`,
+                    preview: `birds ARE real (${currentDate})`,
+                  }
+                : undefined,
+          },
+        ]
+      : [],
   };
 }
 
@@ -421,6 +432,95 @@ export async function setResourceCustomClaims(
   } satisfies StoredResource);
 }
 
+export async function getResourceCredentials(
+  installationId: string,
+  resourceId: string,
+): Promise<ResourceCredentials | null> {
+  const storedResource = await getStoredResource(installationId, resourceId);
+
+  if (!storedResource) {
+    return null;
+  }
+
+  const {
+    credentialTypes,
+    credentialTypesChange,
+    credentialTypesChangeResponse,
+  } = storedResource;
+  return {
+    credentialTypes,
+    credentialTypesChange,
+    credentialTypesChangeResponse,
+  };
+}
+
+export async function recordCredentialTypesChange(
+  installationId: string,
+  resourceId: string,
+  to: ResourceCredentialType[],
+): Promise<void> {
+  const storedResource = await getStoredResource(installationId, resourceId);
+
+  if (!storedResource) {
+    throw new Error(`Cannot find resource ${resourceId}`);
+  }
+
+  const change = storedResource.credentialTypesChange;
+  if (
+    isCredentialTypesChangePending(change) &&
+    isSameCredentialTypes(change.to, to)
+  ) {
+    return;
+  }
+
+  await kv.set(`${installationId}:resource:${resourceId}`, {
+    ...storedResource,
+    credentialTypesChange: { to, requestedAt: Date.now() },
+  } satisfies StoredResource);
+}
+
+export async function setResourceCredentialTypes(
+  installationId: string,
+  resourceId: string,
+  credentialTypes: ResourceCredentialType[],
+): Promise<void> {
+  await updateVercelResource(installationId, resourceId, { credentialTypes });
+
+  const storedResource = await getStoredResource(installationId, resourceId);
+
+  if (!storedResource) {
+    throw new Error(`Cannot find resource ${resourceId}`);
+  }
+
+  const change = storedResource.credentialTypesChange;
+  await kv.set(`${installationId}:resource:${resourceId}`, {
+    ...storedResource,
+    credentialTypes,
+    credentialTypesChange:
+      isCredentialTypesChangePending(change) &&
+      isSameCredentialTypes(change.to, credentialTypes)
+        ? { ...change, confirmedAt: Date.now() }
+        : change,
+  } satisfies StoredResource);
+}
+
+export async function setCredentialTypesChangeResponse(
+  installationId: string,
+  resourceId: string,
+  credentialTypesChangeResponse: CredentialTypesChangeResponse,
+): Promise<void> {
+  const storedResource = await getStoredResource(installationId, resourceId);
+
+  if (!storedResource) {
+    throw new Error(`Cannot find resource ${resourceId}`);
+  }
+
+  await kv.set(`${installationId}:resource:${resourceId}`, {
+    ...storedResource,
+    credentialTypesChangeResponse,
+  } satisfies StoredResource);
+}
+
 export async function getResourceParent(
   installationId: string,
   resourceId: string,
@@ -432,12 +532,13 @@ export async function cloneResource(
   installationId: string,
   resourceId: string,
 ) {
-  const resource = await getResource(installationId, resourceId);
+  const storedResource = await getStoredResource(installationId, resourceId);
 
-  if (!resource) {
+  if (!storedResource) {
     throw new Error(`Cannot find resource ${resourceId}`);
   }
 
+  const resource = deserializeResource(storedResource);
   const newName = `${resource.name}-clone`;
 
   const clonedResource = await provisionResource(installationId, {
@@ -445,6 +546,7 @@ export async function cloneResource(
     name: newName,
     metadata: resource.metadata,
     billingPlanId: resource.billingPlan?.id || "",
+    credentialTypes: storedResource.credentialTypes,
   });
   return clonedResource;
 }
@@ -475,16 +577,18 @@ export async function importResourceToVercel(
       billingPlan: resource.billingPlan,
       notification: resource.notification,
       customClaims,
-      secrets: [
-        {
-          name: "TOP_SECRET",
-          value: `birds aren't real (${new Date().toISOString()})`,
-        },
-        {
-          name: "TOP_SECRET_CLONED",
-          value: `birds aren't real (${new Date().toISOString()})`,
-        },
-      ],
+      secrets: acceptsCredentialType(storedResource.credentialTypes, "static")
+        ? [
+            {
+              name: "TOP_SECRET",
+              value: `birds aren't real (${new Date().toISOString()})`,
+            },
+            {
+              name: "TOP_SECRET_CLONED",
+              value: `birds aren't real (${new Date().toISOString()})`,
+            },
+          ]
+        : [],
     },
   );
   await kv.set(`${installationId}:resource:${resourceId}`, {
@@ -629,10 +733,11 @@ type SerializedResource = Omit<Resource, "billingPlan"> & {
   billingPlan?: string;
 };
 
-type StoredResource = SerializedResource & {
-  parent?: ParentRelation;
-  customClaims?: ResourceCustomClaims;
-};
+type StoredResource = SerializedResource &
+  ResourceCredentials & {
+    parent?: ParentRelation;
+    customClaims?: ResourceCustomClaims;
+  };
 
 function getStoredResource(
   installationId: string,
@@ -649,6 +754,9 @@ function deserializeResource(storedResource: StoredResource): Resource {
   const {
     parent: _parent,
     customClaims: _customClaims,
+    credentialTypes: _credentialTypes,
+    credentialTypesChange: _credentialTypesChange,
+    credentialTypesChangeResponse: _credentialTypesChangeResponse,
     ...serializedResource
   } = storedResource;
   if (serializedResource.billingPlan === undefined) {
