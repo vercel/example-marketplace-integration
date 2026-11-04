@@ -16,12 +16,11 @@ import {
 import { waitUntil } from "@vercel/functions";
 
 interface Params {
-  installationId: string;
   resourceId: string;
 }
 
 export const POST = withAuth(
-  async (_claims, request, { params }: { params: Params }) => {
+  async (claims, request, { params }: { params: Params }) => {
     const requestBody = await readRequestBodyWithSchema(
       request,
       RequestSecretsRotationRequestSchema,
@@ -31,15 +30,17 @@ export const POST = withAuth(
       return new Response(null, { status: 400 });
     }
 
+    const installationId = claims.installation_id;
+    const { resourceId } = params;
+
     console.log(
       "Accepting secret rotation request for resourceId:",
-      params.installationId,
-      params.resourceId,
+      installationId,
+      resourceId,
       "with body:",
       requestBody.data,
     );
 
-    const { installationId, resourceId } = params;
     const credentials = await getResourceCredentials(
       installationId,
       resourceId,
