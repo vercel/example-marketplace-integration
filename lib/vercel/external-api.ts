@@ -7,6 +7,7 @@ const IntegrationsExternalTokenResponse = z.object({
   token_type: z.string(),
   access_token: z.string(),
   installation_id: z.string(),
+  user_id: z.string().optional(),
   team_id: z.string().nullable(),
   expires_in: z.number().int().positive().optional(),
 });
