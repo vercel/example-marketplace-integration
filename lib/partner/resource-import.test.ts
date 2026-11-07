@@ -109,8 +109,8 @@ beforeEach(async () => {
     vercelCalls.push({
       method: init.method ?? "GET",
       url,
-      authorization: (init.headers as Record<string, string> | undefined)
-        ?.Authorization,
+      authorization:
+        new Headers(init.headers).get("authorization") ?? undefined,
       body: init.body ? JSON.parse(init.body as string) : undefined,
     });
     return vercelResponse();

@@ -27,6 +27,7 @@ export default async function Page({
     credentials: {
       access_token: result.access_token,
       token_type: result.token_type,
+      expires_in: result.expires_in,
     },
   });
 
