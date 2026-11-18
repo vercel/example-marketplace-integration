@@ -99,6 +99,22 @@ describe("resource plan restrictions", () => {
     ).toBe("pro200");
   });
 
+  it("keeps a restriction saved while a resource edit is in flight", async () => {
+    const resource = await provisionOnPro();
+
+    await Promise.all([
+      updateResource(INSTALLATION_ID, resource.id, { name: "renamed" }),
+      setResourcePlanRestrictions(INSTALLATION_ID, resource.id, {
+        default: { reason: "Delete your read replicas before downgrading." },
+      }),
+    ]);
+
+    expect((await getPlan(resource.id, "default"))?.disabled).toBe(true);
+    expect((await getResource(INSTALLATION_ID, resource.id))?.name).toBe(
+      "renamed",
+    );
+  });
+
   it("keeps plan restrictions out of Get Resource", async () => {
     const resource = await provisionOnPro();
     await setResourcePlanRestrictions(INSTALLATION_ID, resource.id, {

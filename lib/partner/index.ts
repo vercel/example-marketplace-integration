@@ -263,7 +263,7 @@ export async function updateResource(
   const { billingPlanId, ...updatedFields } = request;
   if (billingPlanId) {
     assertPlanAllowed(
-      storedResource.planRestrictions,
+      await getResourcePlanRestrictions(installationId, resourceId),
       billingPlanId,
       storedResource.billingPlan,
     );
@@ -371,6 +371,7 @@ export async function deleteResource(
 ): Promise<void> {
   const pipeline = kv.pipeline();
   pipeline.del(`${installationId}:resource:${resourceId}`);
+  pipeline.del(planRestrictionsKey(installationId, resourceId));
   pipeline.lrem(`${installationId}:resources`, 0, resourceId);
   await pipeline.exec();
 }
@@ -531,12 +532,21 @@ export async function setCredentialTypesChangeResponse(
   } satisfies StoredResource);
 }
 
+// Kept under its own key so that whole-record resource writes, which spread an
+// earlier read, can't restore an old policy, and saving one can't revert them.
+function planRestrictionsKey(installationId: string, resourceId: string) {
+  return `${installationId}:resource:${resourceId}:plan-restrictions`;
+}
+
 export async function getResourcePlanRestrictions(
   installationId: string,
   resourceId: string,
 ): Promise<PlanRestrictions | undefined> {
-  return (await getStoredResource(installationId, resourceId))
-    ?.planRestrictions;
+  return (
+    (await kv.get<PlanRestrictions>(
+      planRestrictionsKey(installationId, resourceId),
+    )) ?? undefined
+  );
 }
 
 export async function setResourcePlanRestrictions(
@@ -544,16 +554,14 @@ export async function setResourcePlanRestrictions(
   resourceId: string,
   planRestrictions: PlanRestrictions,
 ): Promise<void> {
-  const storedResource = await getStoredResource(installationId, resourceId);
-
-  if (!storedResource) {
+  if (!(await getStoredResource(installationId, resourceId))) {
     throw new Error(`Cannot find resource ${resourceId}`);
   }
 
-  await kv.set(`${installationId}:resource:${resourceId}`, {
-    ...storedResource,
+  await kv.set(
+    planRestrictionsKey(installationId, resourceId),
     planRestrictions,
-  } satisfies StoredResource);
+  );
 }
 
 export async function getResourceParent(
@@ -772,7 +780,6 @@ type StoredResource = SerializedResource &
   ResourceCredentials & {
     parent?: ParentRelation;
     customClaims?: ResourceCustomClaims;
-    planRestrictions?: PlanRestrictions;
   };
 
 function getStoredResource(
@@ -793,7 +800,6 @@ function deserializeResource(storedResource: StoredResource): Resource {
     credentialTypes: _credentialTypes,
     credentialTypesChange: _credentialTypesChange,
     credentialTypesChangeResponse: _credentialTypesChangeResponse,
-    planRestrictions: _planRestrictions,
     ...serializedResource
   } = storedResource;
   if (serializedResource.billingPlan === undefined) {
@@ -860,14 +866,15 @@ export async function getResourceBillingPlans(
   installationId: string,
   resourceId: string,
 ): Promise<GetBillingPlansResponse> {
-  const [plans, storedResource] = await Promise.all([
+  const [plans, storedResource, planRestrictions] = await Promise.all([
     getAvailableBillingPlans(installationId, billingPlans),
     getStoredResource(installationId, resourceId),
+    getResourcePlanRestrictions(installationId, resourceId),
   ]);
   return {
     plans: applyPlanRestrictions(
       plans,
-      storedResource?.planRestrictions,
+      planRestrictions,
       storedResource?.billingPlan,
     ),
   };
