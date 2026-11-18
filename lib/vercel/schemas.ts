@@ -128,6 +128,9 @@ export const billingPlanSchema = z.object({
 
   // If true, the plan is disabled and cannot be selected. Example: "disabled": true` for "Hobby" plan.
   disabled: z.boolean().optional(),
+
+  // Shown to the user when `disabled` is true, explaining why they cannot select this plan.
+  disabledReason: z.string().optional(),
 });
 
 export type BillingPlan = z.infer<typeof billingPlanSchema>;

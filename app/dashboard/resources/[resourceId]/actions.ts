@@ -10,6 +10,7 @@ import {
   setCredentialTypesChangeResponse,
   setResourceCredentialTypes,
   setResourceCustomClaims,
+  setResourcePlanRestrictions,
   updateResource,
   updateResourceNotification,
 } from "@/lib/partner";
@@ -21,6 +22,7 @@ import {
   ParentRelationUnavailableError,
   recordParentRelationFailure,
 } from "@/lib/partner/parent-relations";
+import type { PlanRestrictions } from "@/lib/partner/plan-restrictions";
 import { exampleResourceCustomClaims } from "@/lib/partner/resource-claims";
 import { dispatchEvent, updateSecrets } from "@/lib/vercel/marketplace-api";
 import {
@@ -223,6 +225,25 @@ export async function updateResourceCustomClaimsAction(formData: FormData) {
     session.installation_id,
     resourceId,
     customClaims,
+  );
+
+  revalidatePath(`/dashboard/resources/${resourceId}`);
+}
+
+export async function updateResourcePlanRestrictionsAction(formData: FormData) {
+  const session = await getSession();
+  const resourceId = formData.get("resourceId") as string;
+
+  const planRestrictions: PlanRestrictions = {};
+  for (const planId of formData.getAll("restrictedPlanId")) {
+    const reason = String(formData.get(`reason:${planId}`) ?? "").trim();
+    planRestrictions[String(planId)] = reason ? { reason } : {};
+  }
+
+  await setResourcePlanRestrictions(
+    session.installation_id,
+    resourceId,
+    planRestrictions,
   );
 
   revalidatePath(`/dashboard/resources/${resourceId}`);

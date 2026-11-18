@@ -41,6 +41,11 @@ import {
   type ParentResolution,
   updateParentChildIndex,
 } from "./parent-relations";
+import {
+  type PlanRestrictions,
+  applyPlanRestrictions,
+  assertPlanAllowed,
+} from "./plan-restrictions";
 import { exampleResourceCustomClaims } from "./resource-claims";
 
 const billingPlans: BillingPlan[] = [
@@ -257,6 +262,11 @@ export async function updateResource(
 
   const { billingPlanId, ...updatedFields } = request;
   if (billingPlanId) {
+    assertPlanAllowed(
+      storedResource.planRestrictions,
+      billingPlanId,
+      storedResource.billingPlan,
+    );
     await assertParentPlan(
       installationId,
       await getInstallation(installationId),
@@ -521,6 +531,31 @@ export async function setCredentialTypesChangeResponse(
   } satisfies StoredResource);
 }
 
+export async function getResourcePlanRestrictions(
+  installationId: string,
+  resourceId: string,
+): Promise<PlanRestrictions | undefined> {
+  return (await getStoredResource(installationId, resourceId))
+    ?.planRestrictions;
+}
+
+export async function setResourcePlanRestrictions(
+  installationId: string,
+  resourceId: string,
+  planRestrictions: PlanRestrictions,
+): Promise<void> {
+  const storedResource = await getStoredResource(installationId, resourceId);
+
+  if (!storedResource) {
+    throw new Error(`Cannot find resource ${resourceId}`);
+  }
+
+  await kv.set(`${installationId}:resource:${resourceId}`, {
+    ...storedResource,
+    planRestrictions,
+  } satisfies StoredResource);
+}
+
 export async function getResourceParent(
   installationId: string,
   resourceId: string,
@@ -737,6 +772,7 @@ type StoredResource = SerializedResource &
   ResourceCredentials & {
     parent?: ParentRelation;
     customClaims?: ResourceCustomClaims;
+    planRestrictions?: PlanRestrictions;
   };
 
 function getStoredResource(
@@ -757,6 +793,7 @@ function deserializeResource(storedResource: StoredResource): Resource {
     credentialTypes: _credentialTypes,
     credentialTypesChange: _credentialTypesChange,
     credentialTypesChangeResponse: _credentialTypesChangeResponse,
+    planRestrictions: _planRestrictions,
     ...serializedResource
   } = storedResource;
   if (serializedResource.billingPlan === undefined) {
@@ -821,10 +858,18 @@ export async function getProductBillingPlans(
 
 export async function getResourceBillingPlans(
   installationId: string,
-  _resourceId: string,
+  resourceId: string,
 ): Promise<GetBillingPlansResponse> {
+  const [plans, storedResource] = await Promise.all([
+    getAvailableBillingPlans(installationId, billingPlans),
+    getStoredResource(installationId, resourceId),
+  ]);
   return {
-    plans: await getAvailableBillingPlans(installationId, billingPlans),
+    plans: applyPlanRestrictions(
+      plans,
+      storedResource?.planRestrictions,
+      storedResource?.billingPlan,
+    ),
   };
 }
 
