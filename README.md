@@ -313,6 +313,25 @@ All gates are Vercel-internal and build on the resource token gates above:
 3. Changing them needs `supportsSecretsRotationRequest` and
    `marketplace-resource-token-migration-team` for the team.
 
+## Disabled Billing Plans
+
+A provider can keep a resource off some plans, for example blocking a downgrade
+while the resource still uses features of its current plan, and tell the user
+why.
+
+| Flow | Here |
+| --- | --- |
+| List plans | `GET /v1/installations/:id/resources/:id/plans` returns each restricted plan with `disabled: true` and, when set, `disabledReason`. Vercel shows the reason on the disabled plan. The resource's current plan is never disabled. |
+| Change plan | `PATCH /v1/installations/:id/resources/:id` with a restricted `billingPlanId` returns `409 conflict` with the reason as `error.user.message`, which Vercel shows to the user. |
+
+**Dashboard → resource → Plan Restrictions** picks the plans to disable for that
+resource, each with an optional reason. Leave the reason empty to see a plan
+disabled without one.
+
+Vercel caches a resource's plans for up to 10 minutes, so a new restriction may
+not show in the plan picker right away. Choosing a plan that was restricted after
+the picker loaded is a quick way to see the `409` message.
+
 ## Short-lived installation access tokens
 
 This first rollout uses the OAuth client-credentials grant ([RFC 6749 §4.4](https://www.rfc-editor.org/rfc/rfc6749.html#section-4.4)) with the integration client secret. Public-key assertions and Vercel KMS signing will be added later; do not enable `accessTokenMustUseJwks` for this version of the example.

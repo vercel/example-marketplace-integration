@@ -1,4 +1,5 @@
 import { deleteResource, getResource, updateResource } from "@/lib/partner";
+import { PlanRestrictedError } from "@/lib/partner/plan-restrictions";
 import { readRequestBodyWithSchema } from "@/lib/utils";
 import { withAuth } from "@/lib/vercel/auth";
 import { updateResourceRequestSchema } from "@/lib/vercel/schemas";
@@ -40,15 +41,35 @@ export const PATCH = withAuth(
       return new Response(null, { status: 400 });
     }
 
-    const updatedResource = await updateResource(
-      claims.installation_id,
-      params.resourceId,
-      requestBody.data,
-    );
+    try {
+      const updatedResource = await updateResource(
+        claims.installation_id,
+        params.resourceId,
+        requestBody.data,
+      );
 
-    return Response.json(updatedResource, {
-      status: 200,
-    });
+      return Response.json(updatedResource, {
+        status: 200,
+      });
+    } catch (error) {
+      if (error instanceof PlanRestrictedError) {
+        return Response.json(
+          {
+            error: {
+              code: "conflict",
+              message: error.message,
+              user: {
+                message:
+                  error.reason ??
+                  "This plan isn't available for this resource.",
+              },
+            },
+          },
+          { status: 409 },
+        );
+      }
+      throw error;
+    }
   },
 );
 

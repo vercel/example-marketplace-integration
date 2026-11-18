@@ -1,17 +1,21 @@
 import {
+  getAllBillingPlans,
   getResource,
   getResourceBalance,
   getResourceCredentials,
   getResourceCustomClaims,
   getResourceParent,
+  getResourcePlanRestrictions,
 } from "@/lib/partner";
 import {
   type ResourceCredentials,
   acceptsCredentialType,
   isCredentialTypesChangePending,
 } from "@/lib/partner/credential-types";
+import type { PlanRestrictions } from "@/lib/partner/plan-restrictions";
 import { getAccountInfo } from "@/lib/vercel/marketplace-api";
 import {
+  type BillingPlan,
   type Resource,
   resourceCredentialTypeSchema,
 } from "@/lib/vercel/schemas";
@@ -32,6 +36,7 @@ import {
   updateResourceAction,
   updateResourceCustomClaimsAction,
   updateResourceNotificationAction,
+  updateResourcePlanRestrictionsAction,
 } from "./actions";
 
 export default async function ResourcePage({
@@ -41,14 +46,23 @@ export default async function ResourcePage({
 }) {
   const session = await getSession();
   const installationId = session.installation_id;
-  const [resource, account, parent, customClaims, credentials] =
-    await Promise.all([
-      getResource(installationId, resourceId),
-      getAccountInfo(installationId),
-      getResourceParent(installationId, resourceId),
-      getResourceCustomClaims(installationId, resourceId),
-      getResourceCredentials(installationId, resourceId),
-    ]);
+  const [
+    resource,
+    account,
+    parent,
+    customClaims,
+    credentials,
+    planRestrictions,
+    { plans },
+  ] = await Promise.all([
+    getResource(installationId, resourceId),
+    getAccountInfo(installationId),
+    getResourceParent(installationId, resourceId),
+    getResourceCustomClaims(installationId, resourceId),
+    getResourceCredentials(installationId, resourceId),
+    getResourcePlanRestrictions(installationId, resourceId),
+    getAllBillingPlans(installationId),
+  ]);
 
   if (!resource) {
     throw new Error(`Resource ${resourceId} not found`);
@@ -148,6 +162,13 @@ export default async function ResourcePage({
           </FormButton>
         </form>
       </Section>
+
+      <PlanRestrictionsSection
+        installationId={installationId}
+        resource={resource}
+        plans={plans}
+        planRestrictions={planRestrictions ?? {}}
+      />
 
       <CredentialTypesSection
         installationId={installationId}
@@ -285,6 +306,69 @@ export default async function ResourcePage({
         </form>
       </Section>
     </main>
+  );
+}
+
+function PlanRestrictionsSection({
+  installationId,
+  resource,
+  plans,
+  planRestrictions,
+}: {
+  installationId: string;
+  resource: Resource;
+  plans: BillingPlan[];
+  planRestrictions: PlanRestrictions;
+}) {
+  return (
+    <Section title="Plan Restrictions">
+      <p className="p-2">
+        Plans this resource can&apos;t switch to, for example a downgrade
+        blocked by features it still uses.{" "}
+        <code>
+          GET /v1/installations/{installationId}/resources/{resource.id}/plans
+        </code>{" "}
+        returns them with <code>disabled: true</code> and the reason as{" "}
+        <code>disabledReason</code>, and <code>PATCH</code> rejects a switch to
+        them with <code>409 conflict</code>. Leave the reason empty to disable a
+        plan without one. Vercel caches plans for up to 10 minutes.
+      </p>
+      <form action={updateResourcePlanRestrictionsAction} className="p-2">
+        <input type="hidden" name="resourceId" value={resource.id} />
+        <div className="space-y-4">
+          {plans.map((plan) => {
+            const isCurrent = plan.id === resource.billingPlan?.id;
+            return (
+              <div key={plan.id} className="flex flex-col gap-1">
+                <label className="flex flex-row items-center gap-2">
+                  <input
+                    type="checkbox"
+                    name="restrictedPlanId"
+                    value={plan.id}
+                    defaultChecked={plan.id in planRestrictions}
+                    disabled={isCurrent}
+                  />
+                  {plan.name} ({plan.id}){isCurrent ? " — current plan" : ""}
+                </label>
+                <input
+                  type="text"
+                  name={`reason:${plan.id}`}
+                  placeholder="Reason shown to the user"
+                  className="border border-1 border-slate-400"
+                  defaultValue={planRestrictions[plan.id]?.reason ?? ""}
+                  disabled={isCurrent}
+                />
+              </div>
+            );
+          })}
+          <div className="flex justify-end">
+            <FormButton className="rounded bg-blue-500 text-white px-2 py-1 disabled:opacity-50">
+              Save
+            </FormButton>
+          </div>
+        </div>
+      </form>
+    </Section>
   );
 }
 

@@ -41,6 +41,11 @@ import {
   type ParentResolution,
   updateParentChildIndex,
 } from "./parent-relations";
+import {
+  type PlanRestrictions,
+  applyPlanRestrictions,
+  assertPlanAllowed,
+} from "./plan-restrictions";
 import { exampleResourceCustomClaims } from "./resource-claims";
 
 const billingPlans: BillingPlan[] = [
@@ -257,6 +262,11 @@ export async function updateResource(
 
   const { billingPlanId, ...updatedFields } = request;
   if (billingPlanId) {
+    assertPlanAllowed(
+      await getResourcePlanRestrictions(installationId, resourceId),
+      billingPlanId,
+      storedResource.billingPlan,
+    );
     await assertParentPlan(
       installationId,
       await getInstallation(installationId),
@@ -361,6 +371,7 @@ export async function deleteResource(
 ): Promise<void> {
   const pipeline = kv.pipeline();
   pipeline.del(`${installationId}:resource:${resourceId}`);
+  pipeline.del(planRestrictionsKey(installationId, resourceId));
   pipeline.lrem(`${installationId}:resources`, 0, resourceId);
   await pipeline.exec();
 }
@@ -519,6 +530,38 @@ export async function setCredentialTypesChangeResponse(
     ...storedResource,
     credentialTypesChangeResponse,
   } satisfies StoredResource);
+}
+
+// Kept under its own key so that whole-record resource writes, which spread an
+// earlier read, can't restore an old policy, and saving one can't revert them.
+function planRestrictionsKey(installationId: string, resourceId: string) {
+  return `${installationId}:resource:${resourceId}:plan-restrictions`;
+}
+
+export async function getResourcePlanRestrictions(
+  installationId: string,
+  resourceId: string,
+): Promise<PlanRestrictions | undefined> {
+  return (
+    (await kv.get<PlanRestrictions>(
+      planRestrictionsKey(installationId, resourceId),
+    )) ?? undefined
+  );
+}
+
+export async function setResourcePlanRestrictions(
+  installationId: string,
+  resourceId: string,
+  planRestrictions: PlanRestrictions,
+): Promise<void> {
+  if (!(await getStoredResource(installationId, resourceId))) {
+    throw new Error(`Cannot find resource ${resourceId}`);
+  }
+
+  await kv.set(
+    planRestrictionsKey(installationId, resourceId),
+    planRestrictions,
+  );
 }
 
 export async function getResourceParent(
@@ -821,10 +864,19 @@ export async function getProductBillingPlans(
 
 export async function getResourceBillingPlans(
   installationId: string,
-  _resourceId: string,
+  resourceId: string,
 ): Promise<GetBillingPlansResponse> {
+  const [plans, storedResource, planRestrictions] = await Promise.all([
+    getAvailableBillingPlans(installationId, billingPlans),
+    getStoredResource(installationId, resourceId),
+    getResourcePlanRestrictions(installationId, resourceId),
+  ]);
   return {
-    plans: await getAvailableBillingPlans(installationId, billingPlans),
+    plans: applyPlanRestrictions(
+      plans,
+      planRestrictions,
+      storedResource?.billingPlan,
+    ),
   };
 }
 
